@@ -9,24 +9,23 @@
  Create: 2022
 */
 
-package com.datastat.Controller;
+package com.datastat.Service;
 
+import com.datastat.Dao.QueryDao;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import com.datastat.Service.QueryService;
+import org.springframework.stereotype.Service;
 
 
-@RestController
-public class QueryController {
-
+@Service
+public class QueryService {
     @Autowired
-    QueryService queryService;
+    QueryDao queryDao;
 
-    @RequestMapping(value = "/query", method = RequestMethod.GET)
-    public String queryContributors(@RequestParam(value = "community") String community) {
-        String contributors = queryService.queryContributors(community);
-        return contributors;
+    public String queryContributors(String community) {
+        String result;
+        result = queryDao.queryContributors(community);
+
+        return result;
     }
-
 }
+
