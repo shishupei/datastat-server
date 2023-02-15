@@ -1,10 +1,12 @@
 package com.datastat.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
+import java.util.stream.Stream;
 
 @Data
 public class CustomPropertiesConfig {
@@ -112,17 +114,26 @@ public class CustomPropertiesConfig {
     private String sigLabelQueryStr;
     private String communityRepoQueryStr;
 
+    protected static final Map<String, String> contributeTypeMap = new HashMap<>();
+
+    @PostConstruct
+    public void init() {
+        contributeTypeMap.put("pr", "is_pull_state_merged");
+        contributeTypeMap.put("issue", "is_gitee_issue");
+        contributeTypeMap.put("comment", "is_gitee_comment");
+    }
+
     public String getCountQueryStr(String item) {
         String queryStr = "";
         switch (item) {
             case "stars":
-                queryStr = giteeStarCountQueryStr;
+                queryStr = getGiteeStarCountQueryStr();
                 break;
             case "issues":
-                queryStr = giteeIssueCountQueryStr;
+                queryStr = getGiteeIssueCountQueryStr();
                 break;
             case "prs":
-                queryStr = giteePrCountQueryStr;
+                queryStr = getGiteePrCountQueryStr();
                 break;
             default:
                 return "";
@@ -131,35 +142,60 @@ public class CustomPropertiesConfig {
     }
 
     public String getAggCountQueryStr(CustomPropertiesConfig queryConf, String groupField, String contributeType, String timeRange, String community, String repo, String sig) {
-        long currentTimeMillis = System.currentTimeMillis();
-        long lastTimeMillis = getPastTime(timeRange);
         String queryJson = groupField.equals("company") ? getGiteeAggCompanyQueryStr() : getGiteeAggUserQueryStr();
-
-        return getQueryStrByType(contributeType, queryJson, lastTimeMillis, currentTimeMillis, null);
+        return getQueryStrByType(contributeType, queryJson, timeRange, null);
     }
 
-    protected String getQueryStrByType(String contributeType, String queryJson, long lastTimeMillis, long currentTimeMillis, String item) {
-        String queryStr;
-        switch (contributeType.toLowerCase()) {
-            case "pr":
-                queryStr = getQueryStrByType(queryJson, lastTimeMillis, currentTimeMillis, item, "is_pull_state_merged");
+    public String getQueryStrByType(String contributeType, String queryJson, String timeRange, String item) {
+        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        if (StringUtils.isBlank(orDefault)) return "";
+        return getQueryStrWithTimeRange(queryJson, timeRange, item, orDefault);
+    }
+
+    public String getAggGroupCountQueryStr(String groupField, String group, String contributeType, String timeRange, String label) {
+        String queryJson;
+        switch (groupField) {
+            case "sig":
+                queryJson = getSigAggUserQueryStr();
                 break;
-            case "issue":
-                queryStr = getQueryStrByType(queryJson, lastTimeMillis, currentTimeMillis, item, "is_gitee_issue");
-                break;
-            case "comment":
-                queryStr = getQueryStrByType(queryJson, lastTimeMillis, currentTimeMillis, item, "is_gitee_comment");
+            case "company":
+                queryJson = getCompanyAggUserQueryStr();
                 break;
             default:
-                return "";
+                return null;
+        }
+        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        if (StringUtils.isBlank(orDefault)) return null;
+        return getQueryStrWithTimeRange(queryJson, timeRange, group, orDefault);
+    }
+
+    public String getAggGroupSigCountQueryStr(String queryJson, String contributeType, String timeRange, String group, String field) {
+        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        if (StringUtils.isBlank(orDefault)) return null;
+        return getQueryStrWithTimeRange(queryJson, timeRange, field, group, orDefault);
+    }
+
+    public String[] getAggCompanyGiteeQueryStr(String queryJson, String timeRange, String company) {
+        if (queryJson == null) return null;
+
+        String[] queryJsons = queryJson.split(";");
+        String[] queryStr = new String[queryJsons.length];
+        for (int i = 0; i < queryJsons.length; i++) {
+            queryStr[i] = getQueryStrWithTimeRange(queryJsons[i], timeRange, company);
         }
         return queryStr;
     }
 
-    protected String getQueryStrByType(String queryJson, long lastTimeMillis, long currentTimeMillis, String item, String filterField) {
-        return item == null
-                ? String.format(queryJson, lastTimeMillis, currentTimeMillis, filterField)
-                : String.format(queryJson, lastTimeMillis, currentTimeMillis, item, filterField);
+    public String getQueryStrWithTimeRange(String queryJson, String timeRange, Object... args) {
+        if (queryJson == null) return null;
+
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, args);
+    }
+
+    protected static String queryStrFormat(String queryJson, Object... args) {
+        return String.format(queryJson, args);
     }
 
     protected long getPastTime(String timeRange) {
@@ -180,81 +216,4 @@ public class CustomPropertiesConfig {
         }
         return c.getTimeInMillis();
     }
-
-    public String getAggGroupCountQueryStr(String groupField, String group, String contributeType, String timeRange, String label) {
-        String queryStr;
-        String queryJson;
-        long currentTimeMillis = System.currentTimeMillis();
-        long lastTimeMillis = getPastTime(timeRange);
-        switch (groupField) {
-            case "sig":
-                queryJson = getSigAggUserQueryStr();
-                break;
-            case "company":
-                queryJson = getCompanyAggUserQueryStr();
-                break;
-            default:
-                return null;
-        }
-        if (queryJson == null) return null;
-
-        switch (contributeType.toLowerCase()) {
-            case "pr":
-                queryStr = String.format(queryJson, lastTimeMillis, currentTimeMillis, group, "is_pull_state_merged");
-                break;
-            case "issue":
-                queryStr = String.format(queryJson, lastTimeMillis, currentTimeMillis, group, "is_gitee_issue");
-                break;
-            case "comment":
-                queryStr = String.format(queryJson, lastTimeMillis, currentTimeMillis, group, "is_gitee_comment");
-                break;
-            default:
-                queryStr = null;
-        }
-        return queryStr;
-    }
-
-    public String getAggGroupSigCountQueryStr(String queryJson, String contributeType, String timeRange, String group, String field) {
-        String queryStr;
-        long currentTimeMillis = System.currentTimeMillis();
-        long lastTimeMillis = getPastTime(timeRange);
-
-        switch (contributeType.toLowerCase()) {
-            case "pr":
-                queryStr = String.format(queryJson, lastTimeMillis, currentTimeMillis, field, group, "is_pull_state_merged");
-                break;
-            case "issue":
-                queryStr = String.format(queryJson, lastTimeMillis, currentTimeMillis, field, group, "is_gitee_issue");
-                break;
-            case "comment":
-                queryStr = String.format(queryJson, lastTimeMillis, currentTimeMillis, field, group, "is_gitee_comment");
-                break;
-            default:
-                return null;
-        }
-        return queryStr;
-    }
-
-    public String[] getAggCompanyGiteeQueryStr(String queryJson, String timeRange, String company) {
-        if (queryJson == null) {
-            return null;
-        }
-        long currentTimeMillis = System.currentTimeMillis();
-        long lastTimeMillis = getPastTime(timeRange);
-        String[] queryJsons = queryJson.split(";");
-        String[] queryStr = new String[queryJsons.length];
-        for (int i = 0; i < queryJsons.length; i++) {
-            queryStr[i] = String.format(queryJsons[i], lastTimeMillis, currentTimeMillis, company);
-        }
-        return queryStr;
-    }
-
-    public String getSigScoreQuery(String queryJson, String timeRange, String sig) {
-        if (queryJson == null) return null;
-
-        long currentTimeMillis = System.currentTimeMillis();
-        long lastTimeMillis = getPastTime(timeRange);
-        return String.format(queryJson, lastTimeMillis, currentTimeMillis, sig);
-    }
-
 }
