@@ -15,11 +15,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
+import com.datastat.Modules.helpers.Community;
+
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.datastat.*"})
 public class DsApplication {
 
 	public static void main(String[] args) {
+		System.out.println("Snooker player endurance: " + Community.MINDSPORE);
+
 		SpringApplication.run(DsApplication.class, args);
 	}
 
