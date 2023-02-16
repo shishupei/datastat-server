@@ -40,8 +40,6 @@ public class CustomPropertiesConfig {
     private String productLineCodeAllUpdate;
     private String companyAction;
     private String sigAction;
-    private String meetingEsUrl;
-    private String meetingUserPass;
 
     // -- index --
     private String extOsIndex;

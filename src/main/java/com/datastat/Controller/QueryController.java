@@ -9,24 +9,381 @@
  Create: 2022
 */
 
-package com.datastat.Controller;
+package com.datastat.controller;
 
+import com.datastat.interceptor.authentication.UserLoginToken;
+import com.datastat.interceptor.oneid.OneidToken;
+import com.datastat.interceptor.oneid.SigToken;
+import com.datastat.model.vo.*;
+import com.datastat.service.QueryService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.datastat.Service.QueryService;
-
-
 @RestController
+@RequestMapping(value = "/query")
 public class QueryController {
-
     @Autowired
     QueryService queryService;
 
-    @RequestMapping(value = "/query", method = RequestMethod.GET)
-    public String queryContributors(@RequestParam(value = "community") String community) {
-        String contributors = queryService.queryContributors(community);
-        return contributors;
+    @RequestMapping("/contributors")
+    public String queryContributors(HttpServletRequest request,
+                                    @RequestParam(value = "community") String community) {
+        return queryService.queryContributors(request, community);
     }
 
+    @RequestMapping("/avgduration")
+    public String queryDurationAggFromProjectHostArchPackage(HttpServletRequest request,
+                                                             @RequestParam(value = "community") String community) {
+        return queryService.queryDurationAggFromProjectHostArchPackage(request, community);
+    }
+
+    @RequestMapping("/sigs")
+    public String querySigs(HttpServletRequest request,
+                            @RequestParam(value = "community") String community) {
+        return queryService.querySigs(request, community);
+    }
+
+    @RequestMapping("/users")
+    public String queryUsers(HttpServletRequest request,
+                             @RequestParam(value = "community") String community) {
+        return queryService.queryUsers(request, community);
+    }
+
+    @RequestMapping("/noticeusers")
+    public String queryNoticeUsers(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community) {
+        return queryService.queryNoticeUsers(request, community);
+    }
+
+    @RequestMapping("/modulenums")
+    public String queryModuleNums(HttpServletRequest request,
+                                  @RequestParam(value = "community") String community) {
+        return queryService.queryModuleNums(request, community);
+    }
+
+    @RequestMapping("/businessosv")
+    public String queryBusinessOsv(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community) {
+        return queryService.queryBusinessOsv(request, community);
+    }
+
+    @RequestMapping("/communitymembers")
+    public String queryCommunityMembers(HttpServletRequest request,
+                                        @RequestParam(value = "community") String community) {
+        return queryService.queryCommunityMembers(request, community);
+
+    @RequestMapping("/downloads")
+    public String queryDownloads(HttpServletRequest request,
+                                 @RequestParam(value = "community") String community) {
+        return queryService.queryDownload(request, community);
+    }
+
+    @RequestMapping("/all")
+    public String queryAll(HttpServletRequest request,
+                           @RequestParam(value = "community") String community) throws Exception {
+        return queryService.queryAll(request, community);
+
+    }
+
+    @RequestMapping("/stars")
+    public String queryStars(HttpServletRequest request,
+                             @RequestParam(value = "community") String community) {
+        return queryService.queryCount(request, community, "stars");
+    }
+
+    @RequestMapping("/issues")
+    public String queryIssues(HttpServletRequest request,
+                              @RequestParam(value = "community") String community) {
+        return queryService.queryCount(request, community, "issues");
+    }
+
+    @RequestMapping("/prs")
+    public String queryPrs(HttpServletRequest request,
+                           @RequestParam(value = "community") String community) {
+        return queryService.queryCount(request, community, "prs");
+    }
+
+    @RequestMapping(value = "/blueZone/contributes", method = RequestMethod.POST)
+    public String queryBlueZoneContributes(HttpServletRequest request,
+                                           @RequestBody BlueZoneContributeVo body) {
+        return queryService.queryBlueZoneContributes(request, body);
+    }
+
+    @RequestMapping(value = "/blueZone/users", method = RequestMethod.POST)
+    public String putBlueZoneUser(HttpServletRequest request,
+                                  @RequestBody BlueZoneUserVo userVo) {
+        return queryService.putBlueZoneUser(request, userVo);
+    }
+
+    @RequestMapping(value = "/starFork", method = RequestMethod.GET)
+    public String queryOrgStarAndFork(HttpServletRequest request,
+                                      @RequestParam(value = "community") String community) {
+        return queryService.queryOrgStarAndFork(request, community);
+    }
+
+    @UserLoginToken
+    @RequestMapping(value = "/cveDetails", method = RequestMethod.GET)
+    public String queryCveDetails(HttpServletRequest request,
+                                  @RequestParam(value = "community") String community,
+                                  @RequestParam(value = "lastCursor", required = false) String lastCursor,
+                                  @RequestParam(value = "pageSize", required = false) String pageSize) {
+        return queryService.queryCveDetails(request, community, lastCursor, pageSize);
+    }
+
+    @RequestMapping("/lts/2203")
+    public String queryNewYear(HttpServletRequest request,
+                               @RequestParam(value = "community") String community,
+                               @RequestParam(value = "user") String user) {
+        return queryService.queryNewYear(request, community, user, "2203lts");
+    }
+
+    @RequestMapping("/newYear/report")
+    public String queryNewYear(HttpServletRequest request,
+                               @RequestParam(value = "community") String community,
+                               @RequestParam(value = "user") String user,
+                               @RequestParam(value = "year") String year) {
+        return queryService.queryNewYear(request, community, user, year);
+    }
+
+    @RequestMapping("/newYear/monthcount")
+    public String queryNewYearMonthCount(HttpServletRequest request,
+                                         @RequestParam(value = "community") String community,
+                                         @RequestParam(value = "user") String user) {
+        return queryService.queryNewYearMonthCount(request, user);
+    }
+
+    @UserLoginToken
+    @RequestMapping("/bugQuestionnaires")
+    public String queryBugQuestionnaires(HttpServletRequest request,
+                                         @RequestParam(value = "community") String community,
+                                         @RequestParam(value = "lastCursor", required = false) String lastCursor,
+                                         @RequestParam(value = "pageSize", required = false) String pageSize) {
+        return queryService.queryBugQuestionnaire(request, community, lastCursor, pageSize);
+    }
+
+    @RequestMapping("/obsDetails")
+    public String queryObsDetails(HttpServletRequest request,
+                                  @RequestParam(value = "community") String community,
+                                  @RequestParam(value = "branch") String branch,
+                                  @RequestParam(value = "limit", required = false) String limit) {
+        return queryService.queryObsDetails(request, branch, limit);
+    }
+
+    @RequestMapping(value = "/isoBuildTimes", method = RequestMethod.POST)
+    public String queryIsoBuildTimes(HttpServletRequest request,
+                                     @RequestBody IsoBuildTimesVo body) {
+        return queryService.queryIsoBuildTimes(request, body);
+    }
+
+    @RequestMapping(value = "/sigDetails", method = RequestMethod.POST)
+    public String querySigDetails(HttpServletRequest request,
+                                  @RequestBody SigDetailsVo body) {
+        return queryService.querySigDetails(request, body);
+    }
+
+    @RequestMapping("/company/contribute")
+    public String queryCompanyContributors(HttpServletRequest request,
+                                           @RequestParam(value = "community") String community,
+                                           @RequestParam(value = "contributeType") String contributeType,
+                                           @RequestParam(value = "timeRange") String timeRange,
+                                           @RequestParam(value = "repo", required = false) String repo) {
+        return queryService.queryCompanyContributors(request, community, contributeType, timeRange, repo);
+    }
+
+    @RequestMapping("/user/contribute")
+    public String queryUserContributors(HttpServletRequest request,
+                                        @RequestParam(value = "community") String community,
+                                        @RequestParam(value = "contributeType") String contributeType,
+                                        @RequestParam(value = "timeRange") String timeRange,
+                                        @RequestParam(value = "repo", required = false) String repo) {
+        return queryService.queryUserContributors(request, community, contributeType, timeRange, repo);
+    }
+
+    @RequestMapping(value = "/issueScore", method = RequestMethod.GET)
+    public String queryIssueScore(HttpServletRequest request,
+                                  @RequestParam(value = "community") String community,
+                                  @RequestParam(value = "start_date", required = false) String startDate,
+                                  @RequestParam(value = "end_date", required = false) String endDate) {
+        return queryService.queryIssueScore(request, startDate, endDate);
+    }
+
+    @RequestMapping(value = "/buildCheckInfo", method = RequestMethod.POST)
+    public String queryBuildCheckInfo(HttpServletRequest request,
+                                      @RequestBody BuildCheckInfoQueryVo queryBody,
+                                      @RequestParam(value = "lastCursor", required = false) String lastCursor,
+                                      @RequestParam(value = "pageSize", required = false) String pageSize) {
+        return queryService.queryBuildCheckInfo(request, queryBody, lastCursor, pageSize);
+    }
+
+    @RequestMapping(value = "/track", method = RequestMethod.GET)
+    public String putUserActionsInfo(HttpServletRequest request,
+                                     @RequestParam(value = "community") String community,
+                                     @RequestParam(value = "data") String data,
+                                     @RequestParam(value = "ext") String ext) {
+        return queryService.putUserActionsInfo(request, community, data);
+    }
+
+    @RequestMapping("/sig/name")
+    public String querySigName(HttpServletRequest request,
+                               @RequestParam(value = "community") String community,
+                               @RequestParam(value = "lang", required = false) String lang) {
+        return queryService.querySigName(request, community, lang);
+    }
+
+    @RequestMapping("/sig/info")
+    public String querySigInfo(HttpServletRequest request,
+                               @RequestParam(value = "community") String community,
+                               @RequestParam(value = "sig", required = false) String sig,
+                               @RequestParam(value = "repo", required = false) String repo,
+                               @RequestParam(value = "user", required = false) String user,
+                               @RequestParam(value = "search", required = false) String search,
+                               @RequestParam(value = "page", required = false) String page,
+                               @RequestParam(value = "pageSize", required = false) String pageSize) throws Exception {
+        return queryService.querySigInfo(request, community, sig, repo, user, search, page, pageSize);
+    }
+
+    @RequestMapping("/sig/repo")
+    public String querySigRepo(HttpServletRequest request,
+                               @RequestParam(value = "community") String community,
+                               @RequestParam(value = "sig", required = false) String sig,
+                               @RequestParam(value = "page", required = false) String page,
+                               @RequestParam(value = "pageSize", required = false) String pageSize) throws Exception {
+        return queryService.querySigRepo(request, community, sig, page, pageSize);
+    }
+
+    @RequestMapping("sig/company/contribute")
+    public String querySigCompanyContributors(HttpServletRequest request,
+                                              @RequestParam(value = "community") String community,
+                                              @RequestParam(value = "contributeType") String contributeType,
+                                              @RequestParam(value = "timeRange") String timeRange,
+                                              @RequestParam(value = "sig", required = false) String sig) {
+        return queryService.querySigCompanyContributors(request, community, contributeType, timeRange, sig);
+    }
+
+    @RequestMapping("/company/name")
+    public String queryCompanyName(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community) {
+        return queryService.queryCompanyName(request, community);
+    }
+
+    @OneidToken
+    @RequestMapping("/company/usercontribute")
+    public String queryCompanyUserContribute(HttpServletRequest request,
+                                             @RequestParam(value = "community") String community,
+                                             @RequestParam(value = "company") String company,
+                                             @RequestParam(value = "contributeType") String contributeType,
+                                             @RequestParam(value = "timeRange") String timeRange,
+                                             @CookieValue(value = "_Y_G_", required = false) String token) {
+        return queryService.queryCompanyUserContribute(request, community, company, contributeType, timeRange, token);
+    }
+
+    @OneidToken
+    @RequestMapping("/company/sigcontribute")
+    public String queryCompanySigcontribute(HttpServletRequest request,
+                                            @RequestParam(value = "community") String community,
+                                            @RequestParam(value = "company") String company,
+                                            @RequestParam(value = "contributeType") String contributeType,
+                                            @RequestParam(value = "timeRange") String timeRange,
+                                            @CookieValue(value = "_Y_G_", required = false) String token) {
+        return queryService.queryCompanySigContribute(request, community, company, contributeType, timeRange, token);
+    }
+
+    @OneidToken
+    @RequestMapping("/company/sigdetails")
+    public String queryCompanySigDetails(HttpServletRequest request,
+                                         @RequestParam(value = "community") String community,
+                                         @RequestParam(value = "company") String company,
+                                         @RequestParam(value = "timeRange") String timeRange,
+                                         @CookieValue(value = "_Y_G_", required = false) String token) {
+        return queryService.queryCompanySigDetails(request, community, company, timeRange, token);
+    }
+
+    @RequestMapping("/sig/usercontribute")
+    public String querySigUserTypeCount(HttpServletRequest request,
+                                        @RequestParam(value = "community") String community,
+                                        @RequestParam(value = "sig") String sig,
+                                        @RequestParam(value = "contributeType") String contributeType,
+                                        @RequestParam(value = "timeRange") String timeRange) {
+        return queryService.querySigUserTypeCount(request, community, sig, contributeType, timeRange);
+    }
+
+    @OneidToken
+    @RequestMapping("/company/users")
+    public String queryCompanyUsers(HttpServletRequest request,
+                                    @RequestParam(value = "community") String community,
+                                    @RequestParam(value = "company") String company,
+                                    @RequestParam(value = "timeRange") String timeRange,
+                                    @CookieValue(value = "_Y_G_", required = false) String token) {
+        return queryService.queryCompanyUsers(request, community, company, timeRange, token);
+    }
+
+    @RequestMapping("/community/repos")
+    public String queryRepos(HttpServletRequest request,
+                             @RequestParam(value = "community") String community) {
+        return queryService.queryCommunityRepos(request, community);
+    }
+
+    @OneidToken
+    @SigToken
+    @RequestMapping("/sig/score")
+    public String querySigScore(HttpServletRequest request,
+                                @RequestParam(value = "community") String community,
+                                @RequestParam(value = "sig") String sig,
+                                @RequestParam(value = "timeRange") String timeRange) {
+        return queryService.querySigScore(request, community, sig, timeRange);
+    }
+
+    @RequestMapping("/sig/scoreAll")
+    public String querySigScoreAll(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community) {
+        return queryService.querySigScoreAll(request, community);
+    }
+
+    @OneidToken
+    @SigToken
+    @RequestMapping("/sig/radarscore")
+    public String querySigRadarScore(HttpServletRequest request,
+                                     @RequestParam(value = "community") String community,
+                                     @RequestParam(value = "sig") String sig,
+                                     @RequestParam(value = "timeRange") String timeRange) {
+        return queryService.querySigRadarScore(request, community, sig, timeRange);
+    }
+
+    @RequestMapping("/company/sigs")
+    public String queryCompanySigs(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community,
+                                   @RequestParam(value = "timeRange") String timeRange) {
+        return queryService.queryCompanySigs(request, community, timeRange);
+    }
+
+
+    @RequestMapping("/test")
+    public String test() throws InterruptedException {
+        Thread.sleep(5000);
+        return "time out";
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
