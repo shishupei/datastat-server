@@ -2068,12 +2068,12 @@ public class QueryDao {
         try {
             AsyncHttpClient client = EsAsyncHttpUtil.getClient();
             RequestBuilder builder = esAsyncHttpUtil.getBuilder().setHeader("Authorization",
-                    "Basic " + Base64.getEncoder().encodeToString((queryConf.getMeetingUserPass()).getBytes()));
+                    "Basic " + Base64.getEncoder().encodeToString((env.getProperty("meeting.user.pass")).getBytes()));
 
             HashMap<String, ArrayList<Integer>> sigMap = new HashMap<>();
             for (int i = 0; i < queryStrs.length; i++) {
                 // 获取执行结果
-                builder.setUrl(queryConf.getMeetingEsUrl() + meetingIndex + "/_search");
+                builder.setUrl(env.getProperty("meeting.es.url") + meetingIndex + "/_search");
                 builder.setBody(queryStrs[i]);
 
                 ListenableFuture<Response> future = client.executeRequest(builder.build());
