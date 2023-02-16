@@ -72,6 +72,7 @@ public class QueryController {
     public String queryCommunityMembers(HttpServletRequest request,
                                         @RequestParam(value = "community") String community) {
         return queryService.queryCommunityMembers(request, community);
+    }
 
     @RequestMapping("/downloads")
     public String queryDownloads(HttpServletRequest request,
