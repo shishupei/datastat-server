@@ -16,9 +16,16 @@ import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sun.net.httpserver.HttpExchange;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/query")
@@ -356,6 +363,61 @@ public class QueryController {
                                    @RequestParam(value = "community") String community,
                                    @RequestParam(value = "timeRange") String timeRange) {
         return queryService.queryCompanySigs(request, community, timeRange);
+    }
+
+    @RequestMapping("/TC/sigs")
+    public String querySigsOfTCOwners(HttpServletRequest request,
+                                      @RequestParam(value = "community") String community) {
+        return queryService.querySigsOfTCOwners(request, community);
+    }
+
+    @RequestMapping("/user/sigcontribute")
+    public String queryUserSigContribute(HttpServletRequest request,
+                                         @RequestParam(value = "community") String community,
+                                         @RequestParam(value = "user") String user,
+                                         @RequestParam(value = "contributeType") String contributeType,
+                                         @RequestParam(value = "timeRange") String timeRange) {
+        return queryService.queryUserSigContribute(request, community, user, contributeType, timeRange);
+    }
+
+    @RequestMapping("/user/ownertype")
+    public String queryUserOwnerType(HttpServletRequest request,
+                                     @RequestParam(value = "community") String community,
+                                     @RequestParam(value = "user") String user) {
+        return queryService.queryUserOwnerType(request, community, user);
+    }
+
+    @RequestMapping("/user/contribute/details")
+    public String queryUserContributeDetails(HttpServletRequest request,
+                                             @RequestParam(value = "community") String community,
+                                             @RequestParam(value = "user") String user,
+                                             @RequestParam(value = "sig", required = false) String sig,
+                                             @RequestParam(value = "comment_type", required = false) String comment_type,
+                                             @RequestParam(value = "filter", required = false) String filter,
+                                             @RequestParam(value = "contributeType") String contributeType,
+                                             @RequestParam(value = "timeRange") String timeRange,
+                                             @RequestParam(value = "page", required = false) String page,
+                                             @RequestParam(value = "pageSize", required = false) String pageSize) throws Exception {
+        return queryService.queryUserContributeDetails(request, community, user, sig, contributeType, timeRange, page, pageSize, comment_type, filter);
+    }
+
+
+
+
+    @RequestMapping(value = "/gitee/webhook", method = RequestMethod.POST)
+    public String giteeWebhook(HttpServletRequest request,
+                               @RequestBody String requestBody,
+                               @RequestParam Map body) throws IOException {
+        BufferedReader reader = request.getReader();
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+        }
+        System.out.println(sb);
+
+        System.out.println(body);
+        return requestBody;
     }
 
 

@@ -11,6 +11,7 @@
 
 package com.datastat.model;
 
+import com.datastat.dao.QueryDao;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
@@ -122,6 +123,7 @@ public class CustomPropertiesConfig {
     private String sigYamlZh;
     private String sigLabelQueryStr;
     private String communityRepoQueryStr;
+    private String sigCountQuery;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
@@ -202,6 +204,43 @@ public class CustomPropertiesConfig {
         long lastTimeMillis = getPastTime(timeRange);
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, args);
     }
+
+    public ArrayList<Object> getAggUserCountQueryParams(String contributeType, String timeRange) {
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(contributeType);
+        list.add(lastTimeMillis);
+        list.add(currentTimeMillis);
+        switch (contributeType.toLowerCase()) {
+            case "pr":
+                list.add("is_pull_state_merged");
+                list.add("pull_title");
+                list.add("pull_url");
+                list.add("pull_id_in_repo");
+                break;
+            case "issue":
+                list.add("is_gitee_issue");
+                list.add("issue_title");
+                list.add("issue_url");
+                list.add("issue_id_in_repo");
+                break;
+            case "comment":
+                list.add("is_gitee_comment");
+                list.add("body");
+                list.add("sub_type");
+                list.add("id");
+                break;
+            default:
+                return null;
+        }
+        return list;
+    }
+
+    public String getUserContributeDetailsQuery(CustomPropertiesConfig queryConf, String sig, String label) {
+        return null;
+    }
+
 
     protected static String queryStrFormat(String queryJson, Object... args) {
         return String.format(queryJson, args);

@@ -11,6 +11,7 @@
 
 package com.datastat.config;
 
+import com.datastat.dao.QueryDao;
 import com.datastat.model.CustomPropertiesConfig;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +50,14 @@ public class OpenGaussConfig extends CustomPropertiesConfig {
         String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
         if (StringUtils.isBlank(orDefault)) return null;
         return getQueryStrWithTimeRange(queryJson, timeRange, group, label, orDefault);
+    }
+
+    @Override
+    public String getUserContributeDetailsQuery(CustomPropertiesConfig queryConf, String sig, String label) {
+        if (sig != null && sig.equals("Others")) sig = "No-SIG";
+        sig = sig == null ? "*" : sig;
+
+        return String.format(queryConf.getSigCountQuery(), sig, label);
     }
 
 }

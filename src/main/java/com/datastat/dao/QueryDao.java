@@ -56,6 +56,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -1063,6 +1064,103 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", dataList);
         return objectMapper.valueToTree(resMap).toString();
+    }
+
+    @SneakyThrows
+    public String querySigsOfTCOwners(CustomPropertiesConfig queryConf) {
+        String index = queryConf.getSigIndex();
+        String queryJson = queryConf.getUserOwnsSigStr();
+        String yamlFile = queryConf.getTcOwnerUrl();
+
+        JsonNode TC_owners = querySigOwnerTypeCount(queryConf, "TC");
+        Map<String, String> userName = getUserNameCnEn(yamlFile);
+
+        Iterator<String> users = TC_owners.fieldNames();
+        ArrayList<HashMap<String, Object>> res = new ArrayList<>();
+        while (users.hasNext()) {
+            String user = users.next();
+            String queryStr = String.format(queryJson, user);
+            ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryStr);
+            String responseBody = future.get().getResponseBody(UTF_8);
+            JsonNode dataNode = objectMapper.readTree(responseBody);
+            Iterator<JsonNode> buckets = dataNode.get("aggregations").get("2").get("buckets").elements();
+            ArrayList<String> sigList = new ArrayList<>();
+            while (buckets.hasNext()) {
+                JsonNode bucket = buckets.next();
+                sigList.add(bucket.get("key").asText());
+            }
+            HashMap<String, Object> resData = new HashMap<>();
+            String user_cn = userName.get(user);
+            resData.put("user", user);
+            resData.put("name", user_cn);
+            resData.put("sigs", sigList);
+            res.add(resData);
+        }
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", res);
+        resMap.put("msg", "success");
+        return objectMapper.valueToTree(resMap).toString();
+    }
+
+    @SneakyThrows
+    public String queryAllUserOwnerType(CustomPropertiesConfig queryConf, String user1) {
+        String index = queryConf.getSigIndex();
+        String queryStr = queryConf.getAllUserOwnerTypeQueryStr();
+
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryStr);
+        String responseBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+
+        HashMap<String, ArrayList<Object>> userData = new HashMap<>();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String sig = bucket.get("key").asText();
+            Iterator<JsonNode> users = bucket.get("user").get("buckets").elements();
+            while (users.hasNext()) {
+                JsonNode userBucket = users.next();
+                String user = userBucket.get("key").asText();
+                if (!user.equalsIgnoreCase(user1)) continue;
+
+                Iterator<JsonNode> types = userBucket.get("type").get("buckets").elements();
+                ArrayList<String> typeList = new ArrayList<>();
+                while (types.hasNext()) {
+                    JsonNode type = types.next();
+                    typeList.add(type.get("key").asText());
+                }
+                HashMap<String, Object> user_type = new HashMap<>();
+                user_type.put("sig", sig);
+                user_type.put("type", typeList);
+
+                if (userData.containsKey(user.toLowerCase())) {
+                    userData.get(user.toLowerCase()).add(user_type);
+                } else {
+                    ArrayList<Object> tempList = new ArrayList<>();
+                    tempList.add(user_type);
+                    userData.put(user.toLowerCase(), tempList);
+                }
+            }
+        }
+
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", userData);
+        resMap.put("msg", "success");
+        return objectMapper.valueToTree(resMap).toString();
+    }
+
+    @SneakyThrows
+    public String queryUserContributeDetails(QueryDao queryDao, CustomPropertiesConfig queryConf, String community, String user,
+                                             String sig, String contributeType, String timeRange, String comment_type, String filter) {
+        String index = queryConf.getGiteeAllIndex();
+        ArrayList<Object> params = queryConf.getAggUserCountQueryParams(contributeType, timeRange);
+
+        String label = sig != null ? queryDao.querySigLabel(queryConf).getOrDefault(sig, "*") : "*";
+        String query = queryConf.getUserContributeDetailsQuery(queryConf, sig, label);
+
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        return esQueryUtils.esUserCount(community, restHighLevelClient, index, user, sig, params, comment_type, filter, query);
     }
 
 
@@ -2153,5 +2251,18 @@ public class QueryDao {
             e.printStackTrace();
         }
         return resData;
+    }
+
+    protected Map<String, String> getUserNameCnEn(String yamlFile) {
+        YamlUtil yamlUtil = new YamlUtil();
+        UserNameYaml users = yamlUtil.readUrlYaml(yamlFile, UserNameYaml.class);
+
+        HashMap<String, String> userMap = new HashMap<>();
+        for (UserInfoYaml user : users.getUsers()) {
+            String user_en = user.getEn().trim();
+            String user_cn = user.getCn().trim();
+            userMap.put(user_en, user_cn);
+        }
+        return userMap;
     }
 }

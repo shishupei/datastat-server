@@ -362,7 +362,7 @@ public class EsQueryUtils {
         String type = params.get(0).toString();
         long start = Long.valueOf(params.get(1).toString());
         long end = Long.valueOf(params.get(2).toString());
-        String feild = params.get(3).toString();
+        String field = params.get(3).toString();
         String type_info = params.get(4).toString();
         String type_url = params.get(5).toString();
         String type_no = params.get(6).toString();
@@ -370,7 +370,7 @@ public class EsQueryUtils {
         boolQueryBuilder.must(QueryBuilders.rangeQuery("created_at").from(start).to(end));
         boolQueryBuilder.mustNot(QueryBuilders.matchQuery("is_removed", 1));
         boolQueryBuilder.must(QueryBuilders.wildcardQuery("user_login.keyword", user));
-        boolQueryBuilder.must(QueryBuilders.matchQuery(feild, 1));
+        boolQueryBuilder.must(QueryBuilders.matchQuery(field, 1));
         switch (community.toLowerCase()) {
             case "openeuler":
                 boolQueryBuilder.must(QueryBuilders.wildcardQuery("sig_names.keyword", sig));
