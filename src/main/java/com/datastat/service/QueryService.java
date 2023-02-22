@@ -604,6 +604,77 @@ public class QueryService {
         return result;
     }
 
+    public String querySigsOfTCOwners(HttpServletRequest request, String community) {
+        String key = community.toLowerCase() + "sigs_of_tc_owners";
+        String result = null; //(String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySigsOfTCOwners(queryConf);
+//            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String queryUserSigContribute(HttpServletRequest request, String community, String user, String contributeType, String timeRange) {
+        String key = community.toLowerCase() + user + "sigtypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
+        String result = null; //(String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryGroupSigContribute(queryDao, queryConf, "user", user, contributeType, timeRange);
+//            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String queryUserOwnerType(HttpServletRequest request, String community, String user) {
+        String key = community.toLowerCase() + "all" + "ownertype";
+        String result = null; //(String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryAllUserOwnerType(queryConf, user);
+//            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String queryUserContributeDetails(HttpServletRequest request, String community, String user, String sig, String contributeType,
+                                             String timeRange, String page, String pageSize, String comment_type, String filter) throws Exception {
+        String key = community.toLowerCase() + sig + contributeType.toLowerCase() + timeRange.toLowerCase() + comment_type;
+        String result = null; //(String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryUserContributeDetails(queryDao, queryConf, community, user, sig, contributeType, timeRange, comment_type, filter);
+//            redisDao.set(key, result, redisDefaultExpire);
+        }
+        if (page != null && pageSize != null) {
+            JsonNode all = objectMapper.readTree(result);
+            if (all.get("data").get(user) == null) return result;
+
+            Iterator<JsonNode> buckets = all.get("data").get(user).iterator();
+            ArrayList<JsonNode> userCount = new ArrayList<>();
+            ArrayList<JsonNode> filterRes = new ArrayList<>();
+            while (buckets.hasNext()) {
+                JsonNode bucket = buckets.next();
+                if (filter == null) userCount.add(bucket);
+                if (filter != null && bucket.get("info").toString().contains(filter)) filterRes.add(bucket);
+            }
+            ArrayList<JsonNode> resList = filter == null ? userCount : filterRes;
+            Map map = PageUtils.getDataByPage(Integer.parseInt(page), Integer.parseInt(pageSize), resList);
+            HashMap<String, Object> resMap = new HashMap<>();
+            resMap.put("code", 200);
+            resMap.put("data", map);
+            resMap.put("msg", "success");
+            return objectMapper.valueToTree(resMap).toString();
+        }
+
+        return result;
+    }
+
+
     public QueryDao getQueryDao(HttpServletRequest request) {
         String community = request.getParameter("community");
         String serviceType = community == null ? "queryDao" : community.toLowerCase() + "Dao";
