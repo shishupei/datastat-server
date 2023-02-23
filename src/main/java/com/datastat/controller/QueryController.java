@@ -17,15 +17,13 @@ import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sun.net.httpserver.HttpExchange;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.Map;
+import java.util.Enumeration;
 
 @RestController
 @RequestMapping(value = "/query")
@@ -402,22 +400,25 @@ public class QueryController {
     }
 
 
-
-
     @RequestMapping(value = "/gitee/webhook", method = RequestMethod.POST)
     public String giteeWebhook(HttpServletRequest request,
-                               @RequestBody String requestBody,
-                               @RequestParam Map body) throws IOException {
-        BufferedReader reader = request.getReader();
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
+                               @RequestBody String requestBody) {
+        try {
+            Enumeration<String> headerNames = request.getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String name = headerNames.nextElement();
+                String value = request.getHeader(name);
+                System.out.println(name + ":" + value);
+            }
+            System.out.println(requestBody);
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode all = objectMapper.readTree(requestBody);
+            System.out.println(all);
+            return requestBody;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return "requestBody";
         }
-        System.out.println(sb);
-
-        System.out.println(body);
-        return requestBody;
     }
 
 
