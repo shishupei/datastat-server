@@ -56,7 +56,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -1161,6 +1160,24 @@ public class QueryDao {
 
         RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
         return esQueryUtils.esUserCount(community, restHighLevelClient, index, user, sig, params, comment_type, filter, query);
+    }
+
+    @SneakyThrows
+    public void putGiteeHookUser(CustomPropertiesConfig queryConf, Set<Map<String, String>> users) {
+        String scheme = env.getProperty("es.private.scheme");
+        String host = env.getProperty("es.private.host");
+        int port = Integer.parseInt(env.getProperty("es.private.port", "9200"));
+        String esUser = env.getProperty("es.private.user");
+        String password = env.getProperty("es.private.password");
+        RestHighLevelClient restHighLevelClient = HttpClientUtils.restClient(host, port, scheme, esUser, password);
+
+        BulkRequest request = new BulkRequest();
+        for (Map<String, String> user : users) {
+            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", user.get("email")).source(user));
+        }
+
+        if (request.requests().size() != 0) restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+        restHighLevelClient.close();
     }
 
 
