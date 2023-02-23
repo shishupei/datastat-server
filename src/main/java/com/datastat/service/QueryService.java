@@ -14,10 +14,10 @@ package com.datastat.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.datastat.config.context.QueryConfContext;
-import com.datastat.dao.RedisDao;
-import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.dao.QueryDao;
+import com.datastat.dao.RedisDao;
 import com.datastat.dao.context.QueryDaoContext;
+import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.vo.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.PageUtils;
@@ -674,6 +674,41 @@ public class QueryService {
         return result;
     }
 
+    public String putGiteeHookUser(HttpServletRequest request, String requestBody) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode all = objectMapper.readTree(requestBody);
+            String hookName = all.get("hook_name").asText();
+            JsonNode action = switch (hookName) {
+                case "merge_request_hooks" -> all.get("pull_request");
+                case "issue_hooks" -> all.get("issue");
+                case "note_hooks" -> all.get("comment");
+                default -> null;
+            };
+            if (action == null) return resultJsonStr(400, "user_count", 0, "parse body fail");
+            ArrayList<Map<String, String>> users = new ArrayList<>();
+
+            JsonNode user = action.get("user");
+            String createdAt = action.get("created_at").asText();
+            Map<String, String> userRes = giteeWebhookUser(user, createdAt);
+            if (userRes != null) users.add(userRes);
+
+            JsonNode assignee = action.get("assignee");
+            Map<String, String> assigneeRes = giteeWebhookUser(assignee, createdAt);
+            if (assigneeRes != null) users.add(assigneeRes);
+
+            TreeSet<Map<String, String>> userSet = new TreeSet<>(Comparator.comparing(o -> o.get("email")));
+            userSet.addAll(users);
+
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            queryDao.putGiteeHookUser(queryConf, userSet);
+            return resultJsonStr(200, "user_count", userSet.size(), "success");
+        } catch (Exception e) {
+            return resultJsonStr(400, "user_count", 0, "parse body fail");
+        }
+    }
+
 
     public QueryDao getQueryDao(HttpServletRequest request) {
         String community = request.getParameter("community");
@@ -865,5 +900,17 @@ public class QueryService {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private Map<String, String> giteeWebhookUser(JsonNode user, String createdAt) {
+        if (user == null) return null;
+
+        String email = user.get("email").asText();
+        if (StringUtils.isBlank(email)) return null;
+
+        String id = user.get("id").asText();
+        String login = user.get("login").asText();
+
+        return Map.of("id", id, "gitee_id", login, "email", email, "created_at", createdAt);
     }
 }

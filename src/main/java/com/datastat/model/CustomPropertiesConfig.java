@@ -11,14 +11,11 @@
 
 package com.datastat.model;
 
-import com.datastat.dao.QueryDao;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 @Data
 public class CustomPropertiesConfig {
@@ -69,6 +66,7 @@ public class CustomPropertiesConfig {
     private String starForkIndex;
     private String blueZoneUserIndex;
     private String blueZoneUserContributesIndex;
+    private String giteeEmailIndex;
 
     // -- query str --
     private String extOsQueryStr;
