@@ -705,6 +705,7 @@ public class QueryService {
             queryDao.putGiteeHookUser(queryConf, userSet);
             return resultJsonStr(200, "user_count", userSet.size(), "success");
         } catch (Exception e) {
+            e.printStackTrace();
             return resultJsonStr(400, "user_count", 0, "parse body fail");
         }
     }

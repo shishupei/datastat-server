@@ -16,9 +16,13 @@ import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.BufferedReader;
+import java.util.Enumeration;
 
 @RestController
 @RequestMapping(value = "/query")
@@ -398,6 +402,24 @@ public class QueryController {
     @RequestMapping(value = "/gitee/webhook", method = RequestMethod.POST)
     public String giteeWebhook(HttpServletRequest request,
                                @RequestBody String requestBody) {
+        try {
+            System.out.println(requestBody);
+            Enumeration<String> headerNames = request.getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String name = headerNames.nextElement();
+                String value = request.getHeader(name);
+                System.out.println(name + ":" + value);
+            }
+            BufferedReader reader = request.getReader();
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            System.out.println(sb);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return queryService.putGiteeHookUser(request, requestBody);
     }
