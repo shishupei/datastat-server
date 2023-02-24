@@ -904,7 +904,7 @@ public class QueryService {
     }
 
     private Map<String, Object> giteeWebhookUser(JsonNode user, String createdAt) {
-        if (user.isNull() || user.isEmpty()) return null;
+        if (user == null || user.isNull() || user.isEmpty()) return null;
 
         String email = user.get("email").asText();
         if (StringUtils.isBlank(email)) return null;
