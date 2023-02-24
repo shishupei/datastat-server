@@ -20,6 +20,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Enumeration;
+
 @RestController
 @RequestMapping(value = "/query")
 public class QueryController {
@@ -398,7 +400,12 @@ public class QueryController {
     @RequestMapping(value = "/gitee/webhook", method = RequestMethod.POST)
     public String giteeWebhook(HttpServletRequest request,
                                @RequestBody String requestBody) {
-
+        System.out.println(requestBody);
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while(headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            System.out.println(name + ":" + request.getHeader(name));
+        }
         return queryService.putGiteeHookUser(request, requestBody);
     }
 
