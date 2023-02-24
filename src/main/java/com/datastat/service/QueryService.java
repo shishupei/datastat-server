@@ -686,18 +686,18 @@ public class QueryService {
                 default -> null;
             };
             if (action == null) return resultJsonStr(400, "user_count", 0, "parse body fail");
-            ArrayList<Map<String, String>> users = new ArrayList<>();
+            ArrayList<Map<String, Object>> users = new ArrayList<>();
 
             JsonNode user = action.get("user");
             String createdAt = action.get("created_at").asText();
-            Map<String, String> userRes = giteeWebhookUser(user, createdAt);
+            Map<String, Object> userRes = giteeWebhookUser(user, createdAt);
             if (userRes != null) users.add(userRes);
 
             JsonNode assignee = action.get("assignee");
-            Map<String, String> assigneeRes = giteeWebhookUser(assignee, createdAt);
+            Map<String, Object> assigneeRes = giteeWebhookUser(assignee, createdAt);
             if (assigneeRes != null) users.add(assigneeRes);
 
-            TreeSet<Map<String, String>> userSet = new TreeSet<>(Comparator.comparing(o -> o.get("email")));
+            TreeSet<Map<String, Object>> userSet = new TreeSet<>(Comparator.comparing(o -> o.get("email").toString()));
             userSet.addAll(users);
 
             QueryDao queryDao = getQueryDao(request);
@@ -903,13 +903,13 @@ public class QueryService {
         return false;
     }
 
-    private Map<String, String> giteeWebhookUser(JsonNode user, String createdAt) {
-        if (user == null) return null;
+    private Map<String, Object> giteeWebhookUser(JsonNode user, String createdAt) {
+        if (user.isNull() || user.isEmpty()) return null;
 
         String email = user.get("email").asText();
         if (StringUtils.isBlank(email)) return null;
 
-        String id = user.get("id").asText();
+        long id = user.get("id").asLong();
         String login = user.get("login").asText();
 
         return Map.of("id", id, "gitee_id", login, "email", email, "created_at", createdAt);
