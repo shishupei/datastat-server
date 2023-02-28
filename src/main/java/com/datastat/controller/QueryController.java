@@ -401,6 +401,21 @@ public class QueryController {
         return queryService.putGiteeHookUser(request, requestBody);
     }
 
+    @RequestMapping("/userlist")
+    public String queryUserLists(HttpServletRequest request,
+                                 @RequestParam(value = "community") String community,
+                                 @RequestParam(value = "group", required = false) String group,
+                                 @RequestParam(value = "name", required = false) String name) {
+        return queryService.queryUserLists(request, community, group, name);
+    }
+
+    @RequestMapping("/sig/repo/committers")
+    public String querySigRepoCommitters(HttpServletRequest request,
+                                         @RequestParam(value = "community") String community,
+                                         @RequestParam(value = "sig") String sig) {
+        return queryService.querySigRepoCommitters(request, community, sig);
+    }
+
 
     @RequestMapping("/test")
     public String test() throws InterruptedException {

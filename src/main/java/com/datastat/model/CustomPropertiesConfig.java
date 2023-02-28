@@ -106,7 +106,7 @@ public class CustomPropertiesConfig {
     private String userOwnerTypeQueryStr;
     private String allUserOwnerTypeQueryStr;
     private String userListQueryStr;
-    private String SigRepoCommittersQueryStr;
+    private String sigRepoCommittersQueryStr;
     private String giteeAllIssueByMilQueryStr;
     private String giteeAllQueryStr;
     private String bugQuestionnaireQueryStr;
@@ -237,6 +237,19 @@ public class CustomPropertiesConfig {
 
     public String getUserContributeDetailsQuery(CustomPropertiesConfig queryConf, String sig, String label) {
         return null;
+    }
+
+    public String getAggUserListQueryStr(String queryJson, String group, String name) {
+        if (group == null || name == null) {
+            group = "*";
+            name = "*";
+        }
+        return switch (group) {
+            case "sig" -> String.format(queryJson, "sig_names.keyword", name);
+            case "company" -> String.format(queryJson, "tag_user_company.keyword", name);
+            case "*" -> String.format(queryJson, "user_login.keyword", name);
+            default -> null;
+        };
     }
 
 
