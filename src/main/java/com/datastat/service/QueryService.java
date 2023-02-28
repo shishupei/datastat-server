@@ -710,6 +710,31 @@ public class QueryService {
         }
     }
 
+    public String queryUserLists(HttpServletRequest request, String community, String group, String name) {
+        String key = community.toLowerCase() + group + name + "userlist";
+        String result = null; //(String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryUserLists(queryConf, community, group, name);
+//            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String querySigRepoCommitters(HttpServletRequest request, String community, String sig) {
+        String key = community.toLowerCase() + sig + "committers";
+        String result = null; //(String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySigRepoCommitters(queryConf, sig);
+//            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+
 
     public QueryDao getQueryDao(HttpServletRequest request) {
         String community = request.getParameter("community");

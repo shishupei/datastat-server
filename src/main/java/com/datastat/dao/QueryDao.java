@@ -1103,7 +1103,7 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryAllUserOwnerType(CustomPropertiesConfig queryConf, String user1) {
+    public String queryAllUserOwnerType(CustomPropertiesConfig queryConf, String userName) {
         String index = queryConf.getSigIndex();
         String queryStr = queryConf.getAllUserOwnerTypeQueryStr();
 
@@ -1120,7 +1120,7 @@ public class QueryDao {
             while (users.hasNext()) {
                 JsonNode userBucket = users.next();
                 String user = userBucket.get("key").asText();
-                if (!user.equalsIgnoreCase(user1)) continue;
+                if (!user.equalsIgnoreCase(userName)) continue;
 
                 Iterator<JsonNode> types = userBucket.get("type").get("buckets").elements();
                 ArrayList<String> typeList = new ArrayList<>();
@@ -1173,12 +1173,102 @@ public class QueryDao {
 
         BulkRequest request = new BulkRequest();
         for (Map<String, Object> user : users) {
-            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", user.get("email").toString()).source(user));
+            String id = user.get("id").toString() + "_" + user.get("email").toString() + "_" + user.get("gitee_id");
+            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", id).source(user));
         }
 
         if (request.requests().size() != 0) restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
         restHighLevelClient.close();
     }
+
+    @SneakyThrows
+    public String queryUserLists(CustomPropertiesConfig queryConf, String community, String group, String name) {
+        String queryStr = queryConf.getAggUserListQueryStr(queryConf.getUserListQueryStr(), group, name);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryStr);
+
+        String responseBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+
+        ArrayList<String> dataMap = new ArrayList<>();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String user = bucket.get("key").asText();
+            dataMap.add(user);
+        }
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", dataMap);
+        resMap.put("msg", "success");
+        return objectMapper.valueToTree(resMap).toString();
+    }
+
+    @SneakyThrows
+    public String querySigRepoCommitters(CustomPropertiesConfig queryConf, String sig) {
+        String queryStr = String.format(queryConf.getSigRepoCommittersQueryStr(), sig);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), queryStr);
+
+        String responseBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+
+        ArrayList<Object> dataList = new ArrayList<>();
+        ArrayList<String> committerList = new ArrayList<>();
+        ArrayList<String> committerRepoList = new ArrayList<>();
+
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String repo = bucket.get("key").asText();
+            Iterator<JsonNode> user_buckets = bucket.get("user").get("buckets").elements();
+            ArrayList<String> userList = new ArrayList<>();
+            while (user_buckets.hasNext()) {
+                JsonNode userBucket = user_buckets.next();
+                String user = userBucket.get("key").asText();
+                userList.add(user);
+                committerList.add(user);
+            }
+            HashMap<String, Object> dataMap = new HashMap<>();
+            dataMap.put("repo", repo);
+            dataMap.put("gitee_id", userList);
+            dataList.add(dataMap);
+            committerRepoList.add(repo);
+        }
+        Set<String> set = new HashSet<>(committerList);
+        ArrayList<String> committers = new ArrayList<>(set);
+
+        String res = querySigRepo(queryConf, sig);
+        JsonNode resNode = objectMapper.readTree(res);
+        if (resNode.get("code").asInt() == 200 && resNode.get("data").size() != 0) {
+            Iterator<JsonNode> repos = resNode.get("data").elements();
+            while (repos.hasNext()) {
+                String repo = repos.next().asText();
+                if (committerRepoList.contains(repo)) continue;
+
+                HashMap<String, Object> dataMap = new HashMap<>();
+                dataMap.put("repo", repo);
+                dataMap.put("gitee_id", Collections.emptyList());
+                dataList.add(dataMap);
+            }
+        }
+
+        HashMap<String, Object> resData = new HashMap<>();
+        String siginfo = querySigInfo(queryConf, sig);
+        JsonNode sigMaintainers = objectMapper.readTree(siginfo).get("data");
+        if (sigMaintainers.size() != 0) {
+            JsonNode maintainers = sigMaintainers.get(0).get("maintainers");
+            resData.put("maintainers", maintainers);
+        }
+        resData.put("committers", committers);
+        resData.put("committerDetails", dataList);
+
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", resData);
+        resMap.put("msg", "success");
+        return objectMapper.valueToTree(resMap).toString();
+    }
+
+
 
 
     public HashMap<String, String> querySigLabel(CustomPropertiesConfig queryConf) {
