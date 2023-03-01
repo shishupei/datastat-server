@@ -1169,7 +1169,7 @@ public class QueryDao {
         int port = Integer.parseInt(env.getProperty("es.private.port", "9200"));
         String esUser = env.getProperty("es.private.user");
         String password = env.getProperty("es.private.password");
-        RestHighLevelClient restHighLevelClient = HttpClientUtils.restClient(host, port, scheme, esUser, password);
+        RestHighLevelClient restHighLevelClient = RestHighLevelClientUtil.create(Collections.singletonList(host), port, scheme, esUser, password);
 
         BulkRequest request = new BulkRequest();
         for (Map<String, Object> user : users) {
