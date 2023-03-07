@@ -22,7 +22,7 @@ public class RepoMetricDao extends MetricDao {
             if (term.equalsIgnoreCase("repo"))
                 return queryMetricIncreaseTermContribute(queryConf, start, end, body, term);
         }
-        return resultJsonStr(400, null, "ok");
+        return resultJsonStr(400, null, "query error");
     }
 
     @SneakyThrows
@@ -70,7 +70,7 @@ public class RepoMetricDao extends MetricDao {
                 return queryMetricTotalCountTermDetails(queryConf, start, end, body, term);
             }   
         }
-        return resultJsonStr(400, null, "ok");
+        return resultJsonStr(400, null, "query error");
     }
 
     public String queryMetricTotalCountTermDetails(CustomPropertiesConfig queryConf, long start, long end, DatastatRequestBody body, String term) {

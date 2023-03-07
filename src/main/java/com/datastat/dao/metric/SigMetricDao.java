@@ -23,7 +23,7 @@ public class SigMetricDao extends MetricDao {
             if (term.equalsIgnoreCase("sig"))
                 return queryMetricIncreaseTermContribute(queryConf, start, end, body, term);
         }
-        return resultJsonStr(400, null, "ok");
+        return resultJsonStr(400, null, "query error");
     }
 
     @SneakyThrows
@@ -75,7 +75,7 @@ public class SigMetricDao extends MetricDao {
                 return queryMetricTotalCountTermDetails(queryConf, start, end, body, term);
             }   
         }
-        return resultJsonStr(400, null, "ok");
+        return resultJsonStr(400, null, "query error");
     }
 
     @SneakyThrows

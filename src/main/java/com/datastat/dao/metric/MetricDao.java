@@ -74,9 +74,8 @@ public abstract class MetricDao {
         String operation = body.getOperation();
         operation = operation.equals("total") ? "increase" : operation;
         String methodName = "queryMetric" + StringUtils.capitalize(operation);
-        System.out.println(methodName);
-        Class sigMetricDaoClass = this.getClass();
-        Method method = sigMetricDaoClass.getMethod(methodName, CustomPropertiesConfig.class, long.class, long.class, DatastatRequestBody.class);
+        Class metricDaoClass = this.getClass();
+        Method method = metricDaoClass.getMethod(methodName, CustomPropertiesConfig.class, long.class, long.class, DatastatRequestBody.class);
         return method;
 
     }
