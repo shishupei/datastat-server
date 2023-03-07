@@ -2372,4 +2372,39 @@ public class QueryDao {
         }
         return userMap;
     }
+
+    @SneakyThrows
+    public String querySigPrStateCount(CustomPropertiesConfig queryConf, String sig, Long ts) {
+        sig = StringUtils.isBlank(sig) ? "*" : sig;
+        String queryJson = String.format(queryConf.getSigPrStateCountQuery(), ts, sig);
+        System.out.println(queryJson);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryJson);
+        return parseSigPrStateCountRes(future);
+    }
+
+    protected String parseSigPrStateCountRes(ListenableFuture<Response> future) {
+        Response response;
+        String statusText = ReturnCode.RC400.getMessage();
+        int statusCode = 500;
+        HashMap<String, Object> recordJsonObj = new HashMap<>();
+        try {
+            response = future.get();
+            statusCode = response.getStatusCode();
+            statusText = response.getStatusText();
+            if (statusCode != 200) return resultJsonStr(statusCode, recordJsonObj, statusText);
+
+            String responseBody = response.getResponseBody(UTF_8);
+            JsonNode dataNode = objectMapper.readTree(responseBody);
+            JsonNode records = dataNode.get("aggregations").get("group_field").get("buckets");
+            for (JsonNode record : records) {
+                recordJsonObj.put("merged", record.get("merged").get("value"));
+                recordJsonObj.put("closed", record.get("closed").get("value"));
+                recordJsonObj.put("open", record.get("open").get("value"));
+            }
+            return resultJsonStr(statusCode, objectMapper.valueToTree(recordJsonObj), statusText);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resultJsonStr(statusCode, recordJsonObj, statusText);
+    }
 }

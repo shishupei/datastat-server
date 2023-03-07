@@ -14,6 +14,7 @@ package com.datastat.controller;
 import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
+import com.datastat.model.DatastatRequestBody;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -416,6 +417,21 @@ public class QueryController {
         return queryService.querySigRepoCommitters(request, community, sig);
     }
 
+    @RequestMapping(value = "/metrics/data", method = RequestMethod.POST)
+    public String queryMetricsData(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community,
+                                   @RequestBody DatastatRequestBody body) {
+        String res = queryService.queryMetricsData(request, community, body);
+        return res;
+    }
+
+    @RequestMapping("/sig/pr/state")
+    public String querySigPrDetails(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community,
+                                   @RequestParam(value = "sig", required = false) String sig,
+                                   @RequestParam(value = "timestamp", required = false) Long ts) {
+        return queryService.querySigPrStateCount(request, community, sig, ts);
+    }
 
     @RequestMapping("/test")
     public String test() throws InterruptedException {

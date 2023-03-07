@@ -15,6 +15,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.*;
 
 @Data
@@ -67,6 +69,8 @@ public class CustomPropertiesConfig {
     private String blueZoneUserIndex;
     private String blueZoneUserContributesIndex;
     private String giteeEmailIndex;
+    private String userCountIndex;
+    private String downloadIpIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -122,6 +126,17 @@ public class CustomPropertiesConfig {
     private String sigLabelQueryStr;
     private String communityRepoQueryStr;
     private String sigCountQuery;
+    private String aggContributeDetailQuery;
+    private String userContributeDetailQuery;
+    private String userCountQuery;
+    private String userActiveQuery;
+    private String downloadCountQueryStr;
+    private String downloadIpIncreaseQuery;
+    private String downloadIpCountQuery;
+    private String aggTotalUserCountQuery;
+    private String aggTotalContributeDetailQuery;
+    private String sigOwnerQuery;
+    private String sigPrStateCountQuery;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
@@ -274,5 +289,32 @@ public class CustomPropertiesConfig {
                 c.setTimeInMillis(0);
         }
         return c.getTimeInMillis();
+    }
+
+    public ArrayList<String> getTermQuery(String term, JsonNode companyQueryMap) {
+        ArrayList<String> params = new ArrayList<>();
+        if (term.equalsIgnoreCase("sig")) {
+            params.add("sig_names.keyword");
+            params.add("*");
+        } else if (term.equalsIgnoreCase("repo")) {
+            params.add("gitee_repo.keyword");
+            params.add("*");
+        } else if (companyQueryMap.has(term)) {
+            params.add("tag_user_company.keyword");
+            params.add(companyQueryMap.get(term).asText());
+        }
+        return params;
+    }
+
+    public String convertList2QueryStr(ArrayList<String> res) {
+        if (res == null) {
+            return "*";
+        }
+        String names = "(";
+        for (String r : res) {
+            names = names + "\\\"" + r + "\\\",";
+        }
+        names = names + ")";
+        return names;
     }
 }
