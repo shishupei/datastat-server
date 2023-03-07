@@ -16,7 +16,9 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.datastat.config.context.QueryConfContext;
 import com.datastat.dao.QueryDao;
 import com.datastat.dao.RedisDao;
+import com.datastat.dao.context.MetricDaoContext;
 import com.datastat.dao.context.QueryDaoContext;
+import com.datastat.dao.metric.MetricDao;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.vo.*;
 import com.datastat.result.ReturnCode;
@@ -26,6 +28,7 @@ import com.datastat.util.StringValidationUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.datastat.model.DatastatRequestBody;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +53,9 @@ public class QueryService {
 
     @Autowired
     QueryDaoContext queryDaoContext;
+
+    @Autowired
+    MetricDaoContext metricDaoContext;
 
     @Autowired
     RedisDao redisDao;
@@ -938,5 +944,21 @@ public class QueryService {
         String login = user.get("login").asText();
 
         return Map.of("id", id, "gitee_id", login, "email", email, "created_at", createdAt);
+    }
+
+    public String querySigPrStateCount(HttpServletRequest request, String community, String sig, Long ts) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        String result = queryDao.querySigPrStateCount(queryConf, sig, ts);     
+        return result;
+    }
+    
+    public String queryMetricsData(HttpServletRequest request, String community, DatastatRequestBody body) {
+        String filter = body.getFilter();
+        String serviceType = community.toLowerCase() + filter.toLowerCase() + "MetricDao";
+        MetricDao metricDao = metricDaoContext.getQueryMetricsDao(serviceType);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        String result = metricDao.queryMetricsData(queryConf, body);
+        return result;
     }
 }
