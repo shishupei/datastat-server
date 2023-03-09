@@ -433,6 +433,13 @@ public class QueryController {
         return queryService.querySigPrStateCount(request, community, sig, ts);
     }
 
+    @RequestMapping("/cla/name")
+    public String queryClaName(HttpServletRequest request,
+                                   @RequestParam(value = "community") String community,
+                                   @RequestParam(value = "timestamp", required = false) Long ts) {
+        return queryService.queryClaName(request, community, ts);
+    }
+
     @RequestMapping("/test")
     public String test() throws InterruptedException {
         Thread.sleep(5000);

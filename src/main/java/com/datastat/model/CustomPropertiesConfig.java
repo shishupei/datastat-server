@@ -137,6 +137,7 @@ public class CustomPropertiesConfig {
     private String aggTotalContributeDetailQuery;
     private String sigOwnerQuery;
     private String sigPrStateCountQuery;
+    private String claNameQuery;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 

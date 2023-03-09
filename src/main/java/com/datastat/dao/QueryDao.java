@@ -2377,7 +2377,6 @@ public class QueryDao {
     public String querySigPrStateCount(CustomPropertiesConfig queryConf, String sig, Long ts) {
         sig = StringUtils.isBlank(sig) ? "*" : sig;
         String queryJson = String.format(queryConf.getSigPrStateCountQuery(), ts, sig);
-        System.out.println(queryJson);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryJson);
         return parseSigPrStateCountRes(future);
     }
@@ -2407,4 +2406,21 @@ public class QueryDao {
         }
         return resultJsonStr(statusCode, recordJsonObj, statusText);
     }
+
+    @SneakyThrows
+    public String queryClaName(CustomPropertiesConfig queryConf, Long ts) {
+        String claIndex = queryConf.getClaCorporationIndex();
+        String queryJson = queryConf.getClaNameQuery();
+        ArrayList<String> companies = new ArrayList<>();
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, claIndex, String.format(queryJson, ts));
+        String responseBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> hits = dataNode.get("hits").get("hits").elements();
+        while (hits.hasNext()) {
+            JsonNode source = hits.next().get("_source");
+            companies.add(source.get("corporation_name").asText());
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(companies), "ok");
+    }
+    
 }
