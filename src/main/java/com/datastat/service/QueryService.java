@@ -961,4 +961,11 @@ public class QueryService {
         String result = metricDao.queryMetricsData(queryConf, body);
         return result;
     }
+
+    public String queryClaName(HttpServletRequest request, String community, Long ts) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        String result = queryDao.queryClaName(queryConf, ts);     
+        return result;
+    }
 }

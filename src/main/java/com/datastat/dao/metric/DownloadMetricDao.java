@@ -1,3 +1,14 @@
+/* This project is licensed under the Mulan PSL v2.
+ You can use this software according to the terms and conditions of the Mulan PSL v2.
+ You may obtain a copy of Mulan PSL v2 at:
+     http://license.coscl.org.cn/MulanPSL2
+ THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+ PURPOSE.
+ See the Mulan PSL v2 for more details.
+ Create: 2023
+*/
+
 package com.datastat.dao.metric;
 
 import java.util.*;
@@ -83,5 +94,41 @@ public class DownloadMetricDao extends MetricDao {
     public int queryMetricDownloadCount(CustomPropertiesConfig queryConf, long start, long end, DatastatRequestBody body) {
         int ans = 0;
         return ans;
+    }
+
+    @SneakyThrows
+    public String queryMetricRatio(CustomPropertiesConfig queryConf, long from, long end, DatastatRequestBody body) {
+        HashMap<String, Object> variables = body.getVariables();
+        int period = 0;
+        String term = (String) variables.get("term");
+        if (term.equalsIgnoreCase("week")) period = Calendar.WEEK_OF_MONTH;
+        if (term.equalsIgnoreCase("month")) period = Calendar.MONTH;
+        
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(end);
+        c.add(period, -1);
+        long start = c.getTimeInMillis();
+
+        c.add(period, -1);
+        long preStart = c.getTimeInMillis();
+
+        ArrayList<String> metrics = body.getMetrics();
+        HashMap<String, Object> resMap = new HashMap<>();
+        for (String metric : metrics) {
+            if (metric.equalsIgnoreCase("download_count")) {
+                double curCount = queryMetricDownloadCount(queryConf, start, end, body);
+                double preCount = queryMetricDownloadCount(queryConf, preStart, start, body);
+                double ratio = preCount == 0 ? curCount : (curCount - preCount) / preCount;
+                resMap.put(metric, ratio);
+            }
+            if (metric.equalsIgnoreCase("download_ip")) {
+                double curCount = queryMetricDownloadIpCount(queryConf, start, end, body);
+                double preCount = queryMetricDownloadIpCount(queryConf, preStart, start, body);
+                double ratio = preCount == 0 ? curCount : (curCount - preCount) / preCount;
+                resMap.put(metric, ratio);
+            }
+            
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(resMap), "ok");
     }
 }
