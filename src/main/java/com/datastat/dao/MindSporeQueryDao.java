@@ -19,7 +19,10 @@ import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Repository("mindsporeDao")
 public class MindSporeQueryDao extends QueryDao {
@@ -58,5 +61,54 @@ public class MindSporeQueryDao extends QueryDao {
         String localFile = yamlUtil.wget(mindSporeSigYaml, localYamlPath);
         res = yamlUtil.readYaml(localFile);
         return res;
+    }
+
+    @SneakyThrows
+    @Override
+    public String getEcosystemRepoInfo(CustomPropertiesConfig queryConf, String ecosystemType, String lang, String sortOrder) {
+        String index = queryConf.getEcosystemRepoIndex();
+        String queryJson = queryConf.getEcosystemRepoQuery();
+        sortOrder = sortOrder == null ? "desc" : sortOrder;
+        String queryStr = String.format(queryJson, ecosystemType, lang, sortOrder);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryStr);
+        String responseBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("hits").get("hits").elements();
+
+        ArrayList<JsonNode> resList = new ArrayList<>();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            JsonNode res = bucket.get("_source");
+            resList.add(res);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(resList), "ok");
+    }
+
+    @SneakyThrows
+    @Override
+    public String getSigReadme(CustomPropertiesConfig queryConf, String sig, String lang) {
+        lang = lang == null ? "zh" : lang;
+        String urlStr = "";
+        HashMap<String, Object> sigInfo = getSigFromYaml(queryConf, lang);
+        ArrayList<HashMap<String, String>> SigList = (ArrayList<HashMap<String, String>>) sigInfo.get("SIG list");
+        for (HashMap<String, String> siginfo : SigList) {
+            if (sig.equalsIgnoreCase(siginfo.get("name"))) {
+                urlStr = siginfo.get("links").replace("/blob/", "/raw/").replace("/tree/", "/raw/");
+            }
+        }
+        URL url = new URL(urlStr);
+        URLConnection urlConnection = url.openConnection();
+        HttpURLConnection connection = null;
+        if (urlConnection instanceof HttpURLConnection) {
+            connection = (HttpURLConnection) urlConnection;
+            connection.setConnectTimeout(0);
+        }
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+        String res = "";
+        String current;
+        while ((current = in.readLine()) != null) {
+            res += current + '\n';
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 }

@@ -71,6 +71,7 @@ public class CustomPropertiesConfig {
     private String giteeEmailIndex;
     private String userCountIndex;
     private String downloadIpIndex;
+    private String ecosystemRepoIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -138,6 +139,7 @@ public class CustomPropertiesConfig {
     private String sigOwnerQuery;
     private String sigPrStateCountQuery;
     private String claNameQuery;
+    private String ecosystemRepoQuery;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 

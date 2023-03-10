@@ -440,6 +440,32 @@ public class QueryController {
         return queryService.queryClaName(request, community, ts);
     }
 
+    @RequestMapping(value = "/ip/location")
+    public String getIPLocation(HttpServletRequest request, @RequestParam(value = "ip") String ip) {
+        return queryService.getIPLocation(request, ip);
+    }
+
+    @RequestMapping(value = "ecosystem/repo/info")
+    public String getEcosystemRepoInfo(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "ecosystem_type") String ecosystemType,
+            @RequestParam(value = "lang", required = false) String lang,
+            @RequestParam(value = "sort_type", required = false) String sortType,
+            @RequestParam(value = "sort_order", required = false) String sortOrder,
+            @RequestParam(value = "page", required = false) String page,
+            @RequestParam(value = "pageSize", required = false) String pageSize) {
+        return queryService.getEcosystemRepoInfo(request, community, ecosystemType, lang, sortType, sortOrder, page,
+                pageSize);
+    }
+
+    @RequestMapping(value = "sig/readme")
+    public String getSigReadme(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "sig", required = false) String sig,
+            @RequestParam(value = "lang", required = false) String lang) {
+        return queryService.getSigReadme(request, community, sig, lang);
+    }
+
     @RequestMapping("/test")
     public String test() throws InterruptedException {
         Thread.sleep(5000);

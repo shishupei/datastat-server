@@ -94,6 +94,21 @@
             <artifactId>kafka-clients</artifactId>
             <version>2.7.0</version>
         </dependency>
+
+		<!-- OBS -->
+        <dependency>
+            <groupId>com.huaweicloud</groupId>
+            <artifactId>esdk-obs-java-bundle</artifactId>
+            <version>3.21.8</version>
+        </dependency>
+
+		<!-- geoip -->        
+        <dependency>
+            <groupId>com.maxmind.geoip2</groupId>
+            <artifactId>geoip2</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+		
 	</dependencies>
 
 	<build>
