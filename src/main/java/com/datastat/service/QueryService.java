@@ -22,6 +22,7 @@ import com.datastat.dao.metric.MetricDao;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.vo.*;
 import com.datastat.result.ReturnCode;
+import com.datastat.util.ArrayListUtil;
 import com.datastat.util.PageUtils;
 import com.datastat.util.RSAUtil;
 import com.datastat.util.StringValidationUtil;
@@ -966,6 +967,68 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         String result = queryDao.queryClaName(queryConf, ts);     
+        return result;
+    }
+
+    public String getIPLocation(HttpServletRequest request, String ip) {
+        QueryDao queryDao = getQueryDao(request); 
+        String result = queryDao.getIPLocation(ip);     
+        return result;
+    }
+
+    public String getEcosystemRepoInfo(HttpServletRequest request, String community, String ecosystemType, String lang, String sortType,
+            String sortOrder, String page, String pageSize) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        lang = lang == null ? "zh" : lang.toLowerCase();
+        // String key = community.toLowerCase() + ecosystemType.toLowerCase() + "ecosysteminfo" + sortOrder + lang;
+
+        String result = null;
+        try {
+            if (result == null) {
+                result = queryDao.getEcosystemRepoInfo(queryConf, ecosystemType, lang, sortOrder);
+                // redisDao.set(key, result, redisDefaultExpire);
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode resultJson = objectMapper.readTree(result);
+            if (resultJson.get("code").asInt() != 200) {
+                return resultJsonStr(404, null, "error");
+            }
+            ArrayList<HashMap<String, Object>> resList = objectMapper.convertValue(resultJson.get("data"),
+                    new TypeReference<ArrayList<HashMap<String, Object>>>() {
+                    });
+            if (sortType != null && (sortType.equals("date") || sortType.equals("repo"))) {
+                resList = ArrayListUtil.sortByType(resList, sortType, sortOrder);
+            }
+    
+            if (pageSize != null && page != null && resList.size() > 0) {
+                int currentPage = Integer.parseInt(page);
+                int pagesize = Integer.parseInt(pageSize);
+                Map<String, Object> data = PageUtils.getDataByPage(currentPage, pagesize, resList);
+                data.put("type", resList.get(0).get("type"));
+                data.put("name", resList.get(0).get("name"));
+                data.put("description", resList.get(0).get("description"));
+                ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+                dataList.add((HashMap<String, Object>) data);
+                resList = dataList;
+            }
+            return resultJsonStr(200, objectMapper.valueToTree(resList), "ok");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resultJsonStr(400, null, "error");        
+    }
+
+    public String getSigReadme(HttpServletRequest request, String community, String sig, String lang) {
+        String result = null;
+        // String key = community.toLowerCase() + sig + "readme" + lang;
+        // result = (String) redisDao.get(key);
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        if (result == null) {
+            result = queryDao.getSigReadme(queryConf, sig, lang);
+            // boolean set = redisDao.set(key, result, redisDefaultExpire);
+        }
         return result;
     }
 }

@@ -11,6 +11,7 @@
 
 package com.datastat.dao;
 
+import com.datastat.config.MindSporeConfig;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.SigDetails;
@@ -25,6 +26,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.model.CityResponse;
+
 import io.netty.util.internal.StringUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
@@ -59,6 +63,9 @@ import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.InputStream;
+import java.net.InetAddress;
+
 @Primary
 @Repository(value = "queryDao")
 public class QueryDao {
@@ -73,6 +80,9 @@ public class QueryDao {
 
     @Autowired
     KafkaDao kafkaDao;
+
+    @Autowired
+    ObsDao obsDao;
 
     protected static String esUrl;
 
@@ -2422,5 +2432,50 @@ public class QueryDao {
         }
         return resultJsonStr(200, objectMapper.valueToTree(companies), "ok");
     }
-    
+
+    public String getIPLocation(String ip) {
+        InputStream database = obsDao.getData();
+        try {
+            DatabaseReader reader = new DatabaseReader.Builder(database).build();
+            InetAddress ipAddress = InetAddress.getByName(ip);
+            CityResponse response = reader.city(ipAddress);
+
+            String continent_name = response.getContinent().getName();
+            String region_iso_code = response.getMostSpecificSubdivision().getName();
+            String city_name = response.getCity().getName();
+            String country_iso_code = response.getCountry().getIsoCode();
+            Double lon = response.getLocation().getLatitude();
+            Double lat = response.getLocation().getLongitude();
+
+            HashMap<String, Object> location = new HashMap<>();
+            location.put("lon", lon);
+            location.put("lat", lat);
+
+            HashMap<String, Object> loc = new HashMap<>();
+            loc.put("continent_name", continent_name);
+            loc.put("region_iso_code", region_iso_code);
+            loc.put("city_name", city_name);
+            loc.put("country_iso_code", country_iso_code);
+            loc.put("location", location);
+
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("ip", ip);
+            res.put("geoip", loc);
+
+            String result = objectMapper.valueToTree(res).toString();
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resultJsonStr(404, null, "error");
+    }
+
+    public String getEcosystemRepoInfo(CustomPropertiesConfig queryConf, String ecosystemType, String lang, String sortOrder) {
+        return resultJsonStr(400, null, "error");
+    }
+
+    public String getSigReadme(CustomPropertiesConfig queryConf, String sig, String lang) {
+        return resultJsonStr(400, null, "error");
+    }
+
 }
