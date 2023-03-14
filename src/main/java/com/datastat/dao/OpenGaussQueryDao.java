@@ -31,19 +31,34 @@ public class OpenGaussQueryDao extends QueryDao {
     @SneakyThrows
     @Override
     public String queryDownload(CustomPropertiesConfig queryConf, String item) {
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getDownloadIndex(), queryConf.getDownloadQueryStr());
-        Response response = future.get();
+        String[] indexs = queryConf.getDownloadIndex().split(";");
+        String[] queryJsons = queryConf.getDownloadQueryStr().split(";");
+
         int count = 0;
-        int statusCode = response.getStatusCode();
-        String statusText = response.getStatusText();
+        for (int i = 0; i < queryJsons.length; i++) {
+            count += getDownloadRes(indexs[i], queryJsons[i]);
+        }
+        return resultJsonStr(200, item, count, "ok");
+    }
+
+    @SneakyThrows
+    public int getDownloadRes(String index, String queryJson) {
+        int count = 0;
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryJson);
+        Response response = future.get();
         String responseBody = response.getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(responseBody);
-        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_by_field").get("buckets").elements();
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_by_field").get("buckets")
+                .elements();
         if (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
-            count = bucket.get("doc_count").asInt();
+            if (bucket.has("dockerhub")) {
+                count = bucket.get("dockerhub").get("value").asInt();
+            } else {
+                count = bucket.get("doc_count").asInt();
+            }
         }
-        return resultJsonStr(statusCode, item, count, statusText);
+        return count;
     }
 
     @Override
