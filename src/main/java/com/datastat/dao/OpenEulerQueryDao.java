@@ -44,4 +44,9 @@ public class OpenEulerQueryDao extends QueryDao {
         }
         return resultJsonStr(statusCode, item, Math.round(userCount), statusText);
     }
+
+    @Override
+    public String queryDownload(CustomPropertiesConfig queryConf, String item) {
+        return resultJsonStr(200, item, 0, "ok");
+    }
 }

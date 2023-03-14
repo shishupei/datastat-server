@@ -280,7 +280,8 @@ public class QueryService {
         String result = null; //(String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
-            CustomPropertiesConfig queryConf = getQueryConf(request);
+            // CustomPropertiesConfig queryConf = getQueryConf(request);
+            CustomPropertiesConfig queryConf = queryConfContext.getQueryConfig("queryConf");
             result = queryDao.queryOrgStarAndFork(queryConf, community, item);
 //            redisDao.set(key, result, redisDefaultExpire);
         }
