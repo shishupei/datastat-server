@@ -99,8 +99,7 @@ public class CustomPropertiesConfig {
     private String companyUserQueryStr;
     private String companySigQueryStr;
     private String companyContributeQueryStr;
-    private String companyMeetingsQueryStr;
-    private String companyMaintainersQueryStr;
+    private String companySigUserQueryStr;
     private String companyAggUserQueryStr;
     private String sigAggUserQueryStr;
     private String companyAggSigQueryStr;
@@ -202,6 +201,12 @@ public class CustomPropertiesConfig {
         return getQueryStrWithTimeRange(queryJson, timeRange, field, group, orDefault);
     }
 
+    public String getAggCompanySigCountQueryStr(String queryJson, String company, String timeRange, String contributeType) {
+        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        if (StringUtils.isBlank(orDefault)) return null;
+        return getQueryStrWithTimeRange(queryJson, timeRange, company, orDefault);
+    }
+
     public String[] getAggCompanyGiteeQueryStr(String queryJson, String timeRange, String company) {
         if (queryJson == null) return null;
 
@@ -218,7 +223,13 @@ public class CustomPropertiesConfig {
 
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
-        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, args);
+        Object[] params = new Object[args.length + 2];
+        params[0] = lastTimeMillis;
+        params[1] = currentTimeMillis;
+        for (int i = 0; i < args.length; i++) {
+            params[i + 2] = args[i];
+        }
+        return queryStrFormat(queryJson, params);
     }
 
     public ArrayList<Object> getAggUserCountQueryParams(String contributeType, String timeRange) {

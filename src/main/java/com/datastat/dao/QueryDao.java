@@ -797,98 +797,73 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryCompanySigDetails(CustomPropertiesConfig queryConf, String company, String timeRange) {
-        String gitee_index = queryConf.getGiteeAllIndex();
         String companyStr = getCompanyNames(company);
-        String[] queryStrs = queryConf.getAggCompanyGiteeQueryStr(queryConf.getCompanySigQueryStr(), timeRange, companyStr);
+        HashMap<String, Integer> sigUserMetrics = getCompanySigUsers(queryConf, companyStr, timeRange);
+        HashMap<String, Integer> sigContribute = getCompanySigContribute(queryConf, companyStr, timeRange, "pr");
+        Iterator<String> sigList = sigUserMetrics.keySet().iterator();
 
-        HashMap<String, ArrayList<Integer>> sigMetricsList = commonCompany(gitee_index, queryStrs);
-        if (sigMetricsList == null)
-            return resultJsonStr(400, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
-
-        HashMap<String, Integer> companyContributeList = queryCompanyContribute(queryConf, companyStr, timeRange);
-        if (companyContributeList == null)
-            return resultJsonStr(400, ReturnCode.RC400.getMessage(), "queryCompanyContribute error");
-
-        Iterator<String> sigAll = sigMetricsList.keySet().iterator();
-        Set<String> sigCon = companyContributeList.keySet();
-        while (sigAll.hasNext()) {
-            String s = sigAll.next();
-            if (sigCon.contains(s)) {
-                sigMetricsList.get(s).add(companyContributeList.get(s));
-            } else {
-                sigMetricsList.get(s).add(0);
-            }
-        }
-
-        HashMap<String, ArrayList<Integer>> companyMeetingList = queryCompanyMeetings(queryConf, companyStr, timeRange);
-        if (companyMeetingList == null)
-            return resultJsonStr(400, ReturnCode.RC400.getMessage(), "queryCompanyMeetings error");
-
-        Set<String> sigMeeting = companyMeetingList.keySet();
-        sigAll = sigMetricsList.keySet().iterator();
-        while (sigAll.hasNext()) {
-            String s = sigAll.next();
-            if (sigMeeting.contains(s)) {
-                ArrayList<Integer> meetingValue = companyMeetingList.get(s);
-                sigMetricsList.get(s).add(meetingValue.get(0));
-                sigMetricsList.get(s).add(meetingValue.get(1));
-            } else {
-                sigMetricsList.get(s).add(0);
-                sigMetricsList.get(s).add(0);
-            }
-        }
-
-        HashMap<String, Integer> maintainersList = queryCompanyMaintainers(queryConf, companyStr, timeRange);
-        if (maintainersList == null)
-            return resultJsonStr(400, ReturnCode.RC400.getMessage(), "queryCompanyMaintainers error");
-
-        Set<String> sigMain = maintainersList.keySet();
-        sigAll = sigMetricsList.keySet().iterator();
-        while (sigAll.hasNext()) {
-            String s = sigAll.next();
-            if (sigMain.contains(s)) {
-                sigMetricsList.get(s).add(maintainersList.get(s));
-            } else {
-                sigMetricsList.get(s).add(0);
-            }
-        }
-
-        ArrayList<HashMap<String, Object>> itemList = new ArrayList<>();
-        sigAll = sigMetricsList.keySet().iterator();
+        ArrayList<HashMap<String, Object>> resList = new ArrayList<>();
         HashMap<String, HashMap<String, String>> sigFeatures = getCommunityFeature(queryConf);
-        while (sigAll.hasNext()) {
-            HashMap<String, Object> item = new HashMap<>();
-            String s = sigAll.next();
-            List<Integer> value = sigMetricsList.get(s);
-            HashMap<String, String> sigInfo = sigFeatures.get(s);
-            String feature = "";
-            String group = "";
-            String en_feature = "";
-            String en_group = "";
-            if (sigInfo != null) {
-                feature = sigInfo.get("feature");
-                group = sigInfo.get("group");
-                en_feature = sigInfo.get("en_feature");
-                en_group = sigInfo.get("en_group");
-            }
-            item.put("sig", s);
-            item.put("value", value);
-            item.put("feature", feature);
-            item.put("group", group);
-            item.put("en_feature", en_feature);
-            item.put("en_group", en_group);
-            itemList.add(item);
+        while (sigList.hasNext()) {
+            String sig = sigList.next();
+            HashMap<String, Object> item = getSigFeature(sigFeatures, sig);
+            Integer userCount = sigUserMetrics.get(sig);
+            Integer contribute = sigContribute.get(sig);
+            item.put("user", userCount);
+            item.put("contribute", contribute);
+            resList.add(item);
         }
+        return resultJsonStr(200, objectMapper.valueToTree(resList), "ok");
+    }
 
-        HashMap<String, Object> dataMap = new HashMap<>();
-        List<String> metrics = Arrays.asList(new String[]{"D0", "D1", "D2", "Company", "PR_Merged", "PR_Review", "Issue_update", "Issue_Closed", "Issue_Comment", "Contribute", "Meeting", "Attebdee", "Maintainer"});
-        dataMap.put("metrics", metrics);
-        dataMap.put(company, itemList);
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataMap);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+    public HashMap<String, Object> getSigFeature(HashMap<String, HashMap<String, String>> sigFeatures, String sig) {
+        HashMap<String, String> sigInfo = sigFeatures.get(sig);
+        HashMap<String, Object> res = new HashMap<>();
+        res.put("sig", sig);
+        if (sigInfo != null) {
+            String feature = sigInfo.getOrDefault("feature", "");
+            String group = sigInfo.getOrDefault("group", "");
+            String en_feature = sigInfo.getOrDefault("en_feature", "");
+            String en_group = sigInfo.getOrDefault("en_group", "");
+            res.put("feature", feature);
+            res.put("group", group);
+            res.put("en_feature", en_feature);
+            res.put("en_group", en_group);
+        }
+        return res;
+    }
+
+    @SneakyThrows
+    public HashMap<String, Integer> getCompanySigUsers(CustomPropertiesConfig queryConf, String companyStr, String timeRange) {
+        String queryStr = queryConf.getQueryStrWithTimeRange(queryConf.getCompanySigUserQueryStr(), timeRange, companyStr);
+        HashMap<String, Integer> sigMap = commonCompanySigContribute(queryConf.getGiteeAllIndex(), queryStr);
+        return sigMap;
+    }
+    
+    @SneakyThrows
+    public HashMap<String, Integer> getCompanySigContribute(CustomPropertiesConfig queryConf, String companyStr,
+            String timeRange, String contributeType) {
+        String queryStr = queryConf.getAggCompanySigCountQueryStr(queryConf.getCompanyContributeQueryStr(), companyStr, timeRange,
+                contributeType);
+        HashMap<String, Integer> sigMap = commonCompanySigContribute(queryConf.getGiteeAllIndex(), queryStr);
+        return sigMap;
+    }
+
+    @SneakyThrows
+    protected HashMap<String, Integer> commonCompanySigContribute(String giteeIndex, String queryStr) {
+        HashMap<String, Integer> sigMap = new HashMap<>();
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, giteeIndex, queryStr);
+        String responseBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        int count = 0;
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String sig = bucket.get("key").asText();
+            count = bucket.get("count").get("value").asInt();
+            sigMap.put(sig, count);
+        }
+        return sigMap;
     }
 
     @SneakyThrows
@@ -2207,135 +2182,6 @@ public class QueryDao {
         res.add(company_enMap);
         res.add(company_cnMap);
         return res;
-    }
-
-    protected HashMap<String, ArrayList<Integer>> commonCompany(String index, String[] queryStrs) {
-        try {
-            HashMap<String, ArrayList<Integer>> sigMap = new HashMap<>();
-
-            for (int i = 0; i < queryStrs.length; i++) {
-                ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryStrs[i]);
-                String responseBody = future.get().getResponseBody(UTF_8);
-                JsonNode dataNode = objectMapper.readTree(responseBody);
-
-                Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_filed").get("buckets").elements();
-
-                ArrayList<String> tmp = new ArrayList<>();
-                while (buckets.hasNext()) {
-                    JsonNode bucket = buckets.next();
-                    String sig = bucket.get("key").asText();
-                    int value = bucket.get("count").get("value").asInt();
-                    ArrayList<Integer> sigMetricsList = new ArrayList<>();
-                    for (int j = 0; j < i; j++) {
-                        sigMetricsList.add(0);
-                    }
-                    if (!sigMap.containsKey(sig)) {
-                        sigMap.put(sig, sigMetricsList);
-                    }
-                    sigMap.get(sig).add(value);
-                    tmp.add(sig);
-                }
-                Iterator<String> sigKeys = sigMap.keySet().iterator();
-                while (sigKeys.hasNext()) {
-                    String key = sigKeys.next();
-                    if (!tmp.contains(key)) {
-                        sigMap.get(key).add(0);
-                    }
-                }
-            }
-            return sigMap;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    protected HashMap<String, Integer> queryCompanyContribute(CustomPropertiesConfig queryConf, String company, String timeRange) {
-        try {
-            String giteeIndex = queryConf.getGiteeAllIndex();
-            String[] queryStrs = queryConf.getAggCompanyGiteeQueryStr(queryConf.getCompanyContributeQueryStr(), timeRange, company);
-
-            HashMap<String, Integer> sigMap = new HashMap<>();
-            for (int i = 0; i < queryStrs.length; i++) {
-                ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, giteeIndex, queryStrs[i]);
-                String responseBody = future.get().getResponseBody(UTF_8);
-                JsonNode dataNode = objectMapper.readTree(responseBody);
-                Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_filed").get("buckets").elements();
-                int count = 0;
-                while (buckets.hasNext()) {
-                    JsonNode bucket = buckets.next();
-                    String sig = bucket.get("key").asText();
-                    count = bucket.get("doc_count").asInt();
-                    sigMap.put(sig, count);
-                }
-            }
-            return sigMap;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    protected HashMap<String, ArrayList<Integer>> queryCompanyMeetings(CustomPropertiesConfig queryConf, String company, String timeRange) {
-        String meetingIndex = queryConf.getMeetingsIndex();
-        String[] queryStrs = queryConf.getAggCompanyGiteeQueryStr(queryConf.getCompanyMeetingsQueryStr(), timeRange, company);
-
-        try {
-            AsyncHttpClient client = EsAsyncHttpUtil.getClient();
-            RequestBuilder builder = esAsyncHttpUtil.getBuilder().setHeader("Authorization",
-                    "Basic " + Base64.getEncoder().encodeToString((env.getProperty("meeting.user.pass")).getBytes()));
-
-            HashMap<String, ArrayList<Integer>> sigMap = new HashMap<>();
-            for (int i = 0; i < queryStrs.length; i++) {
-                // 获取执行结果
-                builder.setUrl(env.getProperty("meeting.es.url") + meetingIndex + "/_search");
-                builder.setBody(queryStrs[i]);
-
-                ListenableFuture<Response> future = client.executeRequest(builder.build());
-                String responseBody = future.get().getResponseBody(UTF_8);
-                JsonNode dataNode = objectMapper.readTree(responseBody);
-                Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_filed").get("buckets").elements();
-
-                while (buckets.hasNext()) {
-                    JsonNode bucket = buckets.next();
-                    String sig = bucket.get("key").asText();
-                    int count = bucket.get("doc_count").asInt();
-                    int num = bucket.get("count").get("value").asInt();
-                    ArrayList<Integer> meeting = new ArrayList<>();
-                    meeting.add(count);
-                    meeting.add(num);
-                    sigMap.put(sig, meeting);
-                }
-            }
-            return sigMap;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    protected HashMap<String, Integer> queryCompanyMaintainers(CustomPropertiesConfig queryConf, String company, String timeRange) {
-        try {
-            String sigIndex = queryConf.getSigIndex();
-            String[] queryStrs = queryConf.getAggCompanyGiteeQueryStr(queryConf.getCompanyMaintainersQueryStr(), timeRange, company);
-
-            ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, sigIndex, queryStrs[0]);
-            String responseBody = future.get().getResponseBody(UTF_8);
-            JsonNode dataNode = objectMapper.readTree(responseBody);
-            Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_filed").get("buckets").elements();
-
-            HashMap<String, Integer> sigMap = new HashMap<>();
-            while (buckets.hasNext()) {
-                JsonNode bucket = buckets.next();
-                String sig = bucket.get("key").asText();
-                int value = bucket.get("count").get("value").asInt();
-                sigMap.put(sig, value);
-            }
-            return sigMap;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     protected HashMap<String, HashMap<String, String>> getCommunityFeature(CustomPropertiesConfig queryConf) {
