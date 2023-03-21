@@ -431,8 +431,7 @@ public class EsQueryUtils {
             }
         }
         data.put(user, list);
-        String s = objectMapper.valueToTree(data).toString();
-        return resultJsonStr(200, s, "ok", Map.of("totalCount", totalCount));
+        return resultJsonStr(200, objectMapper.valueToTree(data), "ok", Map.of("totalCount", totalCount));
     }
 
     public ArrayList<HashMap<String, Object>> parseResponse(SearchResponse response, String type, String type_no, String type_info, String type_url) {

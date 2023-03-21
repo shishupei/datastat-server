@@ -52,4 +52,10 @@ public class OpenLookengQueryDao extends QueryDao {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getUsersIndex(), queryConf.getUsersQueryStr());
         return getCountResult(future, item);
     }
+
+    @SneakyThrows
+    @Override
+    public String querySigs(CustomPropertiesConfig queryConf, String item) {
+        return resultJsonStr(404, item, 0, "Not Found");
+    }
 }

@@ -128,8 +128,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryUsers(CustomPropertiesConfig queryConf, String item) {
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getUsersIndex(), queryConf.getUsersQueryStr());
-        return getSumBucketValue(future, item);
+        return resultJsonStr(404, item, 0, "Not Found");
     }
 
     @SneakyThrows
@@ -1144,6 +1143,7 @@ public class QueryDao {
         String query = queryConf.getUserContributeDetailsQuery(queryConf, sig, label);
 
         RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        // BoolQueryBuilder queryBuilder = esQueryUtils.getQueryBuilder(params, comment_type, filter, user);
         return esQueryUtils.esUserCount(community, restHighLevelClient, index, user, sig, params, comment_type, filter, query);
     }
 

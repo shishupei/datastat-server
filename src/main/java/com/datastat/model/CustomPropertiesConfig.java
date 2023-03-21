@@ -175,6 +175,7 @@ public class CustomPropertiesConfig {
     public String getQueryStrByType(String contributeType, String queryJson, String timeRange, String item) {
         String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
         if (StringUtils.isBlank(orDefault)) return "";
+        if (item == null) return getQueryStrWithTimeRange(queryJson, timeRange, orDefault);
         return getQueryStrWithTimeRange(queryJson, timeRange, item, orDefault);
     }
 
