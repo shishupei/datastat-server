@@ -42,6 +42,12 @@ public class MindSporeQueryDao extends QueryDao {
         return objectMapper.valueToTree(resMap).toString();
     }
 
+    @SneakyThrows
+    @Override
+    public String querySigs(CustomPropertiesConfig queryConf, String item) {
+        return resultJsonStr(404, item, 0, "Not Found");
+    }
+
     private HashMap<String, Object> getSigFromYaml(CustomPropertiesConfig queryConf, String lang) {
         HashMap<String, Object> res = new HashMap<>();
         String mindSporeSigYaml;

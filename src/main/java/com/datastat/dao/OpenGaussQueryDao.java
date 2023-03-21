@@ -21,7 +21,7 @@ import org.asynchttpclient.Response;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -87,5 +87,26 @@ public class OpenGaussQueryDao extends QueryDao {
             e.printStackTrace();
         }
         return sigLabels;
+    }
+
+    @SneakyThrows
+    @Override
+    public String queryUsers(CustomPropertiesConfig queryConf, String item) {
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getUsersIndex(), queryConf.getUsersQueryStr());
+        return getSumBucketValue(future, item);
+    }
+
+    @SneakyThrows
+    @Override
+    public String querySigScoreAll(CustomPropertiesConfig queryConf) {
+        HashMap<String, HashMap<String, String>> sigFeatures = getCommunityFeature(queryConf);
+        ArrayList<HashMap<String, String>> sigList = new ArrayList<>();
+        Set<String> keys = sigFeatures.keySet();
+        for (String key : keys) {
+            HashMap<String, String> sigFeature = sigFeatures.get(key);
+            sigFeature.put("sig_names", key);
+            sigList.add(sigFeature);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(sigList), "ok");
     }
 }

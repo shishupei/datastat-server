@@ -27,7 +27,7 @@ public class OpenGaussConfig extends CustomPropertiesConfig {
 
     @Override
     public String getAggCountQueryStr(CustomPropertiesConfig queryConf, String groupField, String contributeType, String timeRange, String community, String repo, String sig) {
-        String queryJson = groupField.equals("company") ? getGiteeAggCompanyQueryStr() : getGiteeAggUserQueryStr();
+        String queryJson = groupField.equals("company") ? queryConf.getGiteeAggCompanyQueryStr() : queryConf.getGiteeAggUserQueryStr();
         repo = repo == null ? "*" : String.format("\\\"https://gitee.com/%s\\\"", repo);
 
         return getQueryStrByType(contributeType, queryJson, timeRange, repo);
