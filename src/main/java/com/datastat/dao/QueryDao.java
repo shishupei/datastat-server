@@ -2324,19 +2324,4 @@ public class QueryDao {
         return resultJsonStr(400, null, "error");
     }
 
-    // public String queruGroupUser(CustomPropertiesConfig queryConf, String company, long start, long end) {
-    //     String index = queryConf.getGiteeAllIndex();
-    //     String companyStr = getCompanyNames(company);
-    //     String queryStr = String.format(queryConf.getGroupUserQueryStr(), start, end, company)
-    //     ArrayList<String> users = new ArrayList<>();
-    //     ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryStr);
-    //     String responseBody = future.get().getResponseBody(UTF_8);
-    //     JsonNode dataNode = objectMapper.readTree(responseBody);
-    //     JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
-    //     while (JsonNode bucket : buckets) {
-    //         users.add(bucket.get("key"));
-    //     }
-    //     return resultJsonStr(200, objectMapper.valueToTree(users), "ok");
-    // }
-
 }
