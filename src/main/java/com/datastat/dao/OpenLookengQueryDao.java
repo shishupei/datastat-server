@@ -29,7 +29,7 @@ public class OpenLookengQueryDao extends QueryDao {
     @SneakyThrows
     @Override
     public String queryContributors(CustomPropertiesConfig queryConf, String item) {
-        String[] indexes = queryConf.getGiteeAllIndex().split(";");
+        String[] indexes = queryConf.getContributorsIndex().split(";");
         String queryJson = queryConf.getContributorsQueryStr();
 
         long contributorsCount = 0L;
@@ -56,6 +56,11 @@ public class OpenLookengQueryDao extends QueryDao {
     @SneakyThrows
     @Override
     public String querySigs(CustomPropertiesConfig queryConf, String item) {
+        return resultJsonStr(404, item, 0, "Not Found");
+    }
+
+    @Override
+    public String queryDownload(CustomPropertiesConfig queryConf, String item) {
         return resultJsonStr(404, item, 0, "Not Found");
     }
 }
