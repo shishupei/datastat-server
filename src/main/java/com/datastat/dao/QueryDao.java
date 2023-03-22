@@ -1510,7 +1510,10 @@ public class QueryDao {
             statusText = response.getStatusText();
             String responseBody = response.getResponseBody(UTF_8);
             JsonNode dataNode = objectMapper.readTree(responseBody);
-            count = dataNode.get("count").asLong();
+            JsonNode buckets = dataNode.get("aggregations").get("count").get("buckets");
+            for (JsonNode bucket : buckets) {
+                count += bucket.get("doc_count").asLong();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

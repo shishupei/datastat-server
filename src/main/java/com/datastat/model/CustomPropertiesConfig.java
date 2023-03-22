@@ -45,7 +45,7 @@ public class CustomPropertiesConfig {
     private String extOsIndex;
     private String sigIndex;
     private String usersIndex;
-    //    private String contributorsIndex;
+    private String contributorsIndex;
     private String noticeUsersIndex;
     //    private String communityMembersIndex;
     private String giteeAllIndex;

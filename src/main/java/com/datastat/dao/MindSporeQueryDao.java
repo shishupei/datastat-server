@@ -45,7 +45,7 @@ public class MindSporeQueryDao extends QueryDao {
     @SneakyThrows
     @Override
     public String querySigs(CustomPropertiesConfig queryConf, String item) {
-        return resultJsonStr(404, item, 0, "Not Found");
+        return resultJsonStr(404, item, queryConf.getSigQueryStr(), "Not Found");
     }
 
     private HashMap<String, Object> getSigFromYaml(CustomPropertiesConfig queryConf, String lang) {
