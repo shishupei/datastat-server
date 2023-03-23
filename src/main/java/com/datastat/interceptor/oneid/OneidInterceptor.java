@@ -38,6 +38,7 @@ import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -60,6 +61,9 @@ public class OneidInterceptor implements HandlerInterceptor {
 
     @Value("${cookie.token.secures}")
     private String cookieSecures;
+
+    @Value("${oneid.token.base.password}")
+    private String oneidTokenBasePassword;
 
     private static HashMap<String, Boolean> domain2secure;
 
@@ -95,7 +99,8 @@ public class OneidInterceptor implements HandlerInterceptor {
 
         // 从请求头中取出 token
         String headerToken = httpServletRequest.getHeader("token");
-        if (StringUtils.isBlank(headerToken)) {
+        String headJwtTokenMd5 = verifyHeaderToken(headerToken);
+        if (StringUtils.isBlank(headJwtTokenMd5)) {
             tokenError(httpServletRequest, httpServletResponse, "unauthorized");
             return false;
         }
@@ -144,7 +149,7 @@ public class OneidInterceptor implements HandlerInterceptor {
         }
 
         // 校验token
-        String verifyTokenMsg = verifyToken(headerToken, token, verifyToken, userId, issuedAt, expiresAt, permission);
+        String verifyTokenMsg = verifyToken(headJwtTokenMd5, token, verifyToken, userId, issuedAt, expiresAt, permission);
         if (!verifyTokenMsg.equals("success")) {
             tokenError(httpServletRequest, httpServletResponse, verifyTokenMsg);
             return false;
@@ -212,6 +217,35 @@ public class OneidInterceptor implements HandlerInterceptor {
             return "unauthorized";
         }
         return "success";
+    }
+
+    /**
+     * 校验header中的token
+     *
+     * @param headerToken header中的token
+     * @return 校验正确返回token的MD5值
+     */
+    private String verifyHeaderToken(String headerToken) {
+        try {
+            if (StringUtils.isBlank(headerToken)) {
+                return "unauthorized";
+            }
+
+            // 服务端校验headerToken是否有效
+            String md5Token = DigestUtils.md5DigestAsHex(headerToken.getBytes());
+            if (!redisDao.exists("idToken_" + md5Token)) {
+                return "token expires";
+            }
+
+            // token 签名密码验证
+            String password = oneidTokenBasePassword;
+            JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(password)).build();
+            jwtVerifier.verify(headerToken);
+            return md5Token;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "unauthorized";
+        }
     }
 
     /**
