@@ -350,11 +350,7 @@ public class QueryDao {
             dataMap.put("month", month);
             dataMap.put("count", count);
         }
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataMap);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataMap), "ok");
     }
 
     @SneakyThrows
@@ -376,32 +372,20 @@ public class QueryDao {
         String format = String.format(queryConf.getObsDetailsQueryStr(), branch);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getObsDetailsIndex(), format);
         ArrayList<JsonNode> obsDetails = getObsDetails(future);
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", obsDetails);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(obsDetails), "ok");
     }
 
     @SneakyThrows
     public String queryIsoBuildTimes(CustomPropertiesConfig queryConf, IsoBuildTimesVo body) {
         ArrayList<JsonNode> dataList = getIsoBuildTimes(queryConf, body);
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
     public String querySigDetails(CustomPropertiesConfig queryConf, SigDetailsVo body) {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigDetailsIndex(), queryConf.getSigDetailsQueryStr());
         ArrayList<JsonNode> dataList = getSigDetails(future, queryConf, body);
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
@@ -445,11 +429,7 @@ public class QueryDao {
         JsonNode resNode = objectMapper.valueToTree(dataMap);
         dataList.add(resNode);
 
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
@@ -473,11 +453,7 @@ public class QueryDao {
             JsonNode resNode = objectMapper.valueToTree(dataMap);
             dataList.add(resNode);
         }
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
@@ -580,11 +556,7 @@ public class QueryDao {
         }
         dataMap.put(community, sigList);
 
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataMap);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataMap), "ok");
     }
 
     @SneakyThrows
@@ -602,11 +574,7 @@ public class QueryDao {
             HashMap<String, Object> data = objectMapper.convertValue(bucket, HashMap.class);
             sigList.add(data);
         }
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", sigList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(sigList), "ok");
     }
 
     @SneakyThrows
@@ -617,7 +585,7 @@ public class QueryDao {
         String responseBody = future.get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(responseBody);
 
-        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_filed").get("buckets").elements();
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
         ArrayList<String> repoList = new ArrayList<>();
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
@@ -625,11 +593,7 @@ public class QueryDao {
             repoList.add(repo);
         }
 
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", repoList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(repoList), "ok");
     }
 
     @SneakyThrows
@@ -651,11 +615,7 @@ public class QueryDao {
         HashMap<String, Object> dataMap = new HashMap<>();
         dataMap.put(community, companyNameList);
 
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataMap);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataMap), "ok");
     }
 
     @SneakyThrows
@@ -731,11 +691,7 @@ public class QueryDao {
             dataList.add(resNode);
         }
 
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
@@ -747,7 +703,6 @@ public class QueryDao {
                 field = "user_login.keyword";
                 break;
             case "company":
-                // group = CompanyCN2Cla(community, group);
                 group = getCompanyNames(group);
                 field = "tag_user_company.keyword";
                 break;
@@ -787,16 +742,18 @@ public class QueryDao {
             dataList.add(resNode);
             rank += 1;
         }
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
     public String queryCompanySigDetails(CustomPropertiesConfig queryConf, String company, String timeRange) {
         String companyStr = getCompanyNames(company);
+
+        String[] queryStrs = queryConf.getAggCompanyGiteeQueryStr(queryConf.getCompanyUsers(), timeRange, companyStr);
+        ListenableFuture<Response> f = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryStrs[0]);
+        JsonNode dataNode = objectMapper.readTree(f.get().getResponseBody(UTF_8));
+        double userTotal = dataNode.get("aggregations").get("group_field").get("value").asDouble();
+
         HashMap<String, Integer> sigUserMetrics = getCompanySigUsers(queryConf, companyStr, timeRange);
         HashMap<String, Integer> sigContribute = getCompanySigContribute(queryConf, companyStr, timeRange, "pr");
         Iterator<String> sigList = sigUserMetrics.keySet().iterator();
@@ -808,7 +765,9 @@ public class QueryDao {
             HashMap<String, Object> item = getSigFeature(sigFeatures, sig);
             Integer userCount = sigUserMetrics.get(sig);
             Integer contribute = sigContribute.get(sig);
+            double percent = userTotal == 0 ? 0 : userCount / userTotal;
             item.put("user", userCount);
+            item.put("userPercent", percent);
             item.put("contribute", contribute);
             resList.add(item);
         }
@@ -867,6 +826,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryCompanyUsers(CustomPropertiesConfig queryConf, String company, String timeRange) {
+        company = getCompanyNames(company);
         String index = queryConf.getGiteeAllIndex();
         String[] queryStrs = queryConf.getAggCompanyGiteeQueryStr(queryConf.getCompanyUsers(), timeRange, company);
 
@@ -875,7 +835,7 @@ public class QueryDao {
             ListenableFuture<Response> f = esAsyncHttpUtil.executeSearch(esUrl, index, queryStrs[i]);
             String responseBody = f.get().getResponseBody(UTF_8);
             JsonNode dataNode = objectMapper.readTree(responseBody);
-            int value = dataNode.get("aggregations").get("group_filed").get("value").asInt();
+            int value = dataNode.get("aggregations").get("group_field").get("value").asInt();
             companyUsersList.add(value);
         }
 
@@ -883,12 +843,7 @@ public class QueryDao {
         dataMap.put("value", companyUsersList);
         List<String> metrics = Arrays.asList(new String[]{"D0", "D1", "D2"});
         dataMap.put("metrics", metrics);
-
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataMap);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataMap), "ok");
     }
 
     @SneakyThrows
@@ -903,12 +858,7 @@ public class QueryDao {
             String repository = hit.get("_source").get("repository").asText();
             dataList.add(repository);
         }
-
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
@@ -942,12 +892,7 @@ public class QueryDao {
             data.put("en_group", enGroup);
             sigList.add(data);
         }
-
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", sigList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(sigList), "ok");
     }
 
     @SneakyThrows
@@ -994,12 +939,7 @@ public class QueryDao {
             data.remove("value");
             sigList.add(data);
         }
-
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("code", 200);
-        resMap.put("data", sigList);
-        resMap.put("msg", "success");
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(sigList), "ok");
     }
 
     @SneakyThrows
@@ -1013,7 +953,7 @@ public class QueryDao {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryStr);
         String responseBody = future.get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(responseBody);
-        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_filed").get("buckets").elements();
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
 
         ArrayList<JsonNode> dataList = new ArrayList<>();
         while (buckets.hasNext()) {
@@ -1041,12 +981,7 @@ public class QueryDao {
             JsonNode resNode = objectMapper.valueToTree(dataMap);
             dataList.add(resNode);
         }
-
-        HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("msg", "success");
-        resMap.put("code", 200);
-        resMap.put("data", dataList);
-        return objectMapper.valueToTree(resMap).toString();
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
     }
 
     @SneakyThrows
