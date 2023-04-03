@@ -203,7 +203,7 @@ public class QueryService {
     public String queryAll(HttpServletRequest request, String community) throws Exception {
         String item = "all";
         String key = community.toLowerCase() + item;
-        String result = null;//(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
 
         JsonNode newData;
         JsonNode oldData = null;
@@ -239,7 +239,7 @@ public class QueryService {
                     flag = false; //TODO errorAlertService.errorAlert(community, oldData, newData);
                 }
                 if (!flag) {
-//                    redisDao.set(key, resultNew, -1L);
+                    redisDao.set(key, resultNew, -1L);
                     result = resultNew;
                 }
             } catch (Exception e) {
@@ -351,12 +351,12 @@ public class QueryService {
     public String queryCompanyContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String repo) {
         String item = "companyContribute";
         String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange.toLowerCase() + repo;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.queryCompanyContributors(queryConf, community, contributeType, timeRange, repo, null);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -364,12 +364,12 @@ public class QueryService {
     public String queryUserContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String repo) {
         String item = "userContribute";
         String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange.toLowerCase() + repo;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.queryUserContributors(queryConf, community, contributeType, timeRange, repo, null);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -578,12 +578,12 @@ public class QueryService {
     public String querySigScoreAll(HttpServletRequest request, String community) {
         String keyStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String key = community.toLowerCase() + "sigscoreall" + keyStr;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigScoreAll(queryConf);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -614,12 +614,12 @@ public class QueryService {
 
     public String querySigsOfTCOwners(HttpServletRequest request, String community) {
         String key = community.toLowerCase() + "sigs_of_tc_owners";
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigsOfTCOwners(queryConf);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
