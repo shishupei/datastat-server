@@ -83,6 +83,7 @@ public class RedisDao {
             else
                 redisTemplate.expire(key, expire, TimeUnit.SECONDS);
             result = true;
+            System.out.println("update " + key + " success!");
         } catch (Exception e) {
             System.out.println(e);
         }
