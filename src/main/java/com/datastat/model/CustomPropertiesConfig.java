@@ -350,13 +350,12 @@ public class CustomPropertiesConfig {
 
     public String getVersionContributeQuery(String contributeType, String version) {
         String contributesQueryStr = "";
-        if (version != null) {
-            if (contributeType.equalsIgnoreCase("cloc")) {
-                contributesQueryStr = String.format(getCompanyVersionClocQuery(), version);
-            }
-            if (contributeType.equalsIgnoreCase("pr")) {
-                contributesQueryStr = String.format(getCompanyVersionPrQuery(), version);
-            }
+        String versionQueryStr = version.equalsIgnoreCase("all") ? "*" : version;
+        if (contributeType.equalsIgnoreCase("cloc")) {
+            contributesQueryStr = String.format(getCompanyVersionClocQuery(), versionQueryStr);
+        }
+        if (contributeType.equalsIgnoreCase("pr")) {
+            contributesQueryStr = String.format(getCompanyVersionPrQuery(), versionQueryStr);
         }
         return contributesQueryStr;
     }
