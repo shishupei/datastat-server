@@ -389,14 +389,16 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryCompanyContributors(CustomPropertiesConfig queryConf, String community, String contributeType, String timeRange, String repo, String sig) {
+    public String queryCompanyContributors(CustomPropertiesConfig queryConf, String community, String contributeType,
+            String timeRange, String version, String repo, String sig) {
         List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
         List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"), env.getProperty("company.name.local.yaml"));
         Map<String, String> companyNameCnEn = companies.get(0);
         Map<String, String> companyNameAlCn = companies.get(1);
 
-        String contributesQueryStr = queryConf.getAggCountQueryStr(queryConf, "company", contributeType, timeRange, community, repo, sig);
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), contributesQueryStr);
+        String contributesQueryStr = queryConf.getCompanyContributorsQuery(queryConf, community, contributeType, timeRange, version, repo, sig);
+        String index = version == null ? queryConf.getGiteeAllIndex() : queryConf.getGiteeVersionIndex();
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, contributesQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
 
