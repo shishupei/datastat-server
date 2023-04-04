@@ -26,7 +26,9 @@ import com.datastat.util.ArrayListUtil;
 import com.datastat.util.PageUtils;
 import com.datastat.util.RSAUtil;
 import com.datastat.util.StringValidationUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
@@ -645,7 +647,19 @@ public class QueryService {
             result = queryDao.queryAllUserOwnerType(queryConf, user);
             redisDao.set(key, result, redisDefaultExpire);
         }
-        return result;
+        try {
+            JsonNode all = objectMapper.readTree(result);
+            JsonNode userData = all.get("data").get(user);
+            if (userData != null) {
+                result = objectMapper.valueToTree(userData).toString();
+            } else {
+                result = "[]";
+            }
+            return resultJsonStr(200, result, "ok");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resultJsonStr(400, null, "error");
     }
 
     public String queryUserContributeDetails(HttpServletRequest request, String community, String user, String sig, String contributeType,
