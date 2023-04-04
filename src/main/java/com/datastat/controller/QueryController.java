@@ -188,9 +188,10 @@ public class QueryController {
     public String queryCompanyContributors(HttpServletRequest request,
                                            @RequestParam(value = "community") String community,
                                            @RequestParam(value = "contributeType") String contributeType,
-                                           @RequestParam(value = "timeRange") String timeRange,
+                                           @RequestParam(value = "timeRange", required = false) String timeRange,
+                                           @RequestParam(value = "version", required = false) String version,
                                            @RequestParam(value = "repo", required = false) String repo) {
-        return queryService.queryCompanyContributors(request, community, contributeType, timeRange, repo);
+        return queryService.queryCompanyContributors(request, community, contributeType, timeRange, version, repo);
     }
 
     @RequestMapping("/user/contribute")

@@ -72,6 +72,7 @@ public class CustomPropertiesConfig {
     private String userCountIndex;
     private String downloadIpIndex;
     private String ecosystemRepoIndex;
+    private String giteeVersionIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -139,6 +140,8 @@ public class CustomPropertiesConfig {
     private String sigPrStateCountQuery;
     private String claNameQuery;
     private String ecosystemRepoQuery;
+    private String companyVersionPrQuery;
+    private String companyVersionClocQuery;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
@@ -331,5 +334,30 @@ public class CustomPropertiesConfig {
         }
         names = names + ")";
         return names;
+    }
+
+    public String getCompanyContributorsQuery(CustomPropertiesConfig queryConf, String community, String contributeType,
+            String timeRange, String version, String repo, String sig) {
+        String contributesQueryStr = null;
+        if (timeRange != null && version == null) {
+            contributesQueryStr = getAggCountQueryStr(queryConf, "company", contributeType, timeRange, community, repo,
+                    sig);
+        } else if (version != null) {
+            contributesQueryStr = getVersionContributeQuery(contributeType, version);
+        }
+        return contributesQueryStr;
+    }
+
+    public String getVersionContributeQuery(String contributeType, String version) {
+        String contributesQueryStr = "";
+        if (version != null) {
+            if (contributeType.equalsIgnoreCase("cloc")) {
+                contributesQueryStr = String.format(getCompanyVersionClocQuery(), version);
+            }
+            if (contributeType.equalsIgnoreCase("pr")) {
+                contributesQueryStr = String.format(getCompanyVersionPrQuery(), version);
+            }
+        }
+        return contributesQueryStr;
     }
 }

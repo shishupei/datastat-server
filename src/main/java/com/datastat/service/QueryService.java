@@ -350,14 +350,14 @@ public class QueryService {
         return queryDao.querySigDetails(queryConf, body);
     }
 
-    public String queryCompanyContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String repo) {
+    public String queryCompanyContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String version, String repo) {
         String item = "companyContribute";
-        String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange.toLowerCase() + repo;
+        String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange + version + repo;
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryCompanyContributors(queryConf, community, contributeType, timeRange, repo, null);
+            result = queryDao.queryCompanyContributors(queryConf, community, contributeType, timeRange, version, repo, null);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
@@ -457,7 +457,7 @@ public class QueryService {
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryCompanyContributors(queryConf, community, contributeType, timeRange, null, sig);
+            result = queryDao.queryCompanyContributors(queryConf, community, contributeType, timeRange, null, null, sig);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
