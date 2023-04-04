@@ -639,7 +639,7 @@ public class QueryService {
     }
 
     public String queryUserOwnerType(HttpServletRequest request, String community, String user) {
-        String key = community.toLowerCase() + "all" + "ownertype";
+        String key = community.toLowerCase() + user + "ownertype";
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
@@ -647,19 +647,7 @@ public class QueryService {
             result = queryDao.queryAllUserOwnerType(queryConf, user);
             redisDao.set(key, result, redisDefaultExpire);
         }
-        try {
-            JsonNode all = objectMapper.readTree(result);
-            JsonNode userData = all.get("data").get(user);
-            if (userData != null) {
-                result = objectMapper.valueToTree(userData).toString();
-            } else {
-                result = "[]";
-            }
-            return resultJsonStr(200, result, "ok");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return resultJsonStr(400, null, "error");
+        return result;
     }
 
     public String queryUserContributeDetails(HttpServletRequest request, String community, String user, String sig, String contributeType,
