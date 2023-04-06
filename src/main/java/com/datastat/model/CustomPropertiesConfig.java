@@ -176,7 +176,7 @@ public class CustomPropertiesConfig {
     }
 
     public String getQueryStrByType(String contributeType, String queryJson, String timeRange, String item) {
-        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        String orDefault = contributeTypeMap.getOrDefault(contributeType.toLowerCase(), "");
         if (StringUtils.isBlank(orDefault)) return "";
         if (item == null) return getQueryStrWithTimeRange(queryJson, timeRange, orDefault);
         return getQueryStrWithTimeRange(queryJson, timeRange, item, orDefault);
@@ -194,19 +194,19 @@ public class CustomPropertiesConfig {
             default:
                 return null;
         }
-        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        String orDefault = contributeTypeMap.getOrDefault(contributeType.toLowerCase(), "");
         if (StringUtils.isBlank(orDefault)) return null;
         return getQueryStrWithTimeRange(queryJson, timeRange, group, orDefault);
     }
 
     public String getAggGroupSigCountQueryStr(String queryJson, String contributeType, String timeRange, String group, String field) {
-        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        String orDefault = contributeTypeMap.getOrDefault(contributeType.toLowerCase(), "");
         if (StringUtils.isBlank(orDefault)) return null;
         return getQueryStrWithTimeRange(queryJson, timeRange, field, group, orDefault);
     }
 
     public String getAggCompanySigCountQueryStr(String queryJson, String company, String timeRange, String contributeType) {
-        String orDefault = contributeTypeMap.getOrDefault(contributeType, "");
+        String orDefault = contributeTypeMap.getOrDefault(contributeType.toLowerCase(), "");
         if (StringUtils.isBlank(orDefault)) return null;
         return getQueryStrWithTimeRange(queryJson, timeRange, company, orDefault);
     }
