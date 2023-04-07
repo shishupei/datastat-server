@@ -256,6 +256,7 @@ public class OneidInterceptor implements HandlerInterceptor {
         try {
             if (sigToken != null && sigToken.required()) {
                 List<String> pers = getUserPermission(httpServletRequest, tokenCookie, "permissions");
+                System.out.println(pers);
                 for (String per : pers) {
                     if (per.equalsIgnoreCase(queryConf.getSigAction())) {
                         return "success";
@@ -263,6 +264,7 @@ public class OneidInterceptor implements HandlerInterceptor {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return "has no permission";
         }
         return "has no permission";
