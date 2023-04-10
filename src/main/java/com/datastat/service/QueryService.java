@@ -644,7 +644,7 @@ public class QueryService {
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryAllUserOwnerType(queryConf, user);
+            result = queryDao.queryUserOwnerType(queryConf, user);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
