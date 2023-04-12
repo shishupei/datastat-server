@@ -1024,7 +1024,7 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryAllUserOwnerType(CustomPropertiesConfig queryConf, String userName) {
+    public String queryUserOwnerType(CustomPropertiesConfig queryConf, String userName) {
         String index = queryConf.getSigIndex();
         String queryStr = queryConf.getAllUserOwnerTypeQueryStr();
 
@@ -1065,7 +1065,7 @@ public class QueryDao {
 
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", 200);
-        resMap.put("data", userData);
+        resMap.put("data", userData.get(userName.toLowerCase()));
         resMap.put("msg", "success");
         return objectMapper.valueToTree(resMap).toString();
     }
@@ -2264,4 +2264,12 @@ public class QueryDao {
         return resultJsonStr(400, null, "error");
     }
 
+    @SneakyThrows
+    public String getCommunityIsv(CustomPropertiesConfig queryConf, String localYamlPath) {
+        String yamlFile = queryConf.getIsvYamlUrl();
+        YamlUtil yamlUtil = new YamlUtil();
+        String localFile = yamlUtil.wget(yamlFile, localYamlPath);
+        CommunityIsvYaml communityIsvs = yamlUtil.readLocalYaml(localFile, CommunityIsvYaml.class);       
+        return objectMapper.valueToTree(communityIsvs.getList()).toString();
+    }
 }

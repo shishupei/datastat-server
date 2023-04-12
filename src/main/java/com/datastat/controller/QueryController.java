@@ -472,27 +472,13 @@ public class QueryController {
         Thread.sleep(5000);
         return "time out";
     }
+
+    @RequestMapping("/isv")
+    public String queryCommunityIsv(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "softwareType", required = false) String softwareType,
+            @RequestParam(value = "company", required = false) String company) {
+        return queryService.queryCommunityIsv(request, community, name, softwareType, company);
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

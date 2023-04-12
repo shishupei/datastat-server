@@ -644,7 +644,7 @@ public class QueryService {
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryAllUserOwnerType(queryConf, user);
+            result = queryDao.queryUserOwnerType(queryConf, user);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
@@ -1033,5 +1033,39 @@ public class QueryService {
             // boolean set = redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
+    }
+
+    public String queryCommunityIsv(HttpServletRequest request, String community, String name, String softwareType, String company) {
+        String key = community.toLowerCase() + "isvinfo";
+        String result = (String) redisDao.get(key);
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        if (result == null) {
+            result = queryDao.getCommunityIsv(queryConf, "/home/");
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        try {
+            JsonNode isvs = objectMapper.readTree(result);
+            ArrayList<JsonNode> resList = new ArrayList<>();
+            for (JsonNode isv : isvs) {
+                if (matchList(isv, "name", name) && matchList(isv, "type", softwareType) && matchList(isv, "company", company)) {
+                    resList.add(isv);
+                }
+            }
+            return resultJsonStr(200, objectMapper.valueToTree(resList), "ok");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resultJsonStr(400, null, "query error");
+    }
+
+    private Boolean matchList(JsonNode isv, String field, String value) {
+        if (value == null) {
+            return true;
+        }
+        if (isv.get(field).asText().contains(value)) {
+            return true;
+        }
+        return false;
     }
 }

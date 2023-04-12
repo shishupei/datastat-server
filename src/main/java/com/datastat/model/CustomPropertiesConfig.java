@@ -40,6 +40,7 @@ public class CustomPropertiesConfig {
     private String productLineCodeAllUpdate;
     private String companyAction;
     private String sigAction;
+    private String isvYamlUrl;
 
     // -- index --
     private String extOsIndex;
