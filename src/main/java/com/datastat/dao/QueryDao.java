@@ -2264,4 +2264,12 @@ public class QueryDao {
         return resultJsonStr(400, null, "error");
     }
 
+    @SneakyThrows
+    public String getCommunityIsv(CustomPropertiesConfig queryConf, String localYamlPath) {
+        String yamlFile = queryConf.getIsvYamlUrl();
+        YamlUtil yamlUtil = new YamlUtil();
+        String localFile = yamlUtil.wget(yamlFile, localYamlPath);
+        CommunityIsvYaml communityIsvs = yamlUtil.readLocalYaml(localFile, CommunityIsvYaml.class);       
+        return objectMapper.valueToTree(communityIsvs.getList()).toString();
+    }
 }
