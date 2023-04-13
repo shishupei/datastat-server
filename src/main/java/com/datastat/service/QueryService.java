@@ -403,12 +403,12 @@ public class QueryService {
     public String querySigName(HttpServletRequest request, String community, String lang) {
         String item = "sigsname";
         String key = community + item + lang;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigName(queryConf, community, lang);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -423,12 +423,12 @@ public class QueryService {
     public String querySigRepo(HttpServletRequest request, String community, String sig, String page, String pageSize) throws Exception {
         String item = "repo";
         String key = community.toLowerCase() + sig + item;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigRepo(queryConf, sig);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         if (pageSize == null || page == null) return result;
 
@@ -582,12 +582,12 @@ public class QueryService {
     public String querySigScoreAll(HttpServletRequest request, String community) {
         String keyStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String key = community.toLowerCase() + "sigscoreall" + keyStr;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigScoreAll(queryConf);
-            // redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -736,12 +736,12 @@ public class QueryService {
 
     public String querySigRepoCommitters(HttpServletRequest request, String community, String sig) {
         String key = community.toLowerCase() + sig + "committers";
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigRepoCommitters(queryConf, sig);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -846,12 +846,12 @@ public class QueryService {
     private String querySigInfo(HttpServletRequest request, String community, String sig) {
         String item = "siginfo";
         String key = community + sig + item;
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigInfo(queryConf, sig);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
@@ -864,7 +864,7 @@ public class QueryService {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigInfo(queryConf, sig);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode all = objectMapper.readTree(result);
