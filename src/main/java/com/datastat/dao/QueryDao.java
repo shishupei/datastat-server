@@ -11,11 +11,15 @@
 
 package com.datastat.dao;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.datastat.config.MindSporeConfig;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
+import com.datastat.model.meetup.MeetupApplyForm;
+import com.datastat.model.meetup.SurveyAnswer;
 import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
 import com.datastat.result.ReturnCode;
@@ -37,6 +41,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.asynchttpclient.*;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -63,8 +68,10 @@ import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.security.interfaces.RSAPrivateKey;
 
 @Primary
 @Repository(value = "queryDao")
@@ -2271,5 +2278,88 @@ public class QueryDao {
         String localFile = yamlUtil.wget(yamlFile, localYamlPath);
         CommunityIsvYaml communityIsvs = yamlUtil.readLocalYaml(localFile, CommunityIsvYaml.class);       
         return objectMapper.valueToTree(communityIsvs.getList()).toString();
+    }
+
+    public String putMeetupApplyForm(CustomPropertiesConfig queryConf, String item, MeetupApplyForm meetupApplyForm, String token) {
+        ArrayList<String> errorMesseages = checkoutMeetupApplyFormField(meetupApplyForm);
+        if (errorMesseages.size() > 0) {
+            return "{\"code\":400,\"data\":{\"" + item + "\":\"write error\"},\"msg:" + errorMesseages + "\"}";
+        }
+        Map meetupApplyFormMap = objectMapper.convertValue(meetupApplyForm, Map.class);
+        return putDataSource(queryConf.getMeetupApplyFormIndex(), meetupApplyFormMap, token);
+    }
+
+    public String getUserId(String token){
+        String userId = null;
+        try {
+            RSAPrivateKey privateKey = RSAUtil.getPrivateKey(env.getProperty("rsa.authing.privateKey"));
+            DecodedJWT decode = JWT.decode(RSAUtil.privateDecrypt(token, privateKey));
+            userId = decode.getAudience().get(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return userId;
+    }
+
+    public String putDataSource(String indexName, Map dataSource, String token) {
+        String userId = getUserId(token);
+        if (userId == null)
+            return "{\"code\":400,\"data\":\"user failed\",\"msg\":\"user failed\"}";
+        LocalDateTime now = LocalDateTime.now();
+        String nowStr = now.toString().split("\\.")[0] + "+08:00";
+        dataSource.put("created_at", nowStr);
+        dataSource.put("user_id", userId);
+
+        BulkRequest request = new BulkRequest();
+        request.add(new IndexRequest(indexName, "_doc", userId + nowStr).source(dataSource));
+
+        String res = "{\"code\":400,\"data\":\"failed\",\"msg\":\"failed\"}";
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        if (request.requests().size() != 0) {
+            try {
+                BulkResponse bulk = restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+                int status_code = bulk.status().getStatus();
+                if (status_code == 200) {
+                    res = "{\"code\":200,\"data\":\"success\",\"msg\":\"success\"}";
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            restHighLevelClient.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    public ArrayList<String> checkoutMeetupApplyFormField(MeetupApplyForm meetupApplyForm) {
+        ArrayList<String> errorMesseges = new ArrayList<>();
+        if (!validDuration(meetupApplyForm.getDuration())) {
+            errorMesseges.add("duration error");
+        }
+        if (!validMeetupFormat(meetupApplyForm.getMeetupFormat())) {
+            errorMesseges.add("meetup format error");
+        }
+        return errorMesseges;
+    }
+
+    private Boolean validDuration(SurveyAnswer value){
+        List<String> valueList = Arrays.asList("半天", "全天", "其他");
+        String duration = value.getOptional();
+        if (valueList.contains(duration)) {
+            return true;
+        }
+        return false;
+    }
+
+    private Boolean validMeetupFormat(SurveyAnswer value){
+        List<String> valueList = Arrays.asList("线上活动", "线下活动", "线上+线下", "其他");
+        String format = value.getOptional();
+        if (valueList.contains(format)) {
+            return true;
+        }
+        return false;
     }
 }

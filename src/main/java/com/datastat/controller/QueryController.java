@@ -15,6 +15,7 @@ import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -481,4 +482,15 @@ public class QueryController {
             @RequestParam(value = "company", required = false) String company) {
         return queryService.queryCommunityIsv(request, community, name, softwareType, company);
     }
+
+    @OneidToken
+    @RequestMapping(value = "/meetupApplyForm", method = RequestMethod.POST)
+    public String addMeetupApplyForm(HttpServletRequest request, 
+            @RequestParam String community,
+            @RequestBody MeetupApplyForm meetupApplyForm,
+            @CookieValue(value = "_Y_G_", required = false) String token) {
+        String res = queryService.putMeetupApplyForm(request, community, meetupApplyForm, token);
+        return res;
+    }
+
 }

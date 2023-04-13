@@ -74,6 +74,7 @@ public class CustomPropertiesConfig {
     private String downloadIpIndex;
     private String ecosystemRepoIndex;
     private String giteeVersionIndex;
+    private String meetupApplyFormIndex;
 
     // -- query str --
     private String extOsQueryStr;
