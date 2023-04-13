@@ -32,6 +32,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.meetup.MeetupApplyForm;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -1067,5 +1069,18 @@ public class QueryService {
             return true;
         }
         return false;
+    }
+
+    public String putMeetupApplyForm(HttpServletRequest request, String community, MeetupApplyForm meetupApplyForm, String token) {
+        String item = "meetupApplyForm";
+        String res = "";
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        try {
+            res = queryDao.putMeetupApplyForm(queryConf, item, meetupApplyForm, token);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return res;
     }
 }
