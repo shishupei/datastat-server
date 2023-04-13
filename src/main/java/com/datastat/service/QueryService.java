@@ -736,12 +736,12 @@ public class QueryService {
 
     public String querySigRepoCommitters(HttpServletRequest request, String community, String sig) {
         String key = community.toLowerCase() + sig + "committers";
-        String result = null; //(String) redisDao.get(key);
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigRepoCommitters(queryConf, sig);
-//            redisDao.set(key, result, redisDefaultExpire);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
