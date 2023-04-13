@@ -1083,4 +1083,16 @@ public class QueryService {
         }
         return res;
     }
+
+    public String queryCommunityVersions(HttpServletRequest request, String community) {
+        String key = community.toLowerCase() + "versions";
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryCommunityVersions(queryConf);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }

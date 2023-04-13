@@ -493,4 +493,10 @@ public class QueryController {
         return res;
     }
 
+    @RequestMapping(value = "/versions")
+    public String queryCommunityVersions(HttpServletRequest request, @RequestParam String community) {
+        String res = queryService.queryCommunityVersions(request, community);
+        return res;
+    }
+
 }
