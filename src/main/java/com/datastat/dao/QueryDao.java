@@ -2362,4 +2362,21 @@ public class QueryDao {
         }
         return false;
     }
+
+    @SneakyThrows
+    public String queryCommunityVersions(CustomPropertiesConfig queryConf) {
+        String index = queryConf.getGiteeVersionIndex();
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryConf.getCommunityVersions());
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
+        ArrayList<String> versions = new ArrayList<>();
+        for (JsonNode bucket : buckets) {
+            String version = bucket.get("key").asText();
+            if (version.contains("Next") || version.contains("LoongArch"))
+                continue;
+            versions.add(version);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(versions), "ok");
+    }
+
 }

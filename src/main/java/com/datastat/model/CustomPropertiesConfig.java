@@ -144,6 +144,7 @@ public class CustomPropertiesConfig {
     private String ecosystemRepoQuery;
     private String companyVersionPrQuery;
     private String companyVersionClocQuery;
+    private String communityVersions;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
