@@ -424,6 +424,9 @@ public class QueryDao {
                 independent += contribute;
                 continue;
             }
+            if (company.contains("华为技术有限公司")) {
+                continue;
+            }
             String companyCn = companyNameAlCn.getOrDefault(company.trim(), company.trim());
             String companyEn = companyNameCnEn.getOrDefault(company.trim(), companyCn);
             dataMap.put("company_cn", companyCn);
@@ -975,6 +978,9 @@ public class QueryDao {
                     company.equalsIgnoreCase("openeuler")) {
                 continue;
             }
+            if (company.contains("华为技术有限公司")) {
+                continue;
+            }
             Iterator<JsonNode> its = bucket.get("sigs").get("buckets").elements();
             ArrayList<String> sigList = new ArrayList<>();
             while (its.hasNext()) {
@@ -1208,7 +1214,8 @@ public class QueryDao {
         ArrayList<String> res = new ArrayList<>();
         res.add(name);
         YamlUtil yamlUtil = new YamlUtil();
-        CompanyYaml companies = yamlUtil.readUrlYaml(env.getProperty("company.name.yaml"), CompanyYaml.class);
+        // CompanyYaml companies = yamlUtil.readUrlYaml(env.getProperty("company.name.yaml"), CompanyYaml.class);
+        CompanyYaml companies = yamlUtil.readLocalYaml(env.getProperty("company.name.yaml"), CompanyYaml.class);
         for (CompanyYamlInfo companyInfo : companies.getCompanies()) {
             String cnCompany = companyInfo.getCompany_cn().trim();
             String enCompany = companyInfo.getCompany_en().trim();
@@ -1328,7 +1335,8 @@ public class QueryDao {
 
     protected Map<String, Integer> getCommunityPartners(String yamlFile) {
         YamlUtil yamlUtil = new YamlUtil();
-        CommunityPartnersYaml communities = yamlUtil.readUrlYaml(yamlFile, CommunityPartnersYaml.class);
+        CommunityPartnersYaml communities = yamlUtil.readLocalYaml(yamlFile, CommunityPartnersYaml.class);
+        // CommunityPartnersYaml communities = yamlUtil.readUrlYaml(yamlFile, CommunityPartnersYaml.class);
 
         HashMap<String, Integer> resMap = new HashMap<>();
         for (CommunityPartnersYamlInfo community : communities.getCommunity()) {
@@ -2108,8 +2116,8 @@ public class QueryDao {
 
     protected List<Map<String, String>> getCompanyNameCnEn(String yamlFile, String localYamlPath) {
         YamlUtil yamlUtil = new YamlUtil();
-        String localFile = yamlUtil.wget(yamlFile, localYamlPath);
-        CompanyYaml companies = yamlUtil.readLocalYaml(localFile, CompanyYaml.class);
+        // String localFile = yamlUtil.wget(yamlFile, localYamlPath);
+        CompanyYaml companies = yamlUtil.readLocalYaml(yamlFile, CompanyYaml.class);
 
         HashMap<String, String> company_enMap = new HashMap<>();
         HashMap<String, String> company_cnMap = new HashMap<>();
@@ -2136,7 +2144,8 @@ public class QueryDao {
         try {
             String yamlFile = queryConf.getSigFeatureUrl();
             YamlUtil yamlUtil = new YamlUtil();
-            SigYaml res = yamlUtil.readUrlYaml(yamlFile, SigYaml.class);
+            SigYaml res = yamlUtil.readLocalYaml(yamlFile, SigYaml.class);
+            // SigYaml res = yamlUtil.readUrlYaml(yamlFile, SigYaml.class);
 
             List<GroupYamlInfo> features = res.getFeature();
             for (GroupYamlInfo feature : features) {
@@ -2165,7 +2174,8 @@ public class QueryDao {
 
     protected Map<String, String> getUserNameCnEn(String yamlFile) {
         YamlUtil yamlUtil = new YamlUtil();
-        UserNameYaml users = yamlUtil.readUrlYaml(yamlFile, UserNameYaml.class);
+        UserNameYaml users = yamlUtil.readLocalYaml(yamlFile, UserNameYaml.class);
+        // UserNameYaml users = yamlUtil.readUrlYaml(yamlFile, UserNameYaml.class);
 
         HashMap<String, String> userMap = new HashMap<>();
         for (UserInfoYaml user : users.getUsers()) {
@@ -2275,8 +2285,8 @@ public class QueryDao {
     public String getCommunityIsv(CustomPropertiesConfig queryConf, String localYamlPath) {
         String yamlFile = queryConf.getIsvYamlUrl();
         YamlUtil yamlUtil = new YamlUtil();
-        String localFile = yamlUtil.wget(yamlFile, localYamlPath);
-        CommunityIsvYaml communityIsvs = yamlUtil.readLocalYaml(localFile, CommunityIsvYaml.class);       
+        // String localFile = yamlUtil.wget(yamlFile, localYamlPath);
+        CommunityIsvYaml communityIsvs = yamlUtil.readLocalYaml(yamlFile, CommunityIsvYaml.class);       
         return objectMapper.valueToTree(communityIsvs.getList()).toString();
     }
 
