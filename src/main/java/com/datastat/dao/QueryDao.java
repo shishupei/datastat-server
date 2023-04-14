@@ -978,6 +978,9 @@ public class QueryDao {
                     company.equalsIgnoreCase("openeuler")) {
                 continue;
             }
+            if (company.contains("华为技术有限公司")) {
+                continue;
+            }
             Iterator<JsonNode> its = bucket.get("sigs").get("buckets").elements();
             ArrayList<String> sigList = new ArrayList<>();
             while (its.hasNext()) {
