@@ -907,6 +907,9 @@ public class QueryService {
         if (str == null) {
             return true;
         }
+        if (arrayList == null) {
+            return false;
+        }
         for (String list : arrayList) {
             if (list.toLowerCase().contains(str.toLowerCase())) {
                 return true;
