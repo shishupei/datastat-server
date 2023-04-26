@@ -1098,4 +1098,16 @@ public class QueryService {
         }
         return result;
     }
+
+    public String getRepoReadme(HttpServletRequest request, String community, String name) {
+        String key = community.toLowerCase() + name + ".md";
+        String result = (String) redisDao.get(key);
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        if (result == null) {
+            result = queryDao.getRepoReadme(queryConf, name);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }

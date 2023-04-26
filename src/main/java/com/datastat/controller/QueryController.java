@@ -499,4 +499,11 @@ public class QueryController {
         return res;
     }
 
+    @RequestMapping(value = "repo/readme")
+    public String getRepoReadme(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "name") String name) {
+        return queryService.getRepoReadme(request, community, name);
+    }
+
 }
