@@ -2389,4 +2389,8 @@ public class QueryDao {
         return resultJsonStr(200, objectMapper.valueToTree(versions), "ok");
     }
 
+    public String getRepoReadme(CustomPropertiesConfig queryConf, String name) {
+        return resultJsonStr(400, null, "error");
+    }
+
 }
