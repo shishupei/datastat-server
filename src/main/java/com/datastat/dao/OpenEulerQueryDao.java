@@ -58,24 +58,30 @@ public class OpenEulerQueryDao extends QueryDao {
         return resultJsonStr(200, item, 0, "ok");
     }
 
-    @SneakyThrows
     @Override
     public String getRepoReadme(CustomPropertiesConfig queryConf, String name) {
-        String path = env.getProperty("TC.oEEP.url");
-        String urlStr = path + name.replaceAll(" ", "%20") + ".md";
-        URL url = new URL(urlStr);
-        URLConnection urlConnection = url.openConnection();
-        HttpURLConnection connection = null;
-        if (urlConnection instanceof HttpURLConnection) {
-            connection = (HttpURLConnection) urlConnection;
-            connection.setConnectTimeout(0);
-        }
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
         String res = "";
-        String current;
-        while ((current = in.readLine()) != null) {
-            res += current + '\n';
+        try {
+            String path = env.getProperty("TC.oEEP.url");
+            String urlStr = path + URLEncoder.encode(name, "utf-8") + ".md";
+            urlStr = urlStr.replaceAll("\\+", "%20");
+            System.out.println(urlStr);
+            URL url = new URL(urlStr);
+            URLConnection urlConnection = url.openConnection();
+            HttpURLConnection connection = null;
+            if (urlConnection instanceof HttpURLConnection) {
+                connection = (HttpURLConnection) urlConnection;
+                connection.setConnectTimeout(0);
+            }
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            String current;
+            while ((current = in.readLine()) != null) {
+                res += current + '\n';
+            }
+            return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+        return resultJsonStr(400, null, "ok");
     }
 }
