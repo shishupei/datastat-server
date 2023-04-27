@@ -416,11 +416,11 @@ public class QueryDao {
             JsonNode bucket = buckets.next();
             String company = bucket.get("key").asText();
             long contribute = bucket.get("sum_field").get("value").asLong();
-            if (!claCompanies.contains(company) || contribute == 0 ||
-                    company.contains("中软国际") ||
-                    company.contains("易宝软件") ||
-                    company.contains("华为合作方") ||
-                    company.equalsIgnoreCase("openeuler")) {
+            if (!claCompanies.contains(company) ||
+                company.equals("中软国际科技服务有限公司") ||
+                company.equals("深圳易宝软件") ||
+                company.contains("华为合作方") ||
+                company.equalsIgnoreCase("openeuler")) {
                 independent += contribute;
                 continue;
             }
@@ -972,10 +972,10 @@ public class QueryDao {
             JsonNode bucket = buckets.next();
             String company = bucket.get("key").asText();
             if (!claCompanies.contains(company) ||
-                    company.contains("中软国际") ||
-                    company.contains("易宝软件") ||
-                    company.contains("华为合作方") ||
-                    company.equalsIgnoreCase("openeuler")) {
+                company.equals("中软国际科技服务有限公司") ||
+                company.equals("深圳易宝软件") ||
+                company.contains("华为合作方") ||
+                company.equalsIgnoreCase("openeuler")) {
                 continue;
             }
             if (company.contains("华为技术有限公司")) {
