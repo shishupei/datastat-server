@@ -506,4 +506,11 @@ public class QueryController {
         return queryService.getRepoReadme(request, community, name);
     }
 
+    @RequestMapping(value = "user/permission/apply")
+    public String putUserPermissionApply(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "username") String username) {
+        return queryService.putUserPermissionApply(request, community, username);
+    }
+
 }
