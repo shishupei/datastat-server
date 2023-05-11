@@ -1110,4 +1110,9 @@ public class QueryService {
         }
         return result;
     }
+
+    public String putUserPermissionApply(HttpServletRequest request, String community, String data) {
+        QueryDao queryDao = getQueryDao(request);
+        return queryDao.putUserPermissionApply(community, data);
+    }
 }

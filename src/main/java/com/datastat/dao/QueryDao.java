@@ -554,6 +554,22 @@ public class QueryDao {
     }
 
     @SneakyThrows
+    public String putUserPermissionApply(String community, String username) {
+        Date now = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        String nowStr = simpleDateFormat.format(now);
+        String id = username;
+
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("username", username);
+        resMap.put("created_at", nowStr);
+        resMap.put("community", community);
+
+        kafkaDao.sendMess(env.getProperty("producer.topic.userApply"), id, objectMapper.valueToTree(resMap).toString());
+        return resultJsonStr(200, null, "ok");
+    }
+
+    @SneakyThrows
     public String querySigName(CustomPropertiesConfig queryConf, String community, String lang) {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), queryConf.getSigNameQueryStr());
         String responseBody = future.get().getResponseBody(UTF_8);
