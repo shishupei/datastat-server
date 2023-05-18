@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.mashape.unirest.http.Headers;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.maxmind.geoip2.DatabaseReader;
@@ -68,9 +69,14 @@ import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
 import java.security.interfaces.RSAPrivateKey;
 
 @Primary
@@ -2407,6 +2413,56 @@ public class QueryDao {
 
     public String getRepoReadme(CustomPropertiesConfig queryConf, String name) {
         return resultJsonStr(400, null, "error");
+    }
+
+    public String getQaBotToken() {
+        try {
+            String body = "{\"auth\":{\"identity\":{\"methods\":[\"password\"],\"password\":{\"user\":{\"name\":\"%s\"," + 
+                " \"password\":\"%s\",\"domain\":{\"name\":\"%s\"}}}},\"scope\":{\"project\":{\"name\":\"cn-north-4\"}}}}";
+            body = String.format(body, env.getProperty("qa.user.name"), env.getProperty("qa.user.password"), env.getProperty("qa.domain.name"));
+            HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest.post("https://iam.cn-north-4.myhuaweicloud.com/v3/auth/tokens")
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .asJson();
+
+            String token = response.getHeaders().get("X-Subject-Token").get(0);
+            return token;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String QaBotAnswer(String content) {
+        try {
+            // endpoint、projectId、qabot_id需要替换成实际信息。
+            URL url = new URL(String.format("https://cbs-ext.cn-north-4.myhuaweicloud.com/v1/%s/qabots/%s/chat", env.getProperty("qa.project_id"), 
+                env.getProperty("qabot_id")));
+            String token = getQaBotToken();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.addRequestProperty("Content-Type", "application/json");
+            connection.addRequestProperty("X-Auth-Token", token);
+
+            // 输入参数
+            String body = String.format("{\"question\": \"%s\"}", content);
+
+            OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream(), "UTF-8");
+            osw.append(body);
+            osw.flush();
+            InputStream is = connection.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+            String ans = "";
+            while (br.ready()) {
+                ans += br.readLine();
+            }
+            return resultJsonStr(200, ans, "ok");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return resultJsonStr(400, "error", "error");
+        }
+
     }
 
 }

@@ -1115,4 +1115,9 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         return queryDao.putUserPermissionApply(community, data);
     }
+
+    public String QaBotAnswer(HttpServletRequest request, String data) {
+        QueryDao queryDao = getQueryDao(request);
+        return queryDao.QaBotAnswer(data);
+    }
 }

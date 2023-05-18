@@ -513,4 +513,10 @@ public class QueryController {
         return queryService.putUserPermissionApply(request, community, username);
     }
 
+    @RequestMapping(value = "qa/bot")
+    public String putUserPermissionApply(HttpServletRequest request,
+            @RequestParam(value = "data") String data) {
+        return queryService.QaBotAnswer(request, data);
+    }
+
 }
