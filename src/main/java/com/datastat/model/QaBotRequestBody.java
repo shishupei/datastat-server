@@ -12,4 +12,7 @@ public class QaBotRequestBody {
     private String session_id;
     private String feedback;
     private String comment;
+    private String request_id;
+    private String degree;
+    private String feedback_tag;
 }

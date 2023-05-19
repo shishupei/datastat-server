@@ -2419,10 +2419,12 @@ public class QueryDao {
 
     public String getQaBotToken() {
         try {
-            String body = "{\"auth\":{\"identity\":{\"methods\":[\"password\"],\"password\":{\"user\":{\"name\":\"%s\"," + 
-                " \"password\":\"%s\",\"domain\":{\"name\":\"%s\"}}}},\"scope\":{\"project\":{\"name\":\"cn-north-4\"}}}}";
-            body = String.format(body, env.getProperty("qa.user.name"), env.getProperty("qa.user.password"), env.getProperty("qa.domain.name"));
-            HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest.post("https://iam.cn-north-4.myhuaweicloud.com/v3/auth/tokens")
+            String body = "{\"auth\":{\"identity\":{\"methods\":[\"password\"],\"password\":{\"user\":{\"name\":\"%s\","
+                    + " \"password\":\"%s\",\"domain\":{\"name\":\"%s\"}}}},\"scope\":{\"project\":{\"name\":\"cn-north-4\"}}}}";
+            body = String.format(body, env.getProperty("qa.user.name"), env.getProperty("qa.user.password"),
+                    env.getProperty("qa.domain.name"));
+            HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest
+                    .post("https://iam.cn-north-4.myhuaweicloud.com/v3/auth/tokens")
                     .header("Content-Type", "application/json")
                     .body(body)
                     .asJson();
@@ -2441,7 +2443,6 @@ public class QueryDao {
         data.put("question", body.getQuestion());
         String dataStr = objectMapper.writeValueAsString(data);
         return QaBotRequest(dataStr, urlStr);
-
     }
 
     @SneakyThrows
@@ -2452,28 +2453,34 @@ public class QueryDao {
         data.put("top", body.getTop());
         data.put("extends", body.getExtend());
         String dataStr = objectMapper.writeValueAsString(data);
-        
         return QaBotRequest(dataStr, urlStr);
-
     }
 
+    @SneakyThrows
     public String QaBotUserFeedback(QaBotRequestBody body) {
         String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/user_feedback";
-
-        return QaBotRequest("dataStr", urlStr);
-
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("session_id", body.getSession_id());
+        data.put("feedback", body.getFeedback());
+        data.put("comment", body.getComment());
+        String dataStr = objectMapper.writeValueAsString(data);
+        return QaBotRequest(dataStr, urlStr);
     }
 
+    @SneakyThrows
     public String QaBotSatisfaction(QaBotRequestBody body) {
-        String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/satisfaction";
-
-        return QaBotRequest("dataStr", urlStr);
-
+        String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/requests/" + body.getRequest_id()
+                + "/satisfaction";
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("degree", body.getDegree());
+        data.put("feedback_tag", body.getFeedback_tag());
+        data.put("comment", body.getComment());
+        String dataStr = objectMapper.writeValueAsString(data);
+        return QaBotRequest(dataStr, urlStr);
     }
 
     public String QaBotRequest(String dataStr, String urlStr) {
         try {
-            // endpoint、projectId、qabot_id需要替换成实际信息。
             URL url = new URL(String.format(urlStr, env.getProperty("qa.project_id"), env.getProperty("qabot_id")));
             String token = getQaBotToken();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -2497,7 +2504,6 @@ public class QueryDao {
             e.printStackTrace();
             return resultJsonStr(400, "error", "error");
         }
-
     }
 
 }
