@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 
 import jakarta.annotation.PostConstruct;
@@ -1116,8 +1117,23 @@ public class QueryService {
         return queryDao.putUserPermissionApply(community, data);
     }
 
-    public String QaBotAnswer(HttpServletRequest request, String data) {
+    public String QaBotChat(HttpServletRequest request, QaBotRequestBody data) {
         QueryDao queryDao = getQueryDao(request);
-        return queryDao.QaBotAnswer(data);
+        return queryDao.QaBotChat(data);
+    }
+
+    public String QaBotSuggestions(HttpServletRequest request, QaBotRequestBody body) {
+        QueryDao queryDao = getQueryDao(request);
+        return queryDao.QaBotSuggestions(body);
+    }
+
+    public String QaBotSatisfaction(HttpServletRequest request, QaBotRequestBody body) {
+        QueryDao queryDao = getQueryDao(request);
+        return queryDao.QaBotSatisfaction(body);
+    }
+
+    public String QaBotUserFeedback(HttpServletRequest request, QaBotRequestBody body) {
+        QueryDao queryDao = getQueryDao(request);
+        return queryDao.QaBotUserFeedback(body);
     }
 }
