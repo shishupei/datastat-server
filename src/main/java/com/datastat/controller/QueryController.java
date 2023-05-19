@@ -15,6 +15,7 @@ import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
@@ -513,10 +514,28 @@ public class QueryController {
         return queryService.putUserPermissionApply(request, community, username);
     }
 
-    @RequestMapping(value = "qa/bot")
-    public String putUserPermissionApply(HttpServletRequest request,
-            @RequestParam(value = "data") String data) {
-        return queryService.QaBotAnswer(request, data);
+    @RequestMapping(value = "qabot/chat", method = RequestMethod.POST)
+    public String QaBotChat(HttpServletRequest request,
+            @RequestBody QaBotRequestBody body) {
+        return queryService.QaBotChat(request, body);
+    }
+
+    @RequestMapping(value = "qabot/suggestions", method = RequestMethod.POST)
+    public String QaBotSuggestions(HttpServletRequest request,
+            @RequestBody QaBotRequestBody body) {
+        return queryService.QaBotSuggestions(request, body);
+    }
+
+    @RequestMapping(value = "qabot/satisfaction", method = RequestMethod.POST)
+    public String QaBotSatisfaction(HttpServletRequest request,
+            @RequestBody QaBotRequestBody body) {
+        return queryService.QaBotSatisfaction(request, body);
+    }
+
+    @RequestMapping(value = "qabot/user_feedback", method = RequestMethod.POST)
+    public String QaBotUserFeedback(HttpServletRequest request,
+            @RequestBody QaBotRequestBody body) {
+        return queryService.QaBotUserFeedback(request, body);
     }
 
 }

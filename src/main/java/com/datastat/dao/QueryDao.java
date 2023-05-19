@@ -16,6 +16,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.datastat.config.MindSporeConfig;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
+import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
 import com.datastat.model.meetup.MeetupApplyForm;
@@ -24,6 +25,7 @@ import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -2432,11 +2434,47 @@ public class QueryDao {
         }
     }
 
-    public String QaBotAnswer(String content) {
+    @SneakyThrows
+    public String QaBotChat(QaBotRequestBody body) {
+        String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/chat";
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("question", body.getQuestion());
+        String dataStr = objectMapper.writeValueAsString(data);
+        return QaBotRequest(dataStr, urlStr);
+
+    }
+
+    @SneakyThrows
+    public String QaBotSuggestions(QaBotRequestBody body) {
+        String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/suggestions";
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("question", body.getQuestion());
+        data.put("top", body.getTop());
+        data.put("extends", body.getExtend());
+        String dataStr = objectMapper.writeValueAsString(data);
+        
+        return QaBotRequest(dataStr, urlStr);
+
+    }
+
+    public String QaBotUserFeedback(QaBotRequestBody body) {
+        String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/user_feedback";
+
+        return QaBotRequest("dataStr", urlStr);
+
+    }
+
+    public String QaBotSatisfaction(QaBotRequestBody body) {
+        String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/satisfaction";
+
+        return QaBotRequest("dataStr", urlStr);
+
+    }
+
+    public String QaBotRequest(String dataStr, String urlStr) {
         try {
             // endpoint、projectId、qabot_id需要替换成实际信息。
-            URL url = new URL(String.format("https://cbs-ext.cn-north-4.myhuaweicloud.com/v1/%s/qabots/%s/chat", env.getProperty("qa.project_id"), 
-                env.getProperty("qabot_id")));
+            URL url = new URL(String.format(urlStr, env.getProperty("qa.project_id"), env.getProperty("qabot_id")));
             String token = getQaBotToken();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -2445,11 +2483,8 @@ public class QueryDao {
             connection.addRequestProperty("Content-Type", "application/json");
             connection.addRequestProperty("X-Auth-Token", token);
 
-            // 输入参数
-            String body = String.format("{\"question\": \"%s\"}", content);
-
             OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream(), "UTF-8");
-            osw.append(body);
+            osw.append(dataStr);
             osw.flush();
             InputStream is = connection.getInputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
@@ -2457,7 +2492,7 @@ public class QueryDao {
             while (br.ready()) {
                 ans += br.readLine();
             }
-            return resultJsonStr(200, ans, "ok");
+            return ans;
         } catch (Exception e) {
             e.printStackTrace();
             return resultJsonStr(400, "error", "error");
