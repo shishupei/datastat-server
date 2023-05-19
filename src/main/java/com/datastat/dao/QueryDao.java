@@ -13,7 +13,6 @@ package com.datastat.dao;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.datastat.config.MindSporeConfig;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.QaBotRequestBody;
@@ -25,12 +24,10 @@ import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-import com.mashape.unirest.http.Headers;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.maxmind.geoip2.DatabaseReader;
@@ -105,11 +102,14 @@ public class QueryDao {
 
     protected List<String> robotUsers;
 
+    protected List<String> domain_ids;
+
     @PostConstruct
     public void init() {
         esUrl = String.format("%s://%s:%s/", env.getProperty("es.scheme"), env.getProperty("es.host"), env.getProperty("es.port"));
         esQueryUtils = new EsQueryUtils();
         robotUsers = Arrays.asList(Objects.requireNonNull(env.getProperty("skip.robot.user")).split(","));
+        domain_ids = Arrays.asList(Objects.requireNonNull(env.getProperty("qa.domain.ids")).split(","));
     }
 
     @SneakyThrows
@@ -2436,12 +2436,23 @@ public class QueryDao {
         }
     }
 
+    public HashMap<String, Object> getExtends(QaBotRequestBody body){
+        List<String> domain_Ids = domain_ids;
+        HashMap<String, Object> extend = body.getExtend();
+        if (extend != null && extend.containsKey("domain_ids")) {
+            domain_Ids = ArrayListUtil.castList(extend.get("domain_ids"), String.class);
+        }
+        HashMap<String, Object> final_extend = new HashMap<>();
+        final_extend.put("domain_ids", domain_Ids);     
+        return final_extend;
+    }
+
     @SneakyThrows
     public String QaBotChat(QaBotRequestBody body) {
         String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/chat";
         HashMap<String, Object> data = new HashMap<>();
         data.put("question", body.getQuestion());
-        data.put("extends", body.getExtend());
+        data.put("extends", getExtends(body));
         String dataStr = objectMapper.writeValueAsString(data);
         return QaBotRequest(dataStr, urlStr);
     }
@@ -2452,7 +2463,7 @@ public class QueryDao {
         HashMap<String, Object> data = new HashMap<>();
         data.put("question", body.getQuestion());
         data.put("top", body.getTop());
-        data.put("extends", body.getExtend());
+        data.put("extends", getExtends(body));
         String dataStr = objectMapper.writeValueAsString(data);
         return QaBotRequest(dataStr, urlStr);
     }
