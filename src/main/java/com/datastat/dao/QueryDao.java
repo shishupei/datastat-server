@@ -2441,6 +2441,7 @@ public class QueryDao {
         String urlStr = env.getProperty("qa.endpoint") + "/v1/%s/qabots/%s/chat";
         HashMap<String, Object> data = new HashMap<>();
         data.put("question", body.getQuestion());
+        data.put("extends", body.getExtend());
         String dataStr = objectMapper.writeValueAsString(data);
         return QaBotRequest(dataStr, urlStr);
     }
