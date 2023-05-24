@@ -2451,6 +2451,9 @@ public class QueryDao {
         HashMap<String, Object> data = new HashMap<>();
         data.put("question", body.getQuestion());
         data.put("extends", getExtends(body));
+        data.put("chat_enable", true);
+        List<Integer> query_types = Arrays.asList(0, 2);
+        data.put("query_types", query_types);
         String dataStr = objectMapper.writeValueAsString(data);
         return QaBotRequest(dataStr, urlStr);
     }
