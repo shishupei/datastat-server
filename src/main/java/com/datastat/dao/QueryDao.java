@@ -425,7 +425,6 @@ public class QueryDao {
             String company = bucket.get("key").asText();
             long contribute = bucket.get("sum_field").get("value").asLong();
             if (!claCompanies.contains(company) ||
-                company.equals("中软国际科技服务有限公司") ||
                 company.equals("深圳易宝软件") ||
                 company.contains("华为合作方") ||
                 company.equalsIgnoreCase("openeuler")) {
@@ -996,7 +995,6 @@ public class QueryDao {
             JsonNode bucket = buckets.next();
             String company = bucket.get("key").asText();
             if (!claCompanies.contains(company) ||
-                company.equals("中软国际科技服务有限公司") ||
                 company.equals("深圳易宝软件") ||
                 company.contains("华为合作方") ||
                 company.equalsIgnoreCase("openeuler")) {
@@ -2443,7 +2441,7 @@ public class QueryDao {
             domain_Ids = ArrayListUtil.castList(extend.get("domain_ids"), String.class);
         }
         HashMap<String, Object> final_extend = new HashMap<>();
-        final_extend.put("domain_ids", domain_Ids);     
+        final_extend.put("domain_ids", domain_Ids);
         return final_extend;
     }
 

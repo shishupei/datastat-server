@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,10 @@ import org.springframework.stereotype.Repository;
 public class GitDao {
     @Autowired
     Environment env;
-    
+
     static ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-    
+    private static Logger logger;
+
     GitDao() {
         service.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -33,7 +35,7 @@ public class GitDao {
             git.pull().call();
             git.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("git pull exception", e);
         }
     }
 }
