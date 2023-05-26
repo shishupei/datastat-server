@@ -1540,7 +1540,7 @@ public class QueryDao {
             while (it.hasNext()) {
                 JsonNode bucket = it.next();
                 String com = bucket.get("key").asText();
-                if (!communities.get(0).equals("allproject") && !communities.contains(com)) {
+                if (!communities.get(0).equals("allproject") && !communities.contains(com.toLowerCase())) {
                     continue;
                 }
                 HashMap dataMap = new HashMap();
