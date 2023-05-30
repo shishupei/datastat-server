@@ -38,6 +38,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -46,13 +47,14 @@ public class HttpClientUtils implements Serializable {
     static PoolingHttpClientConnectionManager connectionManager;
     static ConnectionKeepAliveStrategy myStrategy;
     static CredentialsProvider credentialsProvider;
+    private static Logger logger;
 
     static {
         SSLContext sslcontext = null;
         try {
             sslcontext = skipSsl();
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         //设置协议http和https对应的处理socket链接工厂的对象
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
@@ -127,7 +129,7 @@ public class HttpClientUtils implements Serializable {
                 try {
                     sc = skipSsl();
                 } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    e.printStackTrace();
+                    logger.error("exception", e);
                 }
                 return httpAsyncClientBuilder.setSSLContext(sc);
             });
@@ -139,7 +141,7 @@ public class HttpClientUtils implements Serializable {
 
             client = new RestHighLevelClient(builder);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return client;
     }
@@ -155,7 +157,7 @@ public class HttpClientUtils implements Serializable {
             try {
                 secure = secures[i];
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
             res.put(domain, Boolean.valueOf(secure));
         }

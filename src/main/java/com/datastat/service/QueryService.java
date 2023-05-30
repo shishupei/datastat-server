@@ -38,6 +38,7 @@ import com.datastat.model.meetup.MeetupApplyForm;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
@@ -70,6 +71,7 @@ public class QueryService {
     ObjectMapper objectMapper;
 
     private static long redisDefaultExpire;
+    private static Logger logger;
 
     @PostConstruct
     public void init() {
@@ -227,7 +229,7 @@ public class QueryService {
                     isFlush = true;
                 }
             } catch (ParseException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
 
@@ -248,7 +250,7 @@ public class QueryService {
                     result = resultNew;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
 
@@ -718,7 +720,7 @@ public class QueryService {
             queryDao.putGiteeHookUser(queryConf, userSet);
             return resultJsonStr(200, "user_count", userSet.size(), "success");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return resultJsonStr(400, "user_count", 0, "parse body fail");
         }
     }
@@ -939,7 +941,7 @@ public class QueryService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return false;
     }
@@ -1023,7 +1025,7 @@ public class QueryService {
             }
             return resultJsonStr(200, objectMapper.valueToTree(resList), "ok");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(400, null, "error");        
     }
@@ -1060,7 +1062,7 @@ public class QueryService {
             }
             return resultJsonStr(200, objectMapper.valueToTree(resList), "ok");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(400, null, "query error");
     }
@@ -1083,7 +1085,7 @@ public class QueryService {
         try {
             res = queryDao.putMeetupApplyForm(queryConf, item, meetupApplyForm, token);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return res;
     }

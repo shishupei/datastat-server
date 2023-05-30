@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 
+import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.RequestBuilder;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository("openeulerDao")
 public class OpenEulerQueryDao extends QueryDao {
+    private static Logger logger;
     @SneakyThrows
     @Override
     public String queryUsers(CustomPropertiesConfig queryConf, String item) {
@@ -80,7 +82,7 @@ public class OpenEulerQueryDao extends QueryDao {
             }
             return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(400, null, "ok");
     }

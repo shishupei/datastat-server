@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import jakarta.annotation.Resource;
+
+import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
@@ -41,7 +43,7 @@ import java.util.zip.GZIPOutputStream;
 public class RedisDao {
     @Autowired
     protected StringRedisTemplate redisTemplate;
-
+    private static Logger logger;
     static ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -253,7 +255,7 @@ public class RedisDao {
             int code = dataNode.get("code").intValue();
             return code == 200;
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return false;
         }
     }

@@ -39,6 +39,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.*;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -97,12 +98,10 @@ public class QueryDao {
     ObsDao obsDao;
 
     protected static String esUrl;
-
     protected EsQueryUtils esQueryUtils;
-
     protected List<String> robotUsers;
-
     protected List<String> domain_ids;
+    private static Logger logger;
 
     @PostConstruct
     public void init() {
@@ -1273,7 +1272,7 @@ public class QueryDao {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return company;
     }
@@ -1350,7 +1349,7 @@ public class QueryDao {
             dataMap.put("comments", comments);
             dataMap.put("repos", repos);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return dataMap;
     }
@@ -1395,7 +1394,7 @@ public class QueryDao {
             Iterator<JsonNode> buckets = dataNode.get("aggregations").get("distinct_field").get("buckets").elements();
             count = Lists.newArrayList(buckets).size();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, dataFlag, count, statusText);
     }
@@ -1444,7 +1443,7 @@ public class QueryDao {
             resMap.put("msg", statusText);
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, dataFlag, Math.round(count), statusText);
     }
@@ -1468,7 +1467,7 @@ public class QueryDao {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, dataFlag, Math.round(count), statusText);
     }
@@ -1489,7 +1488,7 @@ public class QueryDao {
                 count += bucket.get("doc_count").asLong();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, dataFlag, Math.round(count), statusText);
     }
@@ -1562,7 +1561,7 @@ public class QueryDao {
             statusText = "fail";
             badReq = ReturnCode.RC400.getMessage();
             statusCode = 500;
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, dataflage, badReq, statusText);
     }
@@ -1584,7 +1583,7 @@ public class QueryDao {
             resMap.putPOJO("data", dataList);
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return resultJsonStr(400, item, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
         }
     }
@@ -1749,7 +1748,7 @@ public class QueryDao {
             resMap.put("msg", statusText);
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, resJsonArray, statusText);
     }
@@ -1888,7 +1887,7 @@ public class QueryDao {
             mistakeUpdateStartTime = simpleDateFormat.parse(mistakeUpdateStartTimeStr);
             mistakeUpdateEndTime = simpleDateFormat.parse(mistakeUpdateEndTimeStr);
         } catch (ParseException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         assert resultMistakeLatestTime != null;
         if (resultMistakeLatestTime.compareTo(mistakeUpdateStartTime) >= 0 &&
@@ -1952,7 +1951,7 @@ public class QueryDao {
             }
             return objectMapper.valueToTree(dataMap);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return null;
         }
     }
@@ -1989,7 +1988,7 @@ public class QueryDao {
             }
             return dataList;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return null;
         }
     }
@@ -2124,7 +2123,7 @@ public class QueryDao {
 
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, dataFlag, badReq, statusText);
     }
@@ -2191,7 +2190,7 @@ public class QueryDao {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resData;
     }
@@ -2239,7 +2238,7 @@ public class QueryDao {
             }
             return resultJsonStr(statusCode, objectMapper.valueToTree(recordJsonObj), statusText);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(statusCode, recordJsonObj, statusText);
     }
@@ -2292,7 +2291,7 @@ public class QueryDao {
             String result = objectMapper.valueToTree(res).toString();
             return result;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return resultJsonStr(404, null, "error");
     }
@@ -2330,7 +2329,7 @@ public class QueryDao {
             DecodedJWT decode = JWT.decode(RSAUtil.privateDecrypt(token, privateKey));
             userId = decode.getAudience().get(0);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return userId;
     }
@@ -2357,13 +2356,13 @@ public class QueryDao {
                     res = "{\"code\":200,\"data\":\"success\",\"msg\":\"success\"}";
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
         try {
             restHighLevelClient.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return res;
     }
@@ -2516,7 +2515,7 @@ public class QueryDao {
             }
             return ans;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return resultJsonStr(400, "error", "error");
         }
     }

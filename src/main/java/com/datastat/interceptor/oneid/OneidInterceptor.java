@@ -34,6 +34,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +67,7 @@ public class OneidInterceptor implements HandlerInterceptor {
     private String oneidTokenBasePassword;
 
     private static HashMap<String, Boolean> domain2secure;
+    private static Logger logger;
 
     @PostConstruct
     public void init() {
@@ -243,7 +245,7 @@ public class OneidInterceptor implements HandlerInterceptor {
             jwtVerifier.verify(headerToken);
             return md5Token;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return "unauthorized";
         }
     }
@@ -264,7 +266,7 @@ public class OneidInterceptor implements HandlerInterceptor {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return "has no permission";
         }
         return "has no permission";

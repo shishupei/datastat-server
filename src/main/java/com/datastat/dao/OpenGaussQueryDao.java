@@ -14,6 +14,8 @@ package com.datastat.dao;
 import com.datastat.model.CustomPropertiesConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.SneakyThrows;
+
+import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.RequestBuilder;
@@ -27,6 +29,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Repository("opengaussDao")
 public class OpenGaussQueryDao extends QueryDao {
+    private static Logger logger;
 
     @SneakyThrows
     @Override
@@ -84,7 +87,7 @@ public class OpenGaussQueryDao extends QueryDao {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return sigLabels;
     }

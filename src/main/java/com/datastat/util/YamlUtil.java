@@ -12,10 +12,13 @@
 package com.datastat.util;
 
 import java.io.*;
+
+import org.apache.logging.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
 
 public class YamlUtil {
+    private static Logger logger;
     public <T> T readLocalYaml(String yamlFile, Class<T> classType) {
         Yaml yaml = new Yaml();
         InputStream inputStream;
@@ -24,7 +27,7 @@ public class YamlUtil {
             inputStream = new FileInputStream(yamlFile);
             t = yaml.loadAs(inputStream, classType);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return t;
     }
@@ -37,7 +40,7 @@ public class YamlUtil {
             inputStream = new FileInputStream(yamlFile);
             t = yaml.load(inputStream);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return t;
     }
@@ -66,13 +69,13 @@ public class YamlUtil {
                             System.out.println(line);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("exception", e);
                     } finally {
                         if (bi != null) {
                             try {
                                 bi.close();
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                logger.error("exception", e);
                             }
                         }
                     }
@@ -90,13 +93,13 @@ public class YamlUtil {
                             System.out.println(line);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("exception", e);
                     } finally {
                         if (bi != null) {
                             try {
                                 bi.close();
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                logger.error("exception", e);
                             }
                         }
                     }
@@ -104,7 +107,7 @@ public class YamlUtil {
             }.start();
             process.waitFor();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
 
         return localFile;
