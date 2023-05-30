@@ -7,6 +7,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -32,6 +33,7 @@ public class RestHighLevelClientUtil {
     /**
      * 创建客户端的类，定义create函数用于创建客户端。
      */
+    private static Logger logger;
     public static RestHighLevelClient create(List<String> host, int port, String protocol,
                                              String username, String password) throws IOException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -42,7 +44,7 @@ public class RestHighLevelClientUtil {
             sc = SSLContext.getInstance("SSL");
             sc.init(null, trustAllCerts, new SecureRandom());
         } catch (KeyManagementException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
 
         SSLIOSessionStrategy sessionStrategy = new SSLIOSessionStrategy(sc, new NullHostNameVerifier());

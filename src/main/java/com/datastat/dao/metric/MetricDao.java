@@ -28,6 +28,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.*;
 import java.lang.reflect.*;
 
@@ -54,6 +55,7 @@ public abstract class MetricDao {
     protected static String esUrl;
     protected static JsonNode companyQueryMap;
     protected static JsonNode userQueryMap;
+    private static Logger logger;
 
     @PostConstruct
     public void init() {
@@ -63,7 +65,7 @@ public abstract class MetricDao {
             companyQueryMap = objectMapper.readTree(companyQueryStr);
             userQueryMap = objectMapper.readTree(userQueryStr);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
     }
 
@@ -75,7 +77,7 @@ public abstract class MetricDao {
             Object result = method.invoke(this, queryConf, start, end, body);
             return result.toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }      
         return resultJsonStr(400, null, "operation error");
     }

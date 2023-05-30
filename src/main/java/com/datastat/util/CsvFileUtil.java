@@ -18,7 +18,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+
 public class CsvFileUtil {
+    private static Logger logger;
     public static List<HashMap<String, Object>> readFile(String file) {
         try {
             BufferedReader textFile = new BufferedReader(new FileReader(new File(file)));
@@ -43,7 +46,7 @@ public class CsvFileUtil {
             return res;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return null;
         }
     }

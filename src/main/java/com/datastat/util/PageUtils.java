@@ -15,7 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.Logger;
+
 public class PageUtils {
+    private static Logger logger;
     public static Map getDataByPage(int currentPage, int pageSize, List data) {
         int dataSize = data.size();
         int totalPage = dataSize / pageSize + 1;
@@ -28,7 +31,7 @@ public class PageUtils {
             resultMap.put("data", list);
             resultMap.put("total", dataSize);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             resultMap.put("data", null);
             resultMap.put("total", dataSize);
         }

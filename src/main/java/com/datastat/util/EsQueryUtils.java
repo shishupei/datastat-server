@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -40,6 +41,7 @@ public class EsQueryUtils {
     private static final int MAXSIZE = 10000;
     private static final int MAXPAGESIZE = 5000;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static Logger logger;
 
     public boolean deleteByQuery(RestHighLevelClient client, String indexName, DeleteByQueryRequest deleteByQueryRequest) {
         try {
@@ -102,7 +104,7 @@ public class EsQueryUtils {
             try {
                 client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
 
@@ -151,7 +153,7 @@ public class EsQueryUtils {
             try {
                 client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
 
@@ -202,7 +204,7 @@ public class EsQueryUtils {
             try {
                 restHighLevelClient.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
 
@@ -427,7 +429,7 @@ public class EsQueryUtils {
             try {
                 client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
         data.put(user, list);
