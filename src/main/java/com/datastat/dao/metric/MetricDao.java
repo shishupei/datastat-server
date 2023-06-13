@@ -56,7 +56,7 @@ public abstract class MetricDao {
     protected static String esUrl;
     protected static JsonNode companyQueryMap;
     protected static JsonNode userQueryMap;
-    private static final Logger logger =  LoggerFactory.getLogger(MetricDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetricDao.class);
 
     @PostConstruct
     public void init() {

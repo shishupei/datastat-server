@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PageUtils {
-    private static final Logger logger =  LoggerFactory.getLogger(PageUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(PageUtils.class);
     public static Map getDataByPage(int currentPage, int pageSize, List data) {
         int dataSize = data.size();
         int totalPage = dataSize / pageSize + 1;

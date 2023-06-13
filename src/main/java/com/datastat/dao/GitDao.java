@@ -18,7 +18,7 @@ public class GitDao {
     Environment env;
 
     static ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-    private static final Logger logger =  LoggerFactory.getLogger(GitDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(GitDao.class);
 
     GitDao() {
         service.scheduleAtFixedRate(new Runnable() {

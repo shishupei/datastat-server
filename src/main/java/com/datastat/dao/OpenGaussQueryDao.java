@@ -30,7 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Repository("opengaussDao")
 public class OpenGaussQueryDao extends QueryDao {
-    private static final Logger logger =  LoggerFactory.getLogger(OpenGaussQueryDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpenGaussQueryDao.class);
 
     @SneakyThrows
     @Override

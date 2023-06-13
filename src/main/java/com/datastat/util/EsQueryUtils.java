@@ -41,7 +41,7 @@ public class EsQueryUtils {
     private static final int MAXSIZE = 10000;
     private static final int MAXPAGESIZE = 5000;
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger logger =  LoggerFactory.getLogger(EsQueryUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(EsQueryUtils.class);
 
     public boolean deleteByQuery(RestHighLevelClient client, String indexName, DeleteByQueryRequest deleteByQueryRequest) {
         try {

@@ -68,7 +68,7 @@ public class OneidInterceptor implements HandlerInterceptor {
     private String oneidTokenBasePassword;
 
     private static HashMap<String, Boolean> domain2secure;
-    private static final Logger logger =  LoggerFactory.getLogger(OneidInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(OneidInterceptor.class);
 
     @PostConstruct
     public void init() {

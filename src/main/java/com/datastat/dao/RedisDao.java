@@ -44,7 +44,7 @@ import java.util.zip.GZIPOutputStream;
 public class RedisDao {
     @Autowired
     protected StringRedisTemplate redisTemplate;
-    private static final Logger logger =  LoggerFactory.getLogger(RedisDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisDao.class);
     static ObjectMapper objectMapper = new ObjectMapper();
 
     /**

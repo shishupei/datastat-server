@@ -102,7 +102,7 @@ public class QueryDao {
     protected EsQueryUtils esQueryUtils;
     protected List<String> robotUsers;
     protected List<String> domain_ids;
-    private static final Logger logger =  LoggerFactory.getLogger(QueryDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryDao.class);
 
     @PostConstruct
     public void init() {

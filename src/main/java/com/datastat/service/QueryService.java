@@ -72,7 +72,7 @@ public class QueryService {
     ObjectMapper objectMapper;
 
     private static long redisDefaultExpire;
-    private static final Logger logger =  LoggerFactory.getLogger(QueryService.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
     @PostConstruct
     public void init() {

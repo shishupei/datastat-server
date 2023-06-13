@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CsvFileUtil {
-    private static final Logger logger =  LoggerFactory.getLogger(CsvFileUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(CsvFileUtil.class);
     public static List<HashMap<String, Object>> readFile(String file) {
         try {
             BufferedReader textFile = new BufferedReader(new FileReader(new File(file)));

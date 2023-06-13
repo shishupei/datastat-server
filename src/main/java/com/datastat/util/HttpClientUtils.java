@@ -48,7 +48,7 @@ public class HttpClientUtils implements Serializable {
     static PoolingHttpClientConnectionManager connectionManager;
     static ConnectionKeepAliveStrategy myStrategy;
     static CredentialsProvider credentialsProvider;
-    private static final Logger logger =  LoggerFactory.getLogger(HttpClientUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpClientUtils.class);
 
     static {
         SSLContext sslcontext = null;

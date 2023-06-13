@@ -34,7 +34,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository("openeulerDao")
 public class OpenEulerQueryDao extends QueryDao {
-    private static final Logger logger =  LoggerFactory.getLogger(OpenEulerQueryDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpenEulerQueryDao.class);
     @SneakyThrows
     @Override
     public String queryUsers(CustomPropertiesConfig queryConf, String item) {

@@ -34,7 +34,7 @@ public class RestHighLevelClientUtil {
     /**
      * 创建客户端的类，定义create函数用于创建客户端。
      */
-    private static final Logger logger =  LoggerFactory.getLogger(RestHighLevelClientUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(RestHighLevelClientUtil.class);
     public static RestHighLevelClient create(List<String> host, int port, String protocol,
                                              String username, String password) throws IOException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
