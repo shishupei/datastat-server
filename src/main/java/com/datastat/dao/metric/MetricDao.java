@@ -12,7 +12,12 @@
 package com.datastat.dao.metric;
 
 import java.util.*;
+import java.lang.reflect.*;
 
+import org.apache.commons.lang3.StringUtils;
+import org.asynchttpclient.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -27,10 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.*;
-import java.lang.reflect.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -55,7 +56,7 @@ public abstract class MetricDao {
     protected static String esUrl;
     protected static JsonNode companyQueryMap;
     protected static JsonNode userQueryMap;
-    private static Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(MetricDao.class);
 
     @PostConstruct
     public void init() {

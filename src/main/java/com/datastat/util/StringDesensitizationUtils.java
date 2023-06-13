@@ -55,7 +55,8 @@ public class StringDesensitizationUtils {
         if (StringUtils.isBlank(address)) return "";
 
         int length = StringUtils.length(address);
-        return StringUtils.rightPad(StringUtils.left(address, length - sensitiveSize), length, "*");
+        int pos = subtractExact(length, sensitiveSize);
+        return StringUtils.rightPad(StringUtils.left(address, pos), length, "*");
     }
 
     /**
@@ -99,7 +100,8 @@ public class StringDesensitizationUtils {
         if (StringUtils.isBlank(cardNum)) return "";
 
         int length = StringUtils.length(cardNum);
-        return StringUtils.leftPad(StringUtils.right(cardNum, length - hideDigit), length, "*");
+        int pos = subtractExact(length, hideDigit);
+        return StringUtils.leftPad(StringUtils.right(cardNum, pos), length, "*");
     }
 
     /**
@@ -113,7 +115,8 @@ public class StringDesensitizationUtils {
         if (StringUtils.isBlank(cardNum)) return "";
 
         int length = StringUtils.length(cardNum);
-        return StringUtils.rightPad(StringUtils.left(cardNum, length - hideDigit), length, "*");
+        int pos = subtractExact(length, hideDigit);
+        return StringUtils.rightPad(StringUtils.left(cardNum, pos), length, "*");
     }
 
     /**
@@ -129,8 +132,9 @@ public class StringDesensitizationUtils {
         int length = StringUtils.length(cardNum);
         int index = (length - hideDigit) >> 1;
         if (hideDigit % 2 == 0) index += 1;
-
-        return StringUtils.left(cardNum, index).concat(StringUtils.leftPad(StringUtils.right(cardNum, length - index - hideDigit), length - index, "*"));
+        int size = subtractExact(length, index);
+        int pos = subtractExact(size, hideDigit);
+        return StringUtils.left(cardNum, index).concat(StringUtils.leftPad(StringUtils.right(cardNum, pos), size, "*"));
     }
 
     /**
@@ -144,6 +148,14 @@ public class StringDesensitizationUtils {
 
         int length = StringUtils.length(cardNum);
         return StringUtils.leftPad(StringUtils.right(cardNum, 0), length, "*");
+    }
+
+    public static int subtractExact(int x, int y) {
+        int r = x - y;
+        if (((x ^ y) & (x ^ r)) < 0) {
+            throw new ArithmeticException("Overflow");
+        }
+        return r;
     }
 
 }

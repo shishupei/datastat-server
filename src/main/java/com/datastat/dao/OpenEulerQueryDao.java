@@ -24,16 +24,17 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 
-import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 @Repository("openeulerDao")
 public class OpenEulerQueryDao extends QueryDao {
-    private static Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(OpenEulerQueryDao.class);
     @SneakyThrows
     @Override
     public String queryUsers(CustomPropertiesConfig queryConf, String item) {

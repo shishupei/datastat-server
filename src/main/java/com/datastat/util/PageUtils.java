@@ -15,17 +15,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PageUtils {
-    private static Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(PageUtils.class);
     public static Map getDataByPage(int currentPage, int pageSize, List data) {
         int dataSize = data.size();
         int totalPage = dataSize / pageSize + 1;
 
         HashMap<Object, Object> resultMap = new HashMap<>();
-        int startIndex = (currentPage - 1) * pageSize;
-        int endIndex = currentPage * pageSize;
+        int startIndex = multiplyExact(currentPage - 1, pageSize);
+        int endIndex = multiplyExact(currentPage, pageSize);
         try {
             List list = currentPage >= totalPage ? data.subList(startIndex, dataSize) : data.subList(startIndex, endIndex);
             resultMap.put("data", list);
@@ -37,4 +38,13 @@ public class PageUtils {
         }
         return resultMap;
     }
+
+    public static int multiplyExact(int a, int b) {
+        long mul = (long) a * (long) b;
+        if (mul > Integer.MAX_VALUE) {
+            throw new ArithmeticException("Overflow!");
+        }
+        return  (int) mul;
+    }
+
 }

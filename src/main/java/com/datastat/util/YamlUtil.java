@@ -13,12 +13,13 @@ package com.datastat.util;
 
 import java.io.*;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 
 public class YamlUtil {
-    private static Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(RestHighLevelClientUtil.class);
     public <T> T readLocalYaml(String yamlFile, Class<T> classType) {
         Yaml yaml = new Yaml();
         InputStream inputStream;

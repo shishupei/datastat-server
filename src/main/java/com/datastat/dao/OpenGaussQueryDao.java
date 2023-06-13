@@ -15,11 +15,12 @@ import com.datastat.model.CustomPropertiesConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.SneakyThrows;
 
-import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -29,7 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Repository("opengaussDao")
 public class OpenGaussQueryDao extends QueryDao {
-    private static Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(OpenGaussQueryDao.class);
 
     @SneakyThrows
     @Override

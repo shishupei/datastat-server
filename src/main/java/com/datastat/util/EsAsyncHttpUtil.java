@@ -61,7 +61,7 @@ public class EsAsyncHttpUtil {
     }
 
     public static SSLContext skipSsl() throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sc = SSLContext.getInstance("SSL");
+        SSLContext sc = SSLContext.getInstance("TLSv1.2");
 
         // 实现一个X509TrustManager接口，用于绕过验证，不用修改里面的方法
         X509TrustManager trustManager = new X509ExtendedTrustManager() {
@@ -99,7 +99,7 @@ public class EsAsyncHttpUtil {
 
             @Override
             public X509Certificate[] getAcceptedIssuers() {
-                return null;
+                return new X509Certificate[0];
             }
         };
 
