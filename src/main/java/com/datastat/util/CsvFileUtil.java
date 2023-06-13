@@ -18,10 +18,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CsvFileUtil {
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(CsvFileUtil.class);
     public static List<HashMap<String, Object>> readFile(String file) {
         try {
             BufferedReader textFile = new BufferedReader(new FileReader(new File(file)));

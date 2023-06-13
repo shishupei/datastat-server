@@ -4,9 +4,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Repository;
@@ -17,7 +18,7 @@ public class GitDao {
     Environment env;
 
     static ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(GitDao.class);
 
     GitDao() {
         service.scheduleAtFixedRate(new Runnable() {

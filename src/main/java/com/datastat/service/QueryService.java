@@ -38,7 +38,8 @@ import com.datastat.model.meetup.MeetupApplyForm;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
@@ -71,7 +72,7 @@ public class QueryService {
     ObjectMapper objectMapper;
 
     private static long redisDefaultExpire;
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(QueryService.class);
 
     @PostConstruct
     public void init() {

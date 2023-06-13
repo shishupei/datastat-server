@@ -19,8 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import jakarta.annotation.Resource;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -43,7 +44,7 @@ import java.util.zip.GZIPOutputStream;
 public class RedisDao {
     @Autowired
     protected StringRedisTemplate redisTemplate;
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(RedisDao.class);
     static ObjectMapper objectMapper = new ObjectMapper();
 
     /**

@@ -7,7 +7,6 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -15,6 +14,8 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class RestHighLevelClientUtil {
     /**
      * 创建客户端的类，定义create函数用于创建客户端。
      */
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(RestHighLevelClientUtil.class);
     public static RestHighLevelClient create(List<String> host, int port, String protocol,
                                              String username, String password) throws IOException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -85,7 +86,7 @@ public class RestHighLevelClientUtil {
 
                 @Override
                 public X509Certificate[] getAcceptedIssuers() {
-                    return null;
+                    return new X509Certificate[0];
                 }
             }
     };

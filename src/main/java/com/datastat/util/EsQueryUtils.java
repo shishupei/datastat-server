@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -36,12 +35,13 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class EsQueryUtils {
     private static final int MAXSIZE = 10000;
     private static final int MAXPAGESIZE = 5000;
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(EsQueryUtils.class);
 
     public boolean deleteByQuery(RestHighLevelClient client, String indexName, DeleteByQueryRequest deleteByQueryRequest) {
         try {
@@ -145,7 +145,7 @@ public class EsQueryUtils {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("exception", ex);
             return resultJsonStr(400, item, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
         } finally {
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
@@ -196,7 +196,7 @@ public class EsQueryUtils {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("exception", ex);
             return resultJsonStr(400, item, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
         } finally {
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
@@ -378,7 +378,6 @@ public class EsQueryUtils {
                 boolQueryBuilder.must(QueryBuilders.wildcardQuery("sig_names.keyword", sig));
                 break;
             case "opengauss":
-                boolQueryBuilder.mustNot(QueryBuilders.wildcardQuery("gitee_repo.keyword", "https://gitee.com/opengauss/practice-course"));
                 boolQueryBuilder.must(QueryBuilders.queryStringQuery(query));
                 break;
             default:

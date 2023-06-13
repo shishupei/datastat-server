@@ -38,16 +38,17 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpClientUtils implements Serializable {
     static PoolingHttpClientConnectionManager connectionManager;
     static ConnectionKeepAliveStrategy myStrategy;
     static CredentialsProvider credentialsProvider;
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(HttpClientUtils.class);
 
     static {
         SSLContext sslcontext = null;
@@ -89,7 +90,7 @@ public class HttpClientUtils implements Serializable {
     }
 
     public static SSLContext skipSsl() throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sc = SSLContext.getInstance("SSL");
+        SSLContext sc = SSLContext.getInstance("TLSv1.2");
 
         // 实现一个X509TrustManager接口，用于绕过验证，不用修改里面的方法
         X509TrustManager trustManager = new X509TrustManager() {

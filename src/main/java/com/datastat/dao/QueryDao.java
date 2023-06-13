@@ -39,7 +39,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.*;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -55,6 +54,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
@@ -101,7 +102,7 @@ public class QueryDao {
     protected EsQueryUtils esQueryUtils;
     protected List<String> robotUsers;
     protected List<String> domain_ids;
-    private static Logger logger;
+    private static final Logger logger =  LoggerFactory.getLogger(QueryDao.class);
 
     @PostConstruct
     public void init() {
@@ -1329,7 +1330,7 @@ public class QueryDao {
             dataMap.put("partners", companies.size() + otherPartners);
         } catch (Exception ex) {
             dataMap.put("partners", otherPartners);
-            ex.printStackTrace();
+            logger.error("exception", ex);
         }
 
         try {
@@ -1513,7 +1514,8 @@ public class QueryDao {
         params.add(q);
         params.add(page);
         params.add(per_page);
-        Request request = builder.setUrl("https://gitee.com/api/v5/user/repos").setQueryParams(params).addHeader("Content-Type", "application/json;charset=UTF-8").setMethod("GET").build();
+        Request request = builder.setUrl(env.getProperty("gitee.user.repos")).setQueryParams(params)
+                .addHeader("Content-Type", "application/json;charset=UTF-8").setMethod("GET").build();
         ListenableFuture<Response> responseListenableFuture = client.executeRequest(request);
         Response response = responseListenableFuture.get();
         String total_count = response.getHeader("total_count");
@@ -2423,7 +2425,7 @@ public class QueryDao {
             body = String.format(body, env.getProperty("qa.user.name"), env.getProperty("qa.user.password"),
                     env.getProperty("qa.domain.name"));
             HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest
-                    .post("https://iam.cn-north-4.myhuaweicloud.com/v3/auth/tokens")
+                    .post(env.getProperty("qa.token.endpoint"))
                     .header("Content-Type", "application/json")
                     .body(body)
                     .asJson();
