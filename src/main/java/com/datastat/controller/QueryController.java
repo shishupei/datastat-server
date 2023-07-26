@@ -21,6 +21,7 @@ import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -536,6 +537,12 @@ public class QueryController {
     public String QaBotUserFeedback(HttpServletRequest request,
             @RequestBody QaBotRequestBody body) {
         return queryService.QaBotUserFeedback(request, body);
+    }
+
+    @RequestMapping(value = "/reviewer/recommend", method = RequestMethod.POST)
+    public ResponseEntity queryReviewerRecommend(@RequestBody PrReviewerVo input) {
+        ResponseEntity res = queryService.queryReviewerRecommend(input);
+        return res;
     }
 
 }

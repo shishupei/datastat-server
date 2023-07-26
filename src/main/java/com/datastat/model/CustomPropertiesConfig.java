@@ -75,6 +75,7 @@ public class CustomPropertiesConfig {
     private String ecosystemRepoIndex;
     private String giteeVersionIndex;
     private String meetupApplyFormIndex;
+    private String userTagIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -145,6 +146,7 @@ public class CustomPropertiesConfig {
     private String companyVersionPrQuery;
     private String companyVersionClocQuery;
     private String communityVersions;
+    private String eurPackagesQuery;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
