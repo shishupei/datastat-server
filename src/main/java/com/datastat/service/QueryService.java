@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.interfaces.RSAPrivateKey;
@@ -1138,5 +1139,13 @@ public class QueryService {
     public String QaBotUserFeedback(HttpServletRequest request, QaBotRequestBody body) {
         QueryDao queryDao = getQueryDao(request);
         return queryDao.QaBotUserFeedback(body);
+    }
+
+    public ResponseEntity queryReviewerRecommend(PrReviewerVo input) {
+        String community = input.getCommunity();
+        String serviceType = community == null ? "queryDao" : community.toLowerCase() + "Dao";
+        QueryDao queryDao = queryDaoContext.getQueryDao(serviceType);
+        CustomPropertiesConfig queryConf = getQueryConf(community);
+        return queryDao.queryReviewerRecommend(queryConf, input);
     }
 }

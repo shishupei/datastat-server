@@ -18,6 +18,7 @@ import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
+import com.datastat.model.UserTagInfo;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.meetup.SurveyAnswer;
 import com.datastat.model.vo.*;
@@ -59,6 +60,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 
 import java.text.DecimalFormat;
@@ -2522,4 +2525,65 @@ public class QueryDao {
         }
     }
 
+    @SneakyThrows
+    public ResponseEntity queryReviewerRecommend(CustomPropertiesConfig queryConf, PrReviewerVo input) {
+        String giteeAllIndex = queryConf.getGiteeAllIndex();
+        String userTagIndex = queryConf.getUserTagIndex();
+
+        String host = env.getProperty("es.host");
+        int port = Integer.parseInt(env.getProperty("es.port", "9200"));
+        String scheme = env.getProperty("es.scheme");
+        String esUser = env.getProperty("es.user");
+        String password = env.getProperty("es.password");
+        RestHighLevelClient restHighLevelClient = HttpClientUtils.restClient(host, port, scheme, esUser, password);
+        EsQueryUtils esQueryUtils = new EsQueryUtils();
+
+        HashMap<String, UserTagInfo> inputUser2Info = new HashMap<>();
+        for (String reviewer : input.getReviewers()) {
+            UserTagInfo userTagInfo = new UserTagInfo();
+            userTagInfo.setGiteeId(reviewer);
+            inputUser2Info.put(reviewer, userTagInfo);
+        }
+
+        // 评论过相关PR的人 + 输入的人
+        HashMap<String, UserTagInfo> user2Info = esQueryUtils.QueryPrReviewerByInter(restHighLevelClient, input, giteeAllIndex, robotUsers);
+        inputUser2Info.putAll(user2Info);
+    
+        // 获取评论过该仓库的人
+        Map<String, Map<String, Object>> mindsporeUserTag = esQueryUtils.QueryPrReviewerByRepo(restHighLevelClient, input, userTagIndex, inputUser2Info);
+
+        // 返回测试结果
+        ArrayList<String> keys = new ArrayList<>(mindsporeUserTag.keySet());
+        ArrayList<String> reviewers = new ArrayList<>(new HashSet<>(input.getReviewers()));
+        keys.removeAll(reviewers);
+
+        List<String> resReviewers = randomItems(reviewers);
+        List<String> res = randomItems(keys);
+        res.addAll(resReviewers);
+        return result(HttpStatus.OK, "success", res);
+    }
+
+    private ResponseEntity result(HttpStatus status, String msg, Object data) {
+        HashMap<String, Object> res = new HashMap<>();
+        res.put("code", status.value());
+        res.put("data", data);
+        res.put("msg", msg);
+        return new ResponseEntity<>(res, status);
+    }
+
+    private List<String> randomItems(List<String> items) {
+        Random random = new Random();
+        ArrayList<String> res = new ArrayList<>();
+        if (items.size() >= 2) {
+            int i = random.nextInt(items.size());
+            res.add(items.get(i));
+            items.remove(i);
+            i = random.nextInt(items.size());
+            res.add(items.get(i));
+        } else {
+            res.addAll(items);
+        }
+        return res;
+
+    }
 }
