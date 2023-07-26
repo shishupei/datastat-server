@@ -14,22 +14,10 @@ package com.datastat.util;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class StringValidationUtil {
-    public static boolean isEmail(String string) {
-        if (string == null) return false;
-
-        String regEx1 = "^[a-z0-9A-Z]+[-|a-z0-9A-Z._]+@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-z]{2,}$";
-        Pattern p;
-        Matcher m;
-        p = Pattern.compile(regEx1);
-        m = p.matcher(string);
-        return m.matches();
-    }
 
     public static boolean isDateTimeStrValid(String dateStr) {
         if (StringUtils.isBlank(dateStr)) return true;
