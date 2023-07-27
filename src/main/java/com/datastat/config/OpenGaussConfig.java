@@ -15,22 +15,37 @@ import com.datastat.dao.QueryDao;
 import com.datastat.model.CustomPropertiesConfig;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 
 @ConfigurationProperties(prefix = "opengauss")
 @PropertySource(value = {"file:${user.dir}/openGauss.properties"})
 @Configuration("opengaussConf")
 @Data
 public class OpenGaussConfig extends CustomPropertiesConfig {
+    @Autowired
+    Environment env;
 
     @Override
     public String getAggCountQueryStr(CustomPropertiesConfig queryConf, String groupField, String contributeType, String timeRange, String community, String repo, String sig) {
         String queryJson = groupField.equals("company") ? queryConf.getGiteeAggCompanyQueryStr() : queryConf.getGiteeAggUserQueryStr();
-        repo = repo == null ? "*" : String.format("\\\"https://gitee.com/%s\\\"", repo);
+        repo = repo == null ? "*" : String.format(env.getProperty("gitee.url"), repo);
 
         return getQueryStrByType(contributeType, queryJson, timeRange, repo);
+    }
+
+    @Override
+    public String getAggCommentQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String repo) {
+        String group = groupField.equals("company") ? "tag_user_company" : "user_login";
+        String queryJson = getAggGroupCommentQueryStr();
+        if (queryJson == null) return null;
+        repo = repo == null ? "*" : String.format(env.getProperty("gitee.url"), repo);
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, repo, group);
     }
 
     @Override

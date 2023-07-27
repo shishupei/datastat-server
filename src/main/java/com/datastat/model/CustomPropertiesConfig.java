@@ -147,6 +147,7 @@ public class CustomPropertiesConfig {
     private String companyVersionClocQuery;
     private String communityVersions;
     private String eurPackagesQuery;
+    private String aggGroupCommentQueryStr;
 
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
@@ -225,6 +226,15 @@ public class CustomPropertiesConfig {
             queryStr[i] = getQueryStrWithTimeRange(queryJsons[i], timeRange, company);
         }
         return queryStr;
+    }
+
+    public String getAggCommentQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String repo) {
+        String group = groupField.equals("company") ? "tag_user_company" : "user_login";
+        String queryJson = getAggGroupCommentQueryStr();
+        if (queryJson == null) return null;
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, group);
     }
 
     public String getQueryStrWithTimeRange(String queryJson, String timeRange, Object... args) {
