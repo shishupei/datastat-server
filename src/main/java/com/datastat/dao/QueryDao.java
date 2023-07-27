@@ -456,6 +456,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryUserContributors(CustomPropertiesConfig queryConf, String community, String contributeType, String timeRange, String repo, String sig) {
+        if (contributeType.equalsIgnoreCase("comment")) return queryUserCommentContributors(queryConf, community, contributeType, timeRange, repo, sig);
         String contributesQueryStr = queryConf.getAggCountQueryStr(queryConf, "gitee_id", contributeType, timeRange, community, repo, sig);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), contributesQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
@@ -472,6 +473,34 @@ public class QueryDao {
             }
             dataMap.put("gitee_id", giteeId);
             dataMap.put("contribute", contribute);
+            JsonNode resNode = objectMapper.valueToTree(dataMap);
+            dataList.add(resNode);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
+    }
+
+    @SneakyThrows
+    public String queryUserCommentContributors(CustomPropertiesConfig queryConf, String community, String contributeType, String timeRange, String repo, String sig) {
+        String contributesQueryStr = queryConf.getAggCommentQueryStr(queryConf, "gitee_id", timeRange, repo);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), contributesQueryStr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+
+        ArrayList<JsonNode> dataList = new ArrayList<>();
+        HashMap<String, Object> dataMap = new HashMap<>();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String giteeId = bucket.get("key").asText();
+            long contribute = bucket.get("comment").get("value").asLong();
+            long invalidComment = bucket.get("invalid_comment").get("value").asLong();
+            long validComment = contribute - invalidComment;
+            if (contribute == 0 || robotUsers.contains(giteeId)) {
+                continue;
+            }
+            dataMap.put("gitee_id", giteeId);
+            dataMap.put("contribute", contribute);
+            dataMap.put("invalid_comment", invalidComment);
+            dataMap.put("valid_comment", validComment);
             JsonNode resNode = objectMapper.valueToTree(dataMap);
             dataList.add(resNode);
         }
