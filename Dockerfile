@@ -15,9 +15,9 @@ RUN apt install --yes openjdk-17-jdk
 RUN apt-get install --yes wget
 RUN apt-get install --yes git
 
-RUN wget https://dlcdn.apache.org/maven/maven-3/3.9.2/binaries/apache-maven-3.9.2-bin.tar.gz && \
-        tar -xzvf apache-maven-3.9.2-bin.tar.gz
-ENV MAVEN_HOEM=/var/lib/ds/apache-maven-3.9.2
+RUN wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz && \
+        tar -xzvf apache-maven-3.8.8-bin.tar.gz
+ENV MAVEN_HOEM=/var/lib/ds/apache-maven-3.8.8
 ENV PATH=$MAVEN_HOEM/bin:$PATH
 
 RUN git clone -b ${BRANCH} https://github.com/opensourceways/datastat-server && \
