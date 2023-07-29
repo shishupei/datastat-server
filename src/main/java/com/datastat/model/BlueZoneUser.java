@@ -17,7 +17,7 @@ import lombok.Data;
 public class BlueZoneUser {
     private String name;
     private String org;
-    private String giteeId;
-    private String githubId;
+    private String gitee_id;
+    private String github_id;
     private String email;
 }
