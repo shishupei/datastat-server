@@ -283,8 +283,8 @@ public class QueryDao {
         HashMap<String, HashSet<String>> id2emails = esQueryUtils.queryBlueUserEmails(restHighLevelClient, index);
         for (BlueZoneUser user : users) {
             String id;
-            if (StringUtils.isNotBlank(user.getGiteeId())) id = user.getGiteeId();
-            else if (StringUtils.isNotBlank(user.getGiteeId())) id = user.getGiteeId();
+            if (StringUtils.isNotBlank(user.getGitee_id())) id = user.getGitee_id();
+            else if (StringUtils.isNotBlank(user.getGitee_id())) id = user.getGitee_id();
             else continue;
 
             Map resMap = objectMapper.convertValue(user, Map.class);
