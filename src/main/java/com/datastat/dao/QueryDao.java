@@ -484,6 +484,7 @@ public class QueryDao {
         String contributesQueryStr = queryConf.getAggCommentQueryStr(queryConf, "gitee_id", timeRange, repo);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), contributesQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        System.out.println(dataNode);
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
 
         ArrayList<JsonNode> dataList = new ArrayList<>();
