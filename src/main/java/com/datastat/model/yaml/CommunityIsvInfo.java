@@ -22,4 +22,5 @@ public class CommunityIsvInfo {
     private String database;
     private String os;
     private String server;
+    private String download;
 }
