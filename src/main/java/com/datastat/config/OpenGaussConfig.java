@@ -45,7 +45,6 @@ public class OpenGaussConfig extends CustomPropertiesConfig {
         repo = repo == null ? "*" : String.format(env.getProperty("gitee.url"), repo);
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
-        System.out.println(queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, repo, group));
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, repo, group);
     }
 
