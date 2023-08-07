@@ -659,7 +659,7 @@ public class QueryService {
 
     public String queryUserContributeDetails(HttpServletRequest request, String community, String user, String sig, String contributeType,
                                              String timeRange, String page, String pageSize, String comment_type, String filter) throws Exception {
-        String key = community.toLowerCase() + sig + contributeType.toLowerCase() + timeRange.toLowerCase() + comment_type;
+        String key = community.toLowerCase() + user + sig + contributeType.toLowerCase() + timeRange.toLowerCase() + comment_type;
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
