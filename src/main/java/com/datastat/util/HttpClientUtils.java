@@ -16,6 +16,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -109,7 +110,7 @@ public class HttpClientUtils implements Serializable {
 
             @Override
             public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return null;
+                return new X509Certificate[0];
             }
         };
         SecureRandom secureRandom = SecureRandom.getInstanceStrong();

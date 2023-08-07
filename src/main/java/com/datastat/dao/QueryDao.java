@@ -81,6 +81,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateKey;
 
 @Primary
@@ -494,7 +495,7 @@ public class QueryDao {
             String giteeId = bucket.get("key").asText();
             long contribute = bucket.get("comment").get("value").asLong();
             long invalidComment = bucket.get("invalid_comment").get("value").asLong();
-            long validComment = contribute - invalidComment;
+            long validComment = Math.subtractExact(contribute, invalidComment);
             if (contribute == 0 || robotUsers.contains(giteeId)) {
                 continue;
             }
@@ -2602,13 +2603,13 @@ public class QueryDao {
     }
 
     private List<String> randomItems(List<String> items) {
-        Random random = new Random();
+        SecureRandom secureRandom =  new SecureRandom();
         ArrayList<String> res = new ArrayList<>();
         if (items.size() >= 2) {
-            int i = random.nextInt(items.size());
+            int i = secureRandom.nextInt(items.size());
             res.add(items.get(i));
             items.remove(i);
-            i = random.nextInt(items.size());
+            i = secureRandom.nextInt(items.size());
             res.add(items.get(i));
         } else {
             res.addAll(items);
