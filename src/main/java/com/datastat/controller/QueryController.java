@@ -222,14 +222,6 @@ public class QueryController {
         return queryService.queryBuildCheckInfo(request, queryBody, lastCursor, pageSize);
     }
 
-    @RequestMapping(value = "/track", method = RequestMethod.GET)
-    public String putUserActionsInfo(HttpServletRequest request,
-                                     @RequestParam(value = "community") String community,
-                                     @RequestParam(value = "data") String data,
-                                     @RequestParam(value = "ext") String ext) {
-        return queryService.putUserActionsInfo(request, community, data);
-    }
-
     @RequestMapping("/sig/name")
     public String querySigName(HttpServletRequest request,
                                @RequestParam(value = "community") String community,
@@ -442,11 +434,6 @@ public class QueryController {
                                    @RequestParam(value = "community") String community,
                                    @RequestParam(value = "timestamp", required = false) Long ts) {
         return queryService.queryClaName(request, community, ts);
-    }
-
-    @RequestMapping(value = "/ip/location")
-    public String getIPLocation(HttpServletRequest request, @RequestParam(value = "ip") String ip) {
-        return queryService.getIPLocation(request, ip);
     }
 
     @RequestMapping(value = "ecosystem/repo/info")
