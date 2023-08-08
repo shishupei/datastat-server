@@ -73,11 +73,20 @@ public class QueryService {
     ObjectMapper objectMapper;
 
     private static long redisDefaultExpire;
+    private static List<String> communityList;
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
     @PostConstruct
     public void init() {
         redisDefaultExpire = Long.parseLong(env.getProperty("redis.keyExpire", "60"));
+        communityList = Arrays.asList(env.getProperty("communitys").split(","));
+    }
+
+    public Boolean checkCommunity(String community) {
+        if (communityList.contains(community.toLowerCase())) {
+            return true;
+        }
+        return false;
     }
 
     public String queryContributors(HttpServletRequest request, String community) {
@@ -210,6 +219,7 @@ public class QueryService {
     }
 
     public String queryAll(HttpServletRequest request, String community) throws Exception {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "all";
         String key = community.toLowerCase() + item;
         String result = (String) redisDao.get(key);
@@ -358,6 +368,7 @@ public class QueryService {
     }
 
     public String queryCompanyContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String version, String repo) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "companyContribute";
         String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange + version + repo;
         String result = (String) redisDao.get(key);
@@ -371,6 +382,7 @@ public class QueryService {
     }
 
     public String queryUserContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String repo) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "userContribute";
         String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange.toLowerCase() + repo;
         String result = (String) redisDao.get(key);
@@ -402,10 +414,12 @@ public class QueryService {
 
     public String putUserActionsInfo(HttpServletRequest request, String community, String data) {
         QueryDao queryDao = getQueryDao(request);
+        if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         return queryDao.putUserActionsInfo(community, data);
     }
 
     public String querySigName(HttpServletRequest request, String community, String lang) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "sigsname";
         String key = community + item + lang;
         String result = (String) redisDao.get(key);
@@ -419,6 +433,7 @@ public class QueryService {
     }
 
     public String querySigInfo(HttpServletRequest request, String community, String sig, String repo, String user, String search, String page, String pageSize) throws Exception {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         if (search != null && search.equals("fuzzy")) {
             return queryFuzzySigInfo(request, community, sig, repo, user, search, page, pageSize);
         }
@@ -458,6 +473,7 @@ public class QueryService {
     }
 
     public String querySigCompanyContributors(HttpServletRequest request, String community, String contributeType, String timeRange, String sig) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "companyContribute";
         String key = community.toLowerCase() + item + contributeType.toLowerCase() + timeRange.toLowerCase() + sig;
         String result = (String) redisDao.get(key);
@@ -533,6 +549,7 @@ public class QueryService {
     }
 
     public String querySigUserTypeCount(HttpServletRequest request, String community, String sig, String contributeType, String timeRange) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + sig + "usertypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -561,6 +578,7 @@ public class QueryService {
     }
 
     public String queryCommunityRepos(HttpServletRequest request, String community) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + "repos";
         String result = null; //(String) redisDao.get(key);
         if (result == null) {
@@ -585,6 +603,7 @@ public class QueryService {
     }
 
     public String querySigScoreAll(HttpServletRequest request, String community) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String keyStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String key = community.toLowerCase() + "sigscoreall" + keyStr;
         String result = (String) redisDao.get(key);
@@ -610,6 +629,7 @@ public class QueryService {
     }
 
     public String queryCompanySigs(HttpServletRequest request, String community, String timeRange) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + "companysigs" + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -622,6 +642,7 @@ public class QueryService {
     }
 
     public String querySigsOfTCOwners(HttpServletRequest request, String community) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + "sigs_of_tc_owners";
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -634,6 +655,7 @@ public class QueryService {
     }
 
     public String queryUserSigContribute(HttpServletRequest request, String community, String user, String contributeType, String timeRange) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + user + "sigtypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -646,6 +668,7 @@ public class QueryService {
     }
 
     public String queryUserOwnerType(HttpServletRequest request, String community, String user) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + user + "ownertype";
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -659,6 +682,7 @@ public class QueryService {
 
     public String queryUserContributeDetails(HttpServletRequest request, String community, String user, String sig, String contributeType,
                                              String timeRange, String page, String pageSize, String comment_type, String filter) throws Exception {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + user + sig + contributeType.toLowerCase() + timeRange.toLowerCase() + comment_type;
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -728,6 +752,7 @@ public class QueryService {
     }
 
     public String queryUserLists(HttpServletRequest request, String community, String group, String name) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + group + name + "userlist";
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -740,6 +765,7 @@ public class QueryService {
     }
 
     public String querySigRepoCommitters(HttpServletRequest request, String community, String sig) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + sig + "committers";
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -962,12 +988,14 @@ public class QueryService {
 
     public String querySigPrStateCount(HttpServletRequest request, String community, String sig, Long ts) {
         QueryDao queryDao = getQueryDao(request);
+        if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         CustomPropertiesConfig queryConf = getQueryConf(request);
         String result = queryDao.querySigPrStateCount(queryConf, sig, ts);     
         return result;
     }
     
     public String queryMetricsData(HttpServletRequest request, String community, DatastatRequestBody body) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String filter = body.getFilter();
         String serviceType = community.toLowerCase() + filter.toLowerCase() + "MetricDao";
         MetricDao metricDao = metricDaoContext.getQueryMetricsDao(serviceType);
@@ -978,6 +1006,7 @@ public class QueryService {
 
     public String queryClaName(HttpServletRequest request, String community, Long ts) {
         QueryDao queryDao = getQueryDao(request);
+        if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         CustomPropertiesConfig queryConf = getQueryConf(request);
         String result = queryDao.queryClaName(queryConf, ts);     
         return result;
@@ -992,6 +1021,7 @@ public class QueryService {
     public String getEcosystemRepoInfo(HttpServletRequest request, String community, String ecosystemType, String lang, String sortType,
             String sortOrder, String page, String pageSize) {
         QueryDao queryDao = getQueryDao(request);
+        if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         CustomPropertiesConfig queryConf = getQueryConf(request);
         lang = lang == null ? "zh" : lang.toLowerCase();
         // String key = community.toLowerCase() + ecosystemType.toLowerCase() + "ecosysteminfo" + sortOrder + lang;
@@ -1046,6 +1076,7 @@ public class QueryService {
     }
 
     public String queryCommunityIsv(HttpServletRequest request, String community, String name, String softwareType, String company) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = community.toLowerCase() + "isvinfo";
         String result = (String) redisDao.get(key);
         QueryDao queryDao = getQueryDao(request);
