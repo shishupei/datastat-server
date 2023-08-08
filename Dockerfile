@@ -25,7 +25,9 @@ RUN git clone -b ${BRANCH} https://github.com/opensourceways/datastat-server && 
         mvn clean install package -Dmaven.test.skip && \
         mv ./target/ds-0.0.1-SNAPSHOT.jar ../ds.jar
 
-RUN git clone https://${NEW_YEAR_USER}@gitee.com/lixianlin01/new-year.git
-RUN git clone https://gitee.com/opensourceway/om-data.git
+RUN git clone https://${NEW_YEAR_USER}@gitee.com/lixianlin01/new-year.git && \
+    git clone https://gitee.com/opensourceway/om-data.git && \
+    useradd -u 1000 datastat -s /bin/bash -m -U
 
+USER datastat
 CMD java -jar ds.jar
