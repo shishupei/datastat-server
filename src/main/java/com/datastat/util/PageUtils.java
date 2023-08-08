@@ -40,11 +40,8 @@ public class PageUtils {
     }
 
     public static int multiplyExact(int a, int b) {
-        long mul = (long) a * (long) b;
-        if (mul > Integer.MAX_VALUE) {
-            throw new ArithmeticException("Overflow!");
-        }
-        return  (int) mul;
+        int r = Math.multiplyExact(a, b);
+        return r;
     }
 
 }
