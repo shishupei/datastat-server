@@ -472,7 +472,6 @@ public class QueryController {
         return queryService.queryCommunityIsv(request, community, name, softwareType, company);
     }
 
-
     @RequestMapping(value = "/versions")
     public String queryCommunityVersions(HttpServletRequest request, @RequestParam String community) {
         String res = queryService.queryCommunityVersions(request, community);
