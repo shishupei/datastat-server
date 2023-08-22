@@ -150,7 +150,9 @@ public class CustomPropertiesConfig {
     private String eurPackagesQuery;
     private String aggGroupCommentQueryStr;
     private String innovationItemAddress;
-
+    private String issueDoneQueryStr;
+    private String issueCveQueryStr;
+    
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
     @PostConstruct
@@ -375,5 +377,23 @@ public class CustomPropertiesConfig {
             contributesQueryStr = String.format(getCompanyVersionPrQuery(), versionQueryStr);
         }
         return contributesQueryStr;
+    }
+
+    public String getAggIssueQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String type) {
+        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
+        String group = groupField.equals("company") ? "tag_user_company" : "sig_names";
+        String queryJson = null;
+        if (type.equals("cve")) {
+            queryJson = getIssueCveQueryStr();
+        }
+        if (type.equals("done")) {
+            queryJson = getIssueDoneQueryStr();
+        }
+        if (queryJson == null) {
+            return null;
+        }
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, group);
     }
 }
