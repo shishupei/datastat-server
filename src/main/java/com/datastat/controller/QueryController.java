@@ -525,6 +525,22 @@ public class QueryController {
     @RequestMapping(value = "/innovation_items")
     public String queryInnovationItems(HttpServletRequest request, @RequestParam(value = "community") String community) {
         return queryService.queryInnovationItems(request, community);
-    } 
+    }
+
+    @RequestMapping(value = "/issue_done")
+    public String queryIssueDone(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "timeRange") String timeRange,
+            @RequestParam(value = "groupField") String groupField) {
+        return queryService.queryIssueDone(request, community, timeRange, groupField);
+    }
+
+    @RequestMapping(value = "/issue_cve")
+    public String queryIssueCve(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "timeRange") String timeRange,
+            @RequestParam(value = "groupField") String groupField) {
+        return queryService.queryIssueCve(request, community, timeRange, groupField);
+    }
 
 }

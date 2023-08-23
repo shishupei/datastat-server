@@ -2624,4 +2624,75 @@ public class QueryDao {
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
     
+    @SneakyThrows
+    public String queryIssueDone(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField) {
+        String issueDoneQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, "done");
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), issueDoneQueryStr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        if (!groupField.equals("company")) {
+            return packageBySig(buckets);
+        } else {
+            return packageByCompany(buckets);
+        }
+    }
+
+    @SneakyThrows
+    public String queryIssueCve(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField) {
+        String issueCveQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, "cve");
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), issueCveQueryStr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        if (!groupField.equals("company")) {
+            return packageBySig(buckets);
+        } else {
+            return packageByCompany(buckets);
+        }
+    }
+
+    @SneakyThrows
+    public String packageByCompany(Iterator<JsonNode> buckets) {
+        List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"), env.getProperty("company.name.local.yaml"));
+        Map<String, String> companyNameCnEn = companies.get(0);
+        ArrayList<JsonNode> dataList = new ArrayList<>();
+        HashMap<String, Object> dataMap = new HashMap<>();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String companyCn = bucket.get("key").asText();
+            long doneNumber = bucket.get("doc_count").asLong();
+            if (doneNumber == 0) {
+                continue;
+            }
+            String companyEn = companyNameCnEn.getOrDefault(companyCn.trim(), companyCn);
+            dataMap.put("company_en", companyEn);
+            dataMap.put("company_cn", companyCn);
+            dataMap.put("value", doneNumber);
+            JsonNode resNode = objectMapper.valueToTree(dataMap);
+            dataList.add(resNode);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
+    }
+
+    @SneakyThrows
+    public String packageBySig(Iterator<JsonNode> buckets) {
+        ArrayList<JsonNode> dataList = new ArrayList<>();
+        HashMap<String, Object> dataMap = new HashMap<>();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String sigName = bucket.get("key").asText();
+            long doneNumber = bucket.get("doc_count").asLong();
+            if (doneNumber == 0) {
+                continue;
+            }
+            dataMap.put("sig_name", sigName);
+            dataMap.put("value", doneNumber);
+            JsonNode resNode = objectMapper.valueToTree(dataMap);
+            dataList.add(resNode);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
+    }
 }
