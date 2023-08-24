@@ -15,6 +15,7 @@ import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
@@ -520,6 +521,11 @@ public class QueryController {
     public ResponseEntity queryReviewerRecommend(@RequestBody PrReviewerVo input) {
         ResponseEntity res = queryService.queryReviewerRecommend(input);
         return res;
+    }
+
+    @RequestMapping(value = "/nps", method = RequestMethod.POST)
+    public String getNps(HttpServletRequest request, @RequestBody NpsBody body) {
+        return queryService.getNps(request, body);
     }
 
 }
