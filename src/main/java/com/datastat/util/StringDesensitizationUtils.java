@@ -151,10 +151,7 @@ public class StringDesensitizationUtils {
     }
 
     public static int subtractExact(int x, int y) {
-        int r = x - y;
-        if (((x ^ y) & (x ^ r)) < 0) {
-            throw new ArithmeticException("Overflow");
-        }
+        int r = Math.subtractExact(x, y);
         return r;
     }
 
