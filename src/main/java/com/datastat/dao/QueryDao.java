@@ -2587,12 +2587,12 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String getNps(CustomPropertiesConfig queryConf, NpsBody body) {
+    public String getNps(CustomPropertiesConfig queryConf, String community, NpsBody body) {
         HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("community", body.getCommunity());
-        resMap.put("page", body.getPage());
-        resMap.put("score", body.getScore());
-        resMap.put("suggest", body.getSuggest());
+        resMap.put("community", community);
+        resMap.put("feedbackPageUrl", body.getFeedbackPageUrl());
+        resMap.put("feedbackValue", body.getFeedbackValue());
+        resMap.put("feedbackText", body.getFeedbackText());
 
         Date now = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
