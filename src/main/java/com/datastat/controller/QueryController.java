@@ -545,7 +545,8 @@ public class QueryController {
     }
   
     @RequestMapping(value = "/nps", method = RequestMethod.POST)
-    public String getNps(HttpServletRequest request, @RequestBody NpsBody body) {
-        return queryService.getNps(request, body);
+    public String getNps(HttpServletRequest request, @RequestParam(value = "community") String community,
+            @RequestBody NpsBody body) {
+        return queryService.getNps(request, community, body);
     }
 }

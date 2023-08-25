@@ -4,8 +4,7 @@ import lombok.Data;
 
 @Data
 public class NpsBody {
-    private String community;
-    private String page;
-    private int score;
-    private String suggest;
+    private String feedbackPageUrl;
+    private int feedbackValue;
+    private String feedbackText;
 }

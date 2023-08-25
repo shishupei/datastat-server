@@ -1179,10 +1179,10 @@ public class QueryService {
         return queryDao.queryReviewerRecommend(queryConf, input);
     }
 
-    public String getNps(HttpServletRequest request, NpsBody body) {
+    public String getNps(HttpServletRequest request, String community, NpsBody body) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
-        return queryDao.getNps(queryConf, body);
+        return queryDao.getNps(queryConf, community, body);
     }
 
     public String queryInnovationItems(HttpServletRequest request, String community) {
