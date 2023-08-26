@@ -528,20 +528,23 @@ public class QueryController {
         return queryService.queryInnovationItems(request, community);
     }
 
-    @RequestMapping(value = "/issue_done")
-    public String queryIssueDone(HttpServletRequest request,
+    @RequestMapping(value = "/list")
+    public String queryAllProjects(HttpServletRequest request,
             @RequestParam(value = "community") String community,
             @RequestParam(value = "timeRange") String timeRange,
-            @RequestParam(value = "groupField") String groupField) {
-        return queryService.queryIssueDone(request, community, timeRange, groupField);
+            @RequestParam(value = "groupField") String groupField,
+            @RequestParam(value = "type") String type) {
+        return queryService.queryAllProjects(request, community, timeRange, groupField, type);
     }
 
-    @RequestMapping(value = "/issue_cve")
-    public String queryIssueCve(HttpServletRequest request,
+    @RequestMapping(value = "/project")
+    public String queryByProjectName(HttpServletRequest request,
             @RequestParam(value = "community") String community,
             @RequestParam(value = "timeRange") String timeRange,
-            @RequestParam(value = "groupField") String groupField) {
-        return queryService.queryIssueCve(request, community, timeRange, groupField);
+            @RequestParam(value = "groupField") String groupField,
+            @RequestParam(value = "projectName") String projectName,
+            @RequestParam(value = "type") String type) {
+        return queryService.queryByProjectName(request, community, timeRange, groupField, projectName, type);
     }
   
     @RequestMapping(value = "/nps", method = RequestMethod.POST)
