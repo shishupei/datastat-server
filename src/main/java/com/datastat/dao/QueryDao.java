@@ -2656,7 +2656,7 @@ public class QueryDao {
             String companyEn = companyNameCnEn.getOrDefault(companyCn.trim(), companyCn);
             dataMap.put("company_en", companyEn);
             dataMap.put("company_cn", companyCn);
-            dataMap.put("value", doneNumber);
+            dataMap.put("contribute", doneNumber);
             JsonNode resNode = objectMapper.valueToTree(dataMap);
             dataList.add(resNode);
         }
@@ -2675,7 +2675,7 @@ public class QueryDao {
                 continue;
             }
             dataMap.put("sig_name", sigName);
-            dataMap.put("value", doneNumber);
+            dataMap.put("contribute", doneNumber);
             JsonNode resNode = objectMapper.valueToTree(dataMap);
             dataList.add(resNode);
         }
