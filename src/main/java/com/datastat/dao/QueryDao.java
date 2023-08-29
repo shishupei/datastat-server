@@ -2613,15 +2613,21 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryInnovationItems(CustomPropertiesConfig queryConf) {
-        List<String> res = new ArrayList<>();
+        List<String> res = getInnovationItemsNames(queryConf);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    @SneakyThrows
+    public List<String> getInnovationItemsNames(CustomPropertiesConfig queryConf) {
         YamlUtil yamlUtil = new YamlUtil();
         InnovationItemYaml items = yamlUtil.readLocalYaml(queryConf.getInnovationItemAddress(), 
         InnovationItemYaml.class);
+        List<String> res = new ArrayList<>();
         for (InnovationItemInfo item : items.getInnovation_projects()) {
             String name = item.getProject_name().trim();
             res.add(name);
         }
-        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+        return res;
     }
 
     @SneakyThrows
@@ -2630,17 +2636,18 @@ public class QueryDao {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), allProjectQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
-
         // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        List<Map<String, Object>> res = new ArrayList<>();
         if (!groupField.equals("company")) {
-            return packageBySig(buckets);
+            res = packageBySig(buckets);
         } else {
-            return packageByCompany(buckets, queryConf);
+            res = packageByCompany(buckets, queryConf);
         }
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 
     @SneakyThrows
-    public String packageByCompany(Iterator<JsonNode> buckets, CustomPropertiesConfig queryConf) {
+    public List<Map<String, Object>> packageByCompany(Iterator<JsonNode> buckets, CustomPropertiesConfig queryConf) {
         // 获取companies变量，保存公司的中英文对应名称
         List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"),
             env.getProperty("company.name.local.yaml"));
@@ -2663,14 +2670,14 @@ public class QueryDao {
             dataList.add(new HashMap<>(dataMap));
         }
         // 过滤返回结果
-        List<JsonNode> newList = filterData(dataList, queryConf);
-        return resultJsonStr(200, objectMapper.valueToTree(newList), "ok");
+        List<Map<String, Object>> newList = filterData(dataList, queryConf);
+        return newList;
     }
 
     @SneakyThrows
-    public List<JsonNode> filterData(List<Map<String, Object>> dataList, CustomPropertiesConfig queryConf) {
+    public List<Map<String, Object>> filterData(List<Map<String, Object>> dataList, CustomPropertiesConfig queryConf) {
         List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
-        List<JsonNode> newList = new ArrayList<>();
+        List<Map<String, Object>> newList = new ArrayList<>();
         long independent = 0;
         for (Map<String, Object> data : dataList) {
             String company = (String) data.get("company_cn");
@@ -2684,22 +2691,20 @@ public class QueryDao {
             if (company.contains("华为技术有限公司")) {
                 continue;
             }
-            JsonNode resNode = objectMapper.valueToTree(data);
-            newList.add(resNode);
+            newList.add(new HashMap<>(data));
         }
         Map<String, Object> data = new HashMap<>();
         data.put("company_cn", "个人贡献者");
         data.put("company_en", "independent");
         data.put("contribute", independent);
-        JsonNode resNode = objectMapper.valueToTree(data);
-        newList.add(resNode);
+        newList.add(new HashMap<>(data));
         return newList;
     }
 
     @SneakyThrows
-    public String packageBySig(Iterator<JsonNode> buckets) {
-        ArrayList<JsonNode> dataList = new ArrayList<>();
-        HashMap<String, Object> dataMap = new HashMap<>();
+    public List<Map<String, Object>> packageBySig(Iterator<JsonNode> buckets) {
+        List<Map<String, Object>> dataList = new ArrayList<>();
+        Map<String, Object> dataMap = new HashMap<>();
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
             String sigName = bucket.get("key").asText();
@@ -2709,23 +2714,102 @@ public class QueryDao {
             }
             dataMap.put("sig_name", sigName);
             dataMap.put("contribute", doneNumber);
-            JsonNode resNode = objectMapper.valueToTree(dataMap);
-            dataList.add(resNode);
+            dataList.add(new HashMap<>(dataMap));
         }
-        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
+        return dataList;
     }
 
     @SneakyThrows
     public String queryByProjectName(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String projectName, String type) {
+        // 查询单个项目的结果
+        List<Map<String, Object>> res = getSingleProject(queryConf, community, timeRange, groupField, projectName, type);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> getSingleProject(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String projectName, String type) {
         String projectQueryStr = queryConf.getAggProjectPrQueryStr(queryConf, timeRange, groupField, projectName, type);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        List<Map<String, Object>> res = new ArrayList<>();
        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
         if (!groupField.equals("company")) {
-            return packageBySig(buckets);
+            res = packageBySig(buckets);
         } else {
-            return packageByCompany(buckets, queryConf);
+            res = packageByCompany(buckets, queryConf);
         }
+        return res;
     }
+
+    @SneakyThrows
+    public String queryAllInnoItems(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String type) {
+        // 获取所有创新项目的名称
+        List<String> projectNames = getInnovationItemsNames(queryConf);
+        List<Map<String, Object>> res = new ArrayList<>();
+        for (String projectName : projectNames) {
+            List<Map<String, Object>> projectRes = getSingleProject(queryConf, community, timeRange, groupField, projectName, type);
+            res.addAll(projectRes);
+        }
+        // 合并不同创新项目的相同结果
+        List<Map<String, Object>> merged = new ArrayList<>();
+        if (!groupField.equals("company")) {
+            merged = mergeSig(res);
+        } else {
+            merged = mergeCompany(res);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(merged), "ok");
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> mergeSig(List<Map<String, Object>> list) {
+        // 合并sig组集合
+        Set<String> set = new HashSet<>();
+        for (Map<String, Object> map : list) {
+            String sig_name = (String) map.get("sig_name");
+            set.add(sig_name);
+        }
+        List<Map<String, Object>> res = new ArrayList<>();
+        for (String sig_name : set) {
+            Map<String, Object> resMap = new HashMap<>();
+            resMap.put("sig_name", sig_name);
+            resMap.put("contribute", (long) 0);
+            for (Map<String, Object> map : list) {
+                String mapSigName = (String) map.get("sig_name");
+                if (mapSigName.equals(sig_name)) {
+                    long contribute = (long) map.get("contribute");
+                    resMap.put("contribute", (long) ((long) resMap.get("contribute") + contribute));
+                }
+            }
+            res.add(resMap);
+        }
+        return res;
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> mergeCompany(List<Map<String, Object>> list) {
+        // 合并公司集合
+        Set<String> set = new HashSet<>();
+        for (Map<String, Object> map : list) {
+            String company_cn = (String) map.get("company_cn");
+            set.add(company_cn);
+        }
+        List<Map<String, Object>> res = new ArrayList<>();
+        for (String company_cn : set) {
+            Map<String, Object> resMap = new HashMap<>();
+            resMap.put("company_cn", company_cn);
+            resMap.put("contribute", (long) 0);
+            for (Map<String, Object> map : list) {
+                String mapCn = (String) map.get("company_cn");
+                String mapEn = (String) map.get("company_en");
+                resMap.put("company_en", mapEn);
+                if (mapCn.equals(company_cn)) {
+                    long contribute = (long) map.get("contribute");
+                    resMap.put("contribute", (long) ((long) resMap.get("contribute") + contribute));
+                }
+            }
+            res.add(resMap);
+        }
+        return res;
+    }       
 }

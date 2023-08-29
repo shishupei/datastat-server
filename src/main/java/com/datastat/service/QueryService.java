@@ -1220,7 +1220,13 @@ public class QueryService {
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryByProjectName(queryConf, community, timeRange, groupField, projectName, type);
+            if (projectName.equals("allInnoItems")) { // 选择所有创新项目
+                result = queryDao.queryAllInnoItems(queryConf, community, timeRange, groupField, type);
+            } else { // 选择单个创新项目
+                result = queryDao.queryByProjectName(queryConf, community, timeRange, groupField, projectName, type);
+            }
+            
+            
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
