@@ -2596,7 +2596,6 @@ public class QueryDao {
                     .body(body)
                     .asString();
         JsonNode resp = objectMapper.readTree(response.getBody());
-        System.out.println(resp);
         if (response.getStatus() == 200 && resp.get("result").get("suggestion").asText().equals("pass"))
             return true;
         return false;
