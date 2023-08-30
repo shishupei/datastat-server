@@ -1202,7 +1202,7 @@ public class QueryService {
 
     public String queryAllProjects(HttpServletRequest request, String community, String timeRange, String groupField, String type) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String key = community.toLowerCase() + timeRange.toLowerCase() + groupField.toLowerCase() + type.toLowerCase();
+        String key = "allProjects" + community.toLowerCase() + timeRange.toLowerCase() + groupField.toLowerCase() + type.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
@@ -1215,7 +1215,7 @@ public class QueryService {
 
     public String queryByProjectName(HttpServletRequest request, String community, String timeRange, String groupField, String projectName, String type) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String key = community.toLowerCase() + timeRange.toLowerCase() + groupField.toLowerCase() + projectName.toLowerCase() + type.toLowerCase();
+        String key = "projectName" + community.toLowerCase() + timeRange.toLowerCase() + groupField.toLowerCase() + projectName.toLowerCase() + type.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
@@ -1225,8 +1225,19 @@ public class QueryService {
             } else { // 选择单个创新项目
                 result = queryDao.queryByProjectName(queryConf, community, timeRange, groupField, projectName, type);
             }
-            
-            
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String querySigDefect(HttpServletRequest request, String community, String timeRange, String sigName) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "sigDefect" + community.toLowerCase() + timeRange.toLowerCase() + sigName.toLowerCase();
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySigDefect(queryConf, community, timeRange, sigName);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;

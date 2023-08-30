@@ -552,4 +552,12 @@ public class QueryController {
             @RequestBody NpsBody body) {
         return queryService.getNps(request, community, body);
     }
+
+    @RequestMapping(value = "/sig_defect")
+    public String querySigDefect(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "timeRange") String timeRange,
+            @RequestParam(value = "sigName") String sigName) {
+        return queryService.querySigDefect(request, community, timeRange, sigName);
+    }
 }
