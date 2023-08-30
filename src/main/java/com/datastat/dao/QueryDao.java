@@ -2635,6 +2635,7 @@ public class QueryDao {
         String allProjectQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, type);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), allProjectQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
         // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
         List<Map<String, Object>> res = new ArrayList<>();
@@ -2697,6 +2698,10 @@ public class QueryDao {
         data.put("company_cn", "个人贡献者");
         data.put("company_en", "independent");
         data.put("contribute", independent);
+        // 判断是否没有结果
+        if (newList.size() == 0 && independent == 0) {
+            return newList;
+        }
         newList.add(new HashMap<>(data));
         return newList;
     }
@@ -2811,5 +2816,25 @@ public class QueryDao {
             res.add(resMap);
         }
         return res;
-    }       
+    }
+    
+    @SneakyThrows
+    public String querySigDefect(CustomPropertiesConfig queryConf, String community, String timeRange, String sigName) {
+        // 查询本项目所有issue
+        String[] types = new String[]{"allIssue", "closedIssue", "allCve", "fixedCve"};
+        ListenableFuture<Response> future = null;
+        String projectQueryStr = null;
+        JsonNode dataNode = null;
+        long res = 0;
+        Map<String, Object> resMap = new HashMap<>();
+        for (int i = 0; i < types.length; i++) {
+            String type = types[i];
+            projectQueryStr = queryConf.getAggSigDefectQueryStr(queryConf, timeRange, sigName, type);
+            future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
+            dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+            res = dataNode.get("hits").get("total").get("value").asLong();
+            resMap.put(type, res);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(resMap), "ok");
+    }
 }

@@ -161,6 +161,8 @@ public class CustomPropertiesConfig {
     private String projectCommentQueryStr;
     private String projectIssueCveQueryStr;
     private String projectIssueDoneQueryStr;
+    private String sigIssueQueryStr;
+    private String sigCveQueryStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
@@ -410,7 +412,7 @@ public class CustomPropertiesConfig {
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, group);
     }
 
-    public String getAggProjectPrQueryStr(CustomPropertiesConfig queryConf, String timeRange, String groupField, String projectName, String contributeType) {
+    public List<String> getProjectRepos(CustomPropertiesConfig queryConf, String projectName) {
         YamlUtil yamlUtil = new YamlUtil();
         InnovationItemYaml items = yamlUtil.readLocalYaml(queryConf.getInnovationItemAddress(), 
                 InnovationItemYaml.class);
@@ -422,6 +424,11 @@ public class CustomPropertiesConfig {
                 break;
             }
         }
+        return repos;
+    }
+
+    public String getAggProjectPrQueryStr(CustomPropertiesConfig queryConf, String timeRange, String groupField, String projectName, String contributeType) {
+        List<String> repos = getProjectRepos(queryConf, projectName);
         // 判断根据项目找到的仓库是否存在
         if (repos.size() == 0) {
             return null;
@@ -477,5 +484,37 @@ public class CustomPropertiesConfig {
         }
         repoSb.append(")");
         return repoSb.toString();
+    }
+
+    public String getAggSigDefectQueryStr(CustomPropertiesConfig queryConf, String timeRange, String sigName, String type) {
+        // 拼接查询项目字符串
+        String queryJson = null;
+        String issueRange = null;
+        switch (type) {
+            case "allIssue":
+                issueRange = "(closed, rejected, open, progressing)";
+                queryJson = getSigIssueQueryStr();
+                break;
+            case "closedIssue":
+                issueRange = "(closed, rejected)";
+                queryJson = getSigIssueQueryStr();
+                break;
+            case "allCve":
+                issueRange = "(CVE/FIXED, CVE/UNFIXED, CVE/UNAFFECTED, CVE/PENDING)";
+                queryJson = getSigCveQueryStr();
+                break;
+            case "fixedCve":
+                issueRange = "(CVE/FIXED, CVE/UNAFFECTED)";
+                queryJson = getSigCveQueryStr();
+                break;
+            default:
+                break;
+        }
+        if (queryJson == null) {
+            return null;
+        }
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, issueRange, sigName);
     }
 }
