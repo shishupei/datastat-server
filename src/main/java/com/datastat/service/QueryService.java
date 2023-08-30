@@ -1182,7 +1182,13 @@ public class QueryService {
     public String getNps(HttpServletRequest request, String community, NpsBody body) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
-        return queryDao.getNps(queryConf, community, body);
+        String token = (String) redisDao.get("nps_moderation_token");
+        if (token == null) {
+            token = queryDao.getHuaweiCloudToken(env.getProperty("moderation.user.name"), env.getProperty("moderation.user.password"),
+                        env.getProperty("moderation.domain.name"), env.getProperty("moderation.token.endpoint"));
+            redisDao.set("nps_moderation_token", token, 36000l);
+        }
+        return queryDao.getNps(queryConf, community, body, token);
     }
 
     public String queryInnovationItems(HttpServletRequest request, String community) {
