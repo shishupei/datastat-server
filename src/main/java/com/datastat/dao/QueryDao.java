@@ -2608,7 +2608,7 @@ public class QueryDao {
         resMap.put("feedbackPageUrl", body.getFeedbackPageUrl());
         resMap.put("feedbackValue", body.getFeedbackValue());
         resMap.put("feedbackText", body.getFeedbackText());
-        if (!moderation(body.getFeedbackText(), token)) return resultJsonStr(400, "null", "Content is not compliant");
+        if (!moderation(body.getFeedbackText(), token)) return resultJsonStr(400, null, "Content is not compliant");
 
         Date now = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
@@ -2623,7 +2623,7 @@ public class QueryDao {
         if (request.requests().size() != 0)
             restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
         restHighLevelClient.close();
-        return resultJsonStr(200, "success", "success");
+        return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
     }
 
     @SneakyThrows
