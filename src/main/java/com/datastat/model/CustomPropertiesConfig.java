@@ -80,6 +80,7 @@ public class CustomPropertiesConfig {
     private String meetupApplyFormIndex;
     private String userTagIndex;
     private String npsIndex;
+    private String giteeFeatureIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -163,6 +164,7 @@ public class CustomPropertiesConfig {
     private String projectIssueDoneQueryStr;
     private String sigIssueQueryStr;
     private String sigCveQueryStr;
+    private String companyFeatureQueryStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 
@@ -516,5 +518,13 @@ public class CustomPropertiesConfig {
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, issueRange, sigName);
+    }
+
+    public String getAggCompanyFeatureQueryStr(CustomPropertiesConfig queryConf, String version) {
+        String queryJson = getCompanyFeatureQueryStr();
+        if (queryJson == null) {
+            return null;
+        }
+        return queryStrFormat(queryJson, version);
     }
 }

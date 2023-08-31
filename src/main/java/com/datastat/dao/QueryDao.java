@@ -410,6 +410,10 @@ public class QueryDao {
     @SneakyThrows
     public String queryCompanyContributors(CustomPropertiesConfig queryConf, String community, String contributeType,
             String timeRange, String version, String repo, String sig) {
+        // 展示特征
+        if (contributeType.equals("feature")) {
+            return getCompanyFeature(queryConf, community, version);
+        }
         List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
         List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"), env.getProperty("company.name.local.yaml"));
         Map<String, String> companyNameCnEn = companies.get(0);
@@ -2665,6 +2669,7 @@ public class QueryDao {
             }
             String companyCn = companyNameAlCn.getOrDefault(company.trim(), company.trim());
             String companyEn = companyNameCnEn.getOrDefault(company.trim(), companyCn);
+            dataMap.put("company", company);
             dataMap.put("company_en", companyEn);
             dataMap.put("company_cn", companyCn);
             dataMap.put("contribute", doneNumber);
@@ -2680,8 +2685,9 @@ public class QueryDao {
         List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
         List<Map<String, Object>> newList = new ArrayList<>();
         long independent = 0;
+        Map<String, Object> dataMap = new HashMap<>();
         for (Map<String, Object> data : dataList) {
-            String company = (String) data.get("company_cn");
+            String company = (String) data.get("company");
             if (!claCompanies.contains(company) ||
                     company.equals("深圳易宝软件") ||
                     company.contains("华为合作方") ||
@@ -2692,17 +2698,19 @@ public class QueryDao {
             if (company.contains("华为技术有限公司")) {
                 continue;
             }
+            dataMap.put("company_en", data.get("company_en"));
+            dataMap.put("company_cn", data.get("company_cn"));
+            dataMap.put("contribute", data.get("contribute"));
             newList.add(new HashMap<>(data));
         }
-        Map<String, Object> data = new HashMap<>();
-        data.put("company_cn", "个人贡献者");
-        data.put("company_en", "independent");
-        data.put("contribute", independent);
+        dataMap.put("company_cn", "个人贡献者");
+        dataMap.put("company_en", "independent");
+        dataMap.put("contribute", independent);
         // 判断是否没有结果
         if (newList.size() == 0 && independent == 0) {
             return newList;
         }
-        newList.add(new HashMap<>(data));
+        newList.add(new HashMap<>(dataMap));
         return newList;
     }
 
@@ -2837,4 +2845,15 @@ public class QueryDao {
         }
         return resultJsonStr(200, objectMapper.valueToTree(resMap), "ok");
     }
+
+    @SneakyThrows
+    public String getCompanyFeature(CustomPropertiesConfig queryConf, String community, String version) {
+        String companyFeature = queryConf.getAggCompanyFeatureQueryStr(queryConf, version);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeFeatureIndex(), companyFeature);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        List<Map<String, Object>> res = packageByCompany(buckets, queryConf);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
 }
