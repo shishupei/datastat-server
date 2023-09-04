@@ -522,9 +522,10 @@ public class CustomPropertiesConfig {
 
     public String getAggCompanyFeatureQueryStr(CustomPropertiesConfig queryConf, String version) {
         String queryJson = getCompanyFeatureQueryStr();
+        String verisonQuery = "all".equals(version) ? "*" : version;
         if (queryJson == null) {
             return null;
         }
-        return queryStrFormat(queryJson, version);
+        return queryStrFormat(queryJson, verisonQuery);
     }
 }
