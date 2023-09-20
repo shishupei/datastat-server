@@ -568,4 +568,15 @@ public class QueryController {
             @RequestParam(value = "sigName") String sigName) {
         return queryService.querySigDefect(request, community, timeRange, sigName);
     }
+
+    @RequestMapping(value = "/sig/contribute")
+    public String querySigContribute(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "timeRange", required = false) String timeRange,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "version", required = false) String version) {
+        return queryService.querySigContribute(request, community, timeRange, projectName, type, version);
+    }
+
 }

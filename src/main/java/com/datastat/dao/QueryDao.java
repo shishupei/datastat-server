@@ -412,7 +412,7 @@ public class QueryDao {
             String timeRange, String version, String repo, String sig) {
         // 展示特征
         if (contributeType.equals("feature")) {
-            return getCompanyFeature(queryConf, community, version);
+            return getVersionFeature(queryConf, community, version, "company");
         }
         List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
         List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"), env.getProperty("company.name.local.yaml"));
@@ -2652,17 +2652,37 @@ public class QueryDao {
     @SneakyThrows
     public String queryAllProjects(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String type) {
         String allProjectQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, type);
+        if (StringUtils.isBlank(allProjectQueryStr)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), allProjectQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
         // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
         List<Map<String, Object>> res = new ArrayList<>();
-        if (!groupField.equals("company")) {
+        if ("company".equals(groupField)) {
+            res = packageByCompany(buckets, queryConf);
+        } else if ("sig".equals(groupField)) {
             res = packageBySig(buckets);
         } else {
-            res = packageByCompany(buckets, queryConf);
+            return resultJsonStr(400, null, "incorrect input parameter");
         }
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    @SneakyThrows
+    public String querySigContributors(CustomPropertiesConfig queryConf, String community, String type, String timeRange) {
+        String sigContributeQueryStr = queryConf.getAggSigContributeQueryStr(queryConf, type, timeRange);
+        if (StringUtils.isBlank(sigContributeQueryStr)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), sigContributeQueryStr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        List<Map<String, Object>> res = new ArrayList<>();
+        // 按照SIG组排序
+        res = packageBySig(buckets);
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 
@@ -2757,15 +2777,21 @@ public class QueryDao {
     @SneakyThrows
     public List<Map<String, Object>> getSingleProject(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String projectName, String type) {
         String projectQueryStr = queryConf.getAggProjectPrQueryStr(queryConf, timeRange, groupField, projectName, type);
+        if (StringUtils.isBlank(projectQueryStr)) {
+            return new ArrayList<>();
+        }
+        projectQueryStr = "";
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
         List<Map<String, Object>> res = new ArrayList<>();
-       // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
-        if (!groupField.equals("company")) {
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        if ("company".equals(groupField)) {
+            res = packageByCompany(buckets, queryConf);
+        } else if ("sig".equals(groupField)) {
             res = packageBySig(buckets);
         } else {
-            res = packageByCompany(buckets, queryConf);
+            res = new ArrayList<>();
         }
         return res;
     }
@@ -2853,6 +2879,10 @@ public class QueryDao {
         for (int i = 0; i < types.length; i++) {
             String type = types[i];
             projectQueryStr = queryConf.getAggSigDefectQueryStr(queryConf, timeRange, sigName, type);
+            if (StringUtils.isBlank(projectQueryStr)) {
+                resMap.put(type, (long) 0);
+                continue;
+            }
             future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
             dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
             res = dataNode.get("hits").get("total").get("value").asLong();
@@ -2862,13 +2892,79 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String getCompanyFeature(CustomPropertiesConfig queryConf, String community, String version) {
-        String companyFeature = queryConf.getAggCompanyFeatureQueryStr(queryConf, version);
+    public String getVersionFeature(CustomPropertiesConfig queryConf, String community, String version, String groupField) {
+        String companyFeature = queryConf.getAggCompanyFeatureQueryStr(queryConf, version, groupField);
+        if (StringUtils.isBlank(companyFeature)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeFeatureIndex(), companyFeature);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
-        List<Map<String, Object>> res = packageByCompany(buckets, queryConf);
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        List<Map<String, Object>> res = new ArrayList<>();
+        if ("company".equals(groupField)) {
+            res = packageByCompany(buckets, queryConf);
+        } else if ("sig".equals(groupField)) {
+            res = packageBySig(buckets);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameter");
+        }
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 
+    @SneakyThrows
+    public String getVersionSig(CustomPropertiesConfig queryConf, String community, String type, String version) {
+        String sigPr = queryConf.getAggSigVersionQuery(queryConf, type, version);
+        if (StringUtils.isBlank(sigPr)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeVersionIndex(), sigPr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        List<Map<String, Object>> res = packageBySig(buckets);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+    
+    @SneakyThrows
+    public String querySigContribute(CustomPropertiesConfig queryConf, String community, String timeRange, String projectName, String type, String version) {
+        if (timeRange != null && projectName != null && version == null) { // 按照项目查找
+            return queryByProjects(queryConf, community, timeRange, projectName, type);
+        } else if (timeRange == null && projectName == null && version != null) {  // 按照版本查找
+            return queryByVersion(queryConf, community, type, version);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameters.");
+        }
+    }
+
+    @SneakyThrows
+    public String queryByProjects(CustomPropertiesConfig queryConf, String community, String timeRange, String projectName, String type) {
+        // 获取所有创新项目的名称
+        List<String> projectNames = getInnovationItemsNames(queryConf);
+        if ("all".equals(projectName)) { // 项目范围：全部项目
+            if ("issue_cve".equals(type) || "issue_done".equals(type)) { // 度量指标：issue闭环个数,cve闭环个数
+                return queryAllProjects(queryConf, community, timeRange, "sig", type);
+            } else if ("pr".equals(type) || "issue".equals(type) || "comment".equals(type)) { // 度量指标：pr, issue, comment
+                return querySigContributors(queryConf, community, type, timeRange);
+            } else {
+                return resultJsonStr(400, null, "incorrect input parameters.");
+            }
+        } else if ("allInnoItems".equals(projectName)) { // 项目范围：全部创新项目
+            return queryAllInnoItems(queryConf, community, timeRange, "sig", type);
+        } else if (projectNames.contains(projectName)) { // 项目范围：某个创新项目
+            return queryByProjectName(queryConf, community, timeRange, "sig", projectName, type);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameters.");
+        }
+    }
+
+    @SneakyThrows
+    public String queryByVersion(CustomPropertiesConfig queryConf, String community, String type, String version) {
+        if ("feature".equals(type)) {
+            return getVersionFeature(queryConf, community, version, "sig");
+        } else if ("pr".equals(type)) {
+            return getVersionSig(queryConf, community, type, version);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameters.");
+        }
+    }
 }

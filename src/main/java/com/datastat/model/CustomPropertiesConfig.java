@@ -165,14 +165,20 @@ public class CustomPropertiesConfig {
     private String sigIssueQueryStr;
     private String sigCveQueryStr;
     private String companyFeatureQueryStr;
+    private String giteeAggSigQueryStr;
+    private String sigVersionPrQueryStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
+    protected static final Map<String, String> groupFieldMap = new HashMap<>();
 
     @PostConstruct
     public void init() {
         contributeTypeMap.put("pr", "is_pull_state_merged");
         contributeTypeMap.put("issue", "is_gitee_issue");
         contributeTypeMap.put("comment", "is_gitee_comment");
+
+        groupFieldMap.put("company", "tag_user_company");
+        groupFieldMap.put("sig", "sig_names");
     }
 
     public String getCountQueryStr(String item) {
@@ -246,11 +252,15 @@ public class CustomPropertiesConfig {
     }
 
     public String getAggCommentQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String repo) {
-        String group = groupField.equals("company") ? "tag_user_company" : "user_login";
         String queryJson = getAggGroupCommentQueryStr();
-        if (queryJson == null) return null;
+        if (queryJson == null) return "";
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
+        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, group);
     }
 
@@ -392,9 +402,18 @@ public class CustomPropertiesConfig {
         return contributesQueryStr;
     }
 
+    public String getAggSigContributeQueryStr(CustomPropertiesConfig queryConf, String type, String timeRange) {
+        String queryJson = getGiteeAggSigQueryStr();
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        String typeJson = contributeTypeMap.getOrDefault(type.toLowerCase(), "");
+        if (queryJson == null || StringUtils.isBlank(typeJson)) {
+            return "";
+        }
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, typeJson);
+    }
+
     public String getAggIssueQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String type) {
-        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
-        String group = groupField.equals("company") ? "tag_user_company" : "sig_names";
         String queryJson = null;
         switch (type) {
             case "issue_cve":
@@ -407,10 +426,15 @@ public class CustomPropertiesConfig {
                 break;
         }
         if (queryJson == null) {
-            return null;
+            return "";
         }
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
+        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, group);
     }
 
@@ -433,7 +457,7 @@ public class CustomPropertiesConfig {
         List<String> repos = getProjectRepos(queryConf, projectName);
         // 判断根据项目找到的仓库是否存在
         if (repos.size() == 0) {
-            return null;
+            return "";
         }
         // 拼接查询仓库的字符串
         String url = queryConf.getRepoUrlPrefix();
@@ -460,11 +484,14 @@ public class CustomPropertiesConfig {
                 break;
         }
         if (queryJson == null) {
-            return null;
+            return "";
         }
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
-        String group = groupField.equals("company") ? "tag_user_company" : "sig_names";
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, repoStr, group);
     }
 
@@ -513,18 +540,32 @@ public class CustomPropertiesConfig {
                 break;
         }
         if (queryJson == null) {
-            return null;
+            return "";
         }
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, issueRange, sigName);
     }
 
-    public String getAggCompanyFeatureQueryStr(CustomPropertiesConfig queryConf, String version) {
+    public String getAggCompanyFeatureQueryStr(CustomPropertiesConfig queryConf, String version, String groupField) {
         String queryJson = getCompanyFeatureQueryStr();
         String verisonQuery = "all".equals(version) ? "*" : version;
         if (queryJson == null) {
-            return null;
+            return "";
+        }
+        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
+        return queryStrFormat(queryJson, verisonQuery, group);
+    }
+
+    public String getAggSigVersionQuery(CustomPropertiesConfig queryConf, String type, String version) {
+        String queryJson = getSigVersionPrQueryStr();
+        String verisonQuery = "all".equals(version) ? "*" : version;
+        if (queryJson == null) {
+            return "";
         }
         return queryStrFormat(queryJson, verisonQuery);
     }
