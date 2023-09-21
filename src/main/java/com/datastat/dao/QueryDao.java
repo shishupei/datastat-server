@@ -582,17 +582,23 @@ public class QueryDao {
 
     @SneakyThrows
     public String putUserActionsInfo(String community, String data) {
+        System.out.println("data: " + data);
         String sdata = new String(Base64.getDecoder().decode(data));
+        System.out.println("sdata: " + sdata);
         JsonNode userVo = objectMapper.readTree(sdata);
+        System.out.println("userVo: " + userVo);
         Date now = new Date();
+        System.out.println("now: " + now);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        System.out.println("simpleDateFormat: " + simpleDateFormat);
         String nowStr = simpleDateFormat.format(now);
+        System.out.println("nowStr: " + nowStr);
         String id = userVo.get("_track_id").asText();
-
+        System.out.println("id: " + id);
         HashMap<String, Object> resMap = objectMapper.convertValue(userVo, HashMap.class);
         resMap.put("created_at", nowStr);
         resMap.put("community", community);
-
+        System.out.println("resMap: " + resMap);
         kafkaDao.sendMess(env.getProperty("producer.topic.tracker"), id, objectMapper.valueToTree(resMap).toString());
         return resultJsonStr(200, "track_id", id, "collect over");
     }
