@@ -19,6 +19,8 @@ RUN wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.
         tar -xzvf apache-maven-3.8.8-bin.tar.gz
 ENV MAVEN_HOEM=/var/lib/ds/apache-maven-3.8.8
 ENV PATH=$MAVEN_HOEM/bin:$PATH
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 RUN git clone -b ${BRANCH} https://github.com/opensourceways/datastat-server && \
         cd datastat-server && \
