@@ -2787,7 +2787,6 @@ public class QueryDao {
         if (StringUtils.isBlank(projectQueryStr)) {
             return new ArrayList<>();
         }
-        projectQueryStr = "";
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
