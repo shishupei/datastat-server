@@ -2619,13 +2619,14 @@ public class QueryDao {
             BulkRequest request = new BulkRequest();
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
             String index = queryConf.getNpsIndex();
+            logger.info(index);
             request.add(new IndexRequest(index, "_doc", uuid).source(resMap));
             if (request.requests().size() != 0)
                 restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
             restHighLevelClient.close();
             return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return resultJsonStr(400, null, "error");
         }
     }
