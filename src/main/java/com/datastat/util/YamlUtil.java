@@ -49,7 +49,6 @@ public class YamlUtil {
     public String wget(String urlFile, String path) {
         Runtime runtime = Runtime.getRuntime();
         String cmd = String.format("wget -N -P %s %s", path, urlFile);
-        System.out.println("cmd: " + cmd);
 
         String[] sp = urlFile.split("/");
         String localFile = path + sp[sp.length - 1];
@@ -67,7 +66,6 @@ public class YamlUtil {
                         bi = new BufferedReader(new InputStreamReader(is1));
                         ;
                         while ((line = bi.readLine()) != null) {
-                            System.out.println(line);
                         }
                     } catch (Exception e) {
                         logger.error("exception", e);
@@ -91,7 +89,6 @@ public class YamlUtil {
                         bi = new BufferedReader(new InputStreamReader(is2));
                         ;
                         while ((line = bi.readLine()) != null) {
-                            System.out.println(line);
                         }
                     } catch (Exception e) {
                         logger.error("exception", e);

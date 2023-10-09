@@ -68,7 +68,6 @@ public class OpenEulerQueryDao extends QueryDao {
             String path = env.getProperty("TC.oEEP.url");
             String urlStr = path + URLEncoder.encode(name, "utf-8") + ".md";
             urlStr = urlStr.replaceAll("\\+", "%20");
-            System.out.println(urlStr);
             URL url = new URL(urlStr);
             URLConnection urlConnection = url.openConnection();
             HttpURLConnection connection = null;
