@@ -1188,6 +1188,7 @@ public class QueryService {
                         env.getProperty("moderation.domain.name"), env.getProperty("moderation.token.endpoint"));
             redisDao.set("nps_moderation_token", token, 36000l);
         }
+        System.out.println("*******    get token success    *******");
         return queryDao.getNps(queryConf, community, body, token);
     }
 

@@ -2604,7 +2604,7 @@ public class QueryDao {
         return false;
     }
 
-    @SneakyThrows
+    // @SneakyThrows
     public String getNps(CustomPropertiesConfig queryConf, String community, NpsBody body, String token) {
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("community", community);
@@ -2612,21 +2612,25 @@ public class QueryDao {
         resMap.put("feedbackValue", body.getFeedbackValue());
         resMap.put("feedbackText", body.getFeedbackText());
         if (!moderation(body.getFeedbackText(), token)) return resultJsonStr(400, null, "Content is not compliant");
+        try{
+            Date now = new Date();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+            String nowStr = simpleDateFormat.format(now);
+            String uuid = UUID.randomUUID().toString();
+            resMap.put("created_at", nowStr);
 
-        Date now = new Date();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-        String nowStr = simpleDateFormat.format(now);
-        String uuid = UUID.randomUUID().toString();
-        resMap.put("created_at", nowStr);
-
-        BulkRequest request = new BulkRequest();
-        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
-        String index = queryConf.getNpsIndex();
-        request.add(new IndexRequest(index, "_doc", uuid).source(resMap));
-        if (request.requests().size() != 0)
-            restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
-        restHighLevelClient.close();
-        return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
+            BulkRequest request = new BulkRequest();
+            RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+            String index = queryConf.getNpsIndex();
+            request.add(new IndexRequest(index, "_doc", uuid).source(resMap));
+            if (request.requests().size() != 0)
+                restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+            restHighLevelClient.close();
+            return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return resultJsonStr(400, null, "error");
+        }
     }
 
     @SneakyThrows
