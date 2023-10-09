@@ -92,13 +92,7 @@ public class QueryController {
     @RequestMapping("/all")
     public String queryAll(HttpServletRequest request,
                            @RequestParam(value = "community") String community) throws Exception {
-        System.out.println("进入时间");
-        System.out.println(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(Calendar.getInstance().getTime()));    
-        String res = queryService.queryAll(request, community);
-        System.out.println("离开时间");
-        System.out.println(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(Calendar.getInstance().getTime()));   
-        return res;
-        // return queryService.queryAll(request, community);
+        return queryService.queryAll(request, community);
     }
 
     @RequestMapping("/stars")
