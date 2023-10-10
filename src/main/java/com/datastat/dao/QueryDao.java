@@ -2601,7 +2601,6 @@ public class QueryDao {
         return false;
     }
 
-    // @SneakyThrows
     public String getNps(CustomPropertiesConfig queryConf, String community, NpsBody body, String token) {
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("community", community);
@@ -2619,7 +2618,6 @@ public class QueryDao {
             BulkRequest request = new BulkRequest();
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
             String index = queryConf.getNpsIndex();
-            logger.info(index);
             request.add(new IndexRequest(index, "_doc", uuid).source(resMap));
             if (request.requests().size() != 0)
                 restHighLevelClient.bulk(request, RequestOptions.DEFAULT);

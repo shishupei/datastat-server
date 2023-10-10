@@ -1180,6 +1180,7 @@ public class QueryService {
     }
 
     public String getNps(HttpServletRequest request, String community, NpsBody body) {
+        if (!checkCommunity(community) && !community.equals("xihe")) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         String token = (String) redisDao.get("nps_moderation_token");
