@@ -300,18 +300,21 @@ public class OneidInterceptor implements HandlerInterceptor {
 
     private List<String> getUserPermission(HttpServletRequest httpServletRequest, Cookie tokenCookie, String permissions) {
         String community = httpServletRequest.getParameter("community");
-        String company = httpServletRequest.getParameter("company");
-        String contributeType = httpServletRequest.getParameter("contributeType");
-        String timeRange = httpServletRequest.getParameter("timeRange");
         String oneIdHost = env.getProperty("oneid.host");
-        String s = String.format("%s/oneid/user/permissions?community=%s&company=%s&contributeType=%s&timeRange=%s", oneIdHost, community, company, contributeType, timeRange);
+        String s = String.format("%s/oneid/user/permissions?community=%s", oneIdHost, community);
 
         try {
             HttpResponse<JsonNode> response = Unirest.get(s)
                     .header("token", httpServletRequest.getHeader("token"))
                     .header("Cookie", "_Y_G_=" + tokenCookie.getValue())
                     .asJson();
-            logger.info("response: " + response);
+            logger.info("response: " + response.getBody());
+
+            HttpResponse<JsonNode> response2 = Unirest.get("https://datastat.openeuler.org/oneid/user/permissions?community=openeuler")
+                    .header("token", httpServletRequest.getHeader("token"))
+                    .header("Cookie", "_Y_G_=" + tokenCookie.getValue())
+                    .asJson();
+                    logger.info("response2: " + response2.getBody());
             JSONArray jsonArray = response.getBody().getObject().getJSONObject("data").getJSONArray(permissions);
             logger.info("jsonArray:" + jsonArray);
             List<String> list = new ArrayList<>();
