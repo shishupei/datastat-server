@@ -239,7 +239,7 @@ public class OneidInterceptor implements HandlerInterceptor {
             if (!redisDao.exists("idToken_" + md5Token)) {
                 return "token expires";
             }
-
+            logger.info("md5 token exists");
             // token 签名密码验证
             String password = oneidTokenBasePassword;
             JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(password)).build();
@@ -259,6 +259,7 @@ public class OneidInterceptor implements HandlerInterceptor {
         try {
             if (sigToken != null && sigToken.required()) {
                 List<String> pers = getUserPermission(httpServletRequest, tokenCookie, "permissions");
+                logger.info("pers:" + pers);
                 for (String per : pers) {
                     if (per.equalsIgnoreCase(queryConf.getSigAction())) {
                         return "success";
@@ -303,7 +304,6 @@ public class OneidInterceptor implements HandlerInterceptor {
         String contributeType = httpServletRequest.getParameter("contributeType");
         String timeRange = httpServletRequest.getParameter("timeRange");
         String oneIdHost = env.getProperty("oneid.host");
-//        String s = String.format("http://119.8.46.32:9999/oneid/user/permissions?community=%s&company=%s&contributeType=%s&timeRange=%s", community, company, contributeType, timeRange);
         String s = String.format("%s/oneid/user/permissions?community=%s&company=%s&contributeType=%s&timeRange=%s", oneIdHost, community, company, contributeType, timeRange);
 
         try {
@@ -311,8 +311,9 @@ public class OneidInterceptor implements HandlerInterceptor {
                     .header("token", httpServletRequest.getHeader("token"))
                     .header("Cookie", "_Y_G_=" + tokenCookie.getValue())
                     .asJson();
+            logger.info("response: " + response);
             JSONArray jsonArray = response.getBody().getObject().getJSONObject("data").getJSONArray(permissions);
-
+            logger.info("jsonArray:" + jsonArray);
             List<String> list = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); i++) {
                 list.add(jsonArray.getString(i));
