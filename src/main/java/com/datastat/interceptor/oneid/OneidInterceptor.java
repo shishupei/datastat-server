@@ -301,7 +301,6 @@ public class OneidInterceptor implements HandlerInterceptor {
         String community = httpServletRequest.getParameter("community");
         String oneIdHost = env.getProperty("oneid.host");
         String s = String.format("%s/oneid/user/permissions?community=%s", oneIdHost, community);
-        logger.info("url: " + s);
         try {
             HttpResponse<JsonNode> response = Unirest.get(s)
                     .header("token", httpServletRequest.getHeader("token"))
