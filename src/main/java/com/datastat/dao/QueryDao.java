@@ -344,6 +344,7 @@ public class QueryDao {
             List<HashMap<String, Object>> user_login = datas.stream().filter(m -> m.getOrDefault("user_login", "").equals(user)).collect(Collectors.toList());
             resMap.put("data", user_login);
         }
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -578,6 +579,7 @@ public class QueryDao {
         resMap.put("totalCount", totalCount);
         resMap.put("cursor", cursor);
         resMap.put("msg", "ok");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1091,6 +1093,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", res);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1138,6 +1141,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", userData.get(userName.toLowerCase()));
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1193,6 +1197,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", dataMap);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1258,6 +1263,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", resData);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1337,11 +1343,13 @@ public class QueryDao {
 
 
     public String resultJsonStr(int code, String item, Object data, String msg) {
-        return "{\"code\":" + code + ",\"data\":{\"" + item + "\":" + data + "},\"msg\":\"" + msg + "\"}";
+        String updateAt = (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date());
+        return "{\"code\":" + code + ",\"data\":{\"" + item + "\":" + data + "},\"msg\":\"" + msg + "\",\"update_at\":\"" + updateAt + "\"}";
     }
 
     public String resultJsonStr(int code, Object data, String msg) {
-        return "{\"code\":" + code + ",\"data\":" + data + ",\"msg\":\"" + msg + "\"}";
+        String updateAt = (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date());
+        return "{\"code\":" + code + ",\"data\":" + data + ",\"msg\":\"" + msg + "\",\"update_at\":\"" + updateAt + "\"}";
     }
 
     protected Map<String, Object> queryContributes(CustomPropertiesConfig queryConf, String community) {
@@ -1478,6 +1486,7 @@ public class QueryDao {
             resMap.put("code", 200);
             resMap.put("data", respro);
             resMap.put("msg", statusText);
+            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
             logger.error("exception", e);
@@ -1594,6 +1603,7 @@ public class QueryDao {
             resMap.put("code", statusCode);
             resMap.put("data", res);
             resMap.put("msg", statusText);
+            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
             statusText = "fail";
@@ -2158,7 +2168,7 @@ public class QueryDao {
             resMap.put("code", statusCode);
             resMap.put("data", jsonNode1);
             resMap.put("msg", statusText);
-
+            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
             logger.error("exception", e);
@@ -2571,6 +2581,7 @@ public class QueryDao {
         res.put("code", status.value());
         res.put("data", data);
         res.put("msg", msg);
+        res.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return new ResponseEntity<>(res, status);
     }
 
