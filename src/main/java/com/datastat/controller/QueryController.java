@@ -475,6 +475,16 @@ public class QueryController {
         return "time out";
     }
 
+    @OneidToken
+    @RequestMapping(value = "/meetupApplyForm", method = RequestMethod.POST)
+    public String addMeetupApplyForm(HttpServletRequest request, 
+            @RequestParam String community,
+            @RequestBody MeetupApplyForm meetupApplyForm,
+            @CookieValue(value = "_Y_G_", required = false) String token) {
+        String res = queryService.putMeetupApplyForm(request, community, meetupApplyForm, token);
+        return res;
+    }
+    
     @RequestMapping("/isv")
     public String queryCommunityIsv(HttpServletRequest request,
             @RequestParam(value = "community") String community,
