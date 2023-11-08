@@ -171,6 +171,15 @@ public class QueryController {
         return queryService.queryBugQuestionnaire(request, community, lastCursor, pageSize);
     }
 
+    @OneidToken
+    @RequestMapping(value = "add/bugquestionnaire", method = RequestMethod.POST)
+    public String addBugQuestionnaire(HttpServletRequest request,
+            @RequestParam String community,
+            @RequestParam(value = "lang", required = false) String lang,
+            @RequestBody BugQuestionnaireVo bugQuestionnaireVo) {
+        return queryService.putBugQuestionnaire(request, community, lang, bugQuestionnaireVo);
+    }
+
     @RequestMapping("/obsDetails")
     public String queryObsDetails(HttpServletRequest request,
                                   @RequestParam(value = "community") String community,
