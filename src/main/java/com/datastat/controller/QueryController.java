@@ -162,7 +162,6 @@ public class QueryController {
         return queryService.queryNewYearMonthCount(request, user);
     }
 
-    @UserLoginToken
     @RequestMapping("/bugQuestionnaires")
     public String queryBugQuestionnaires(HttpServletRequest request,
                                          @RequestParam(value = "community") String community,
