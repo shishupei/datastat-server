@@ -348,6 +348,16 @@ public class QueryService {
         return result;
     }
 
+    public String putBugQuestionnaire(HttpServletRequest request, String community, String lang, BugQuestionnaireVo bugQuestionnaireVo) {
+        String item = "bugQuestionnaire";
+        String result = "";
+        lang = lang == null ? "zh" : lang.toLowerCase();
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        result = queryDao.putBugQuestionnaire(queryConf, community, item, lang, bugQuestionnaireVo);
+        return result;
+    }
+
     public String queryObsDetails(HttpServletRequest request, String branch, String limit) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
@@ -1022,6 +1032,7 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         CustomPropertiesConfig queryConf = getQueryConf(request);
+        sortOrder = sortOrder == null ? "desc" : sortOrder;
         lang = lang == null ? "zh" : lang.toLowerCase();
         // String key = community.toLowerCase() + ecosystemType.toLowerCase() + "ecosysteminfo" + sortOrder + lang;
 

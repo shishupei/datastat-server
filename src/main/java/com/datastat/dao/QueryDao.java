@@ -25,6 +25,7 @@ import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -384,6 +385,37 @@ public class QueryDao {
 
         result = dataDesensitizationProcessing(result, item);
         return result;
+    }
+
+    public String putBugQuestionnaire(CustomPropertiesConfig queryConf, String community, String item, String lang, BugQuestionnaireVo bugQuestionnaireVo) {
+        ArrayList<String> validationMesseages = bugQuestionnaireVo.checkoutFieldValidate(bugQuestionnaireVo, community, lang);
+        if (validationMesseages.size() != 0) {
+            return "{\"code\":400,\"data\":{\"" + item + "\":\"write error\"},\"msg:" + validationMesseages + "\"}";
+        }        
+        try{
+            Date now = new Date();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+            String nowStr = simpleDateFormat.format(now);
+            String uuid = UUID.randomUUID().toString();
+            HashMap<String, Object> bugQuestionnaireMap = objectMapper.convertValue(bugQuestionnaireVo, new TypeReference<>() {
+            });
+            bugQuestionnaireMap.put("created_at", nowStr);
+            if (lang.equals("en")) {
+                bugQuestionnaireMap.put("is_en", 1);
+            }
+
+            BulkRequest request = new BulkRequest();
+            RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+            String index = queryConf.getBugQuestionnaireIndex();
+            request.add(new IndexRequest(index, "_doc", uuid + nowStr).source(bugQuestionnaireMap));
+            if (request.requests().size() != 0)
+                restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+            restHighLevelClient.close();
+            return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
+        } catch (Exception e) {
+            logger.error("exception", e);
+            return resultJsonStr(400, null, "error");
+        }
     }
 
     @SneakyThrows

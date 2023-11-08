@@ -74,7 +74,6 @@ public class MindSporeQueryDao extends QueryDao {
     public String getEcosystemRepoInfo(CustomPropertiesConfig queryConf, String ecosystemType, String lang, String sortOrder) {
         String index = queryConf.getEcosystemRepoIndex();
         String queryJson = queryConf.getEcosystemRepoQuery();
-        sortOrder = sortOrder == null ? "desc" : sortOrder;
         String queryStr = String.format(queryJson, ecosystemType, lang, sortOrder);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, queryStr);
         String responseBody = future.get().getResponseBody(UTF_8);
