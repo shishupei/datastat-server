@@ -170,7 +170,6 @@ public class QueryController {
         return queryService.queryBugQuestionnaire(request, community, lastCursor, pageSize);
     }
 
-    @OneidToken
     @RequestMapping(value = "add/bugquestionnaire", method = RequestMethod.POST)
     public String addBugQuestionnaire(HttpServletRequest request,
             @RequestParam String community,
