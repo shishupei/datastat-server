@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM openeuler/openeuler:22.03
 
 ARG NEW_YEAR_USER
 ARG BRANCH
