@@ -25,8 +25,6 @@ public class BugQuestionnaireVo {
     private ArrayList<String> existProblem = new ArrayList<>();
     private String problemDetail;
     private Integer comprehensiveSatisfication;
-    private String participateReason;
-
 
     @Pattern(regexp = "^[a-z0-9A-Z]+[-|a-z0-9A-Z._]+@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-z]{2,}$", message = "email format is invalid")
     @Size(max = 50)
@@ -43,23 +41,20 @@ public class BugQuestionnaireVo {
             }
         } else if ("openlookeng".equalsIgnoreCase(community)) {
             existProblemTemplate = Arrays.asList("文档存在风险与错误", "内容描述不清晰", "内容获取有困难", "示例代码错误", "内容有缺失");
+        } else if ("mindspore".equalsIgnoreCase(community)) {
+            existProblemTemplate = Arrays.asList("低错类", "易用性", "正确性", "风险提示", "内容合规");
         } else {
             return null;
         }
         
-        
-        List<String> participateReasonTemplate = Arrays.asList("本职工作", "求职", "技术兴趣", "学习");
-        List<Integer> comprehensiveSatisficationTemplate = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        List<Integer> comprehensiveSatisficationTemplate = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
         String bugDocFragment = bugQuestionnaireVo.getBugDocFragment();
         ArrayList<String> existProblem = bugQuestionnaireVo.getExistProblem();
         String problemDetail = bugQuestionnaireVo.getProblemDetail();
         Integer comprehensiveSatisfication = bugQuestionnaireVo.getComprehensiveSatisfication();
-        String participateReason = bugQuestionnaireVo.getParticipateReason();
-        String email = bugQuestionnaireVo.getEmail();
 
         boolean existProblemValidation = existProblemTemplate.containsAll(existProblem);
-        boolean participateReasonValidation = participateReasonTemplate.contains(participateReason);
         boolean comprehensiveSatisficationValidation = comprehensiveSatisficationTemplate
                 .contains(comprehensiveSatisfication);
 
