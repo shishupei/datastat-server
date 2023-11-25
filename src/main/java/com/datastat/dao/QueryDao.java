@@ -1044,6 +1044,7 @@ public class QueryDao {
             data.remove("value");
             sigList.add(data);
         }
+        logger.info(resultJsonStr(200, objectMapper.valueToTree(sigList), "ok"));
         return resultJsonStr(200, objectMapper.valueToTree(sigList), "ok");
     }
 
