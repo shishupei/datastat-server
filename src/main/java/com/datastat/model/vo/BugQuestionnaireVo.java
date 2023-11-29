@@ -42,7 +42,7 @@ public class BugQuestionnaireVo {
         } else if ("openlookeng".equalsIgnoreCase(community)) {
             existProblemTemplate = Arrays.asList("文档存在风险与错误", "内容描述不清晰", "内容获取有困难", "示例代码错误", "内容有缺失");
         } else if ("mindspore".equalsIgnoreCase(community)) {
-            existProblemTemplate = Arrays.asList("低错类", "易用性", "正确性", "风险提示", "内容合规");
+            existProblemTemplate = Arrays.asList("规范和低错类", "易用性", "正确性", "风险提示", "内容合规");
         } else {
             return null;
         }
