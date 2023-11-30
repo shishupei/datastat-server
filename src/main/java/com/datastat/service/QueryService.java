@@ -515,7 +515,7 @@ public class QueryService {
         boolean per = checkPermission(request, queryDao, queryConf, token, company);
         if (!per) return resultJsonStr(400, "", "No Permission");
 
-        String key = community.toLowerCase() + company + "usertypecontribute_" + contributeType.toLowerCase();
+        String key = community.toLowerCase() + company + "usertypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
             result = queryDao.queryGroupUserContributors(queryDao, queryConf, "company", company, contributeType, timeRange);
