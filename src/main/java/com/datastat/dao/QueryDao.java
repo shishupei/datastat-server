@@ -1205,6 +1205,7 @@ public class QueryDao {
         for (Map<String, Object> user : users) {
             String id = user.get("id").toString() + "_" + user.get("email").toString() + "_" + user.get("gitee_id");
             request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", id).source(user));
+            logger.info("putGiteeHookUser user: ", user);
         }
 
         if (request.requests().size() != 0) restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
