@@ -109,6 +109,7 @@ public class QueryDao {
     protected List<String> robotUsers;
     protected List<String> domain_ids;
     private static final Logger logger = LoggerFactory.getLogger(QueryDao.class);
+    private static List<Map<String, Object>> giteeWebhookList = new ArrayList<>();
 
     @PostConstruct
     public void init() {
@@ -1193,23 +1194,34 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public void putGiteeHookUser(CustomPropertiesConfig queryConf, Set<Map<String, Object>> users) {
+    public synchronized void putGiteeHookUser(CustomPropertiesConfig queryConf, Set<Map<String, Object>> users) {
+        giteeWebhookList.addAll(users);
+        if (giteeWebhookList.size() >= 100) {
+            try {
+                writeToEsIndex(giteeWebhookList, queryConf);
+                logger.info("already write {} documents to es", giteeWebhookList.size());
+                giteeWebhookList = new ArrayList<>();
+            } catch (Exception e) {
+                logger.error("write /gitee/webhook to es failed");
+            }
+        }
+    }
+
+    @SneakyThrows
+    private synchronized void writeToEsIndex(List<Map<String, Object>> giteeWebhookList, CustomPropertiesConfig queryConf) {
+        BulkRequest request = new BulkRequest();
+        for (Map<String, Object> user : giteeWebhookList) {
+            String id = user.get("id").toString() + "_" + user.get("email").toString() + "_" + user.get("gitee_id");
+            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", id).source(user));
+        }
         String scheme = env.getProperty("es.private.scheme");
         String host = env.getProperty("es.private.host");
         int port = Integer.parseInt(env.getProperty("es.private.port", "9200"));
         String esUser = env.getProperty("es.private.user");
         String password = env.getProperty("es.private.password");
-        RestHighLevelClient restHighLevelClient = RestHighLevelClientUtil.create(Collections.singletonList(host), port, scheme, esUser, password);
-
-        BulkRequest request = new BulkRequest();
-        for (Map<String, Object> user : users) {
-            String id = user.get("id").toString() + "_" + user.get("email").toString() + "_" + user.get("gitee_id");
-            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", id).source(user));
-            logger.info("putGiteeHookUser user: ", user);
+        try (RestHighLevelClient restHighLevelClient = RestHighLevelClientUtil.create(Collections.singletonList(host), port, scheme, esUser, password)) {
+            restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
         }
-
-        if (request.requests().size() != 0) restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
-        restHighLevelClient.close();
     }
 
     @SneakyThrows
