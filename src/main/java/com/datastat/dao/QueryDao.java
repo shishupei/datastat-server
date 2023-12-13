@@ -110,6 +110,7 @@ public class QueryDao {
     protected List<String> domain_ids;
     private static final Logger logger = LoggerFactory.getLogger(QueryDao.class);
     private static List<Map<String, Object>> giteeWebhookList = new ArrayList<>();
+    private static List<Map<String, Object>> unErasedGiteeWebhookList = new ArrayList<>();
 
     @PostConstruct
     public void init() {
@@ -1196,6 +1197,11 @@ public class QueryDao {
     @SneakyThrows
     public synchronized void putGiteeHookUser(CustomPropertiesConfig queryConf, Set<Map<String, Object>> users) {
         giteeWebhookList.addAll(users);
+        unErasedGiteeWebhookList.addAll(users);
+        
+        logger.info("unErasedGiteeWebhookList:{}:endunErasedGiteeWebhookList:", unErasedGiteeWebhookList.toString());
+        logger.info("giteeWebhookList:{}:endgiteeWebhookList:", giteeWebhookList.toString());
+
         if (giteeWebhookList.size() >= 100) {
             try {
                 writeToEsIndex(giteeWebhookList, queryConf);
