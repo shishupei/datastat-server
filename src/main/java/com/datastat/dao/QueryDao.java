@@ -333,15 +333,17 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryNewYear(String community, String user, String year) {
-        String localFile = "om-data/" + community.toLowerCase() + "_" + year + ".csv";
-        List<HashMap<String, Object>> datas = CsvFileUtil.readFile(localFile);
+        List<HashMap<String, Object>> report = obsDao.getReportData();
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", 200);
         resMap.put("msg", "OK");
-        if (datas == null) resMap.put("data", new ArrayList<>());
-        else if (user == null) resMap.put("data", datas);
+        if (report == null)
+            resMap.put("data", new ArrayList<>());
+        else if (user == null)
+            resMap.put("data", report);
         else {
-            List<HashMap<String, Object>> user_login = datas.stream().filter(m -> m.getOrDefault("user_login", "").equals(user)).collect(Collectors.toList());
+            List<HashMap<String, Object>> user_login = report.stream()
+                    .filter(m -> m.getOrDefault("user_login", "").equals(user)).collect(Collectors.toList());
             resMap.put("data", user_login);
         }
         return objectMapper.valueToTree(resMap).toString();
