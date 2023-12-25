@@ -336,7 +336,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryNewYear(String community, String user, String year) {
-        String localFile = "om-data/obs" + community.toLowerCase() + "_" + year + ".csv";
+        String localFile = "om-data/obs/" + community.toLowerCase() + "_" + year + ".csv";
         List<HashMap<String, Object>> report = CsvFileUtil.readFile(localFile);
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", 200);
