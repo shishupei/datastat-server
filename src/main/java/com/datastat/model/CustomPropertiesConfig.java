@@ -15,6 +15,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
+import com.datastat.model.yaml.InnovationItemInfo;
+import com.datastat.model.yaml.InnovationItemYaml;
+import com.datastat.util.YamlUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.*;
@@ -77,6 +80,7 @@ public class CustomPropertiesConfig {
     private String meetupApplyFormIndex;
     private String userTagIndex;
     private String npsIndex;
+    private String giteeFeatureIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -152,14 +156,29 @@ public class CustomPropertiesConfig {
     private String innovationItemAddress;
     private String issueDoneQueryStr;
     private String issueCveQueryStr;
+    private String repoUrlPrefix;
+    private String projectPrQueryStr;
+    private String projectIssueQueryStr;
+    private String projectCommentQueryStr;
+    private String projectIssueCveQueryStr;
+    private String projectIssueDoneQueryStr;
+    private String sigIssueQueryStr;
+    private String sigCveQueryStr;
+    private String companyFeatureQueryStr;
+    private String giteeAggSigQueryStr;
+    private String sigVersionPrQueryStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
+    protected static final Map<String, String> groupFieldMap = new HashMap<>();
 
     @PostConstruct
     public void init() {
         contributeTypeMap.put("pr", "is_pull_state_merged");
         contributeTypeMap.put("issue", "is_gitee_issue");
         contributeTypeMap.put("comment", "is_gitee_comment");
+
+        groupFieldMap.put("company", "tag_user_company");
+        groupFieldMap.put("sig", "sig_names");
     }
 
     public String getCountQueryStr(String item) {
@@ -379,21 +398,171 @@ public class CustomPropertiesConfig {
         return contributesQueryStr;
     }
 
-    public String getAggIssueQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String type) {
-        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
-        String group = groupField.equals("company") ? "tag_user_company" : "sig_names";
-        String queryJson = null;
-        if (type.equals("cve")) {
-            queryJson = getIssueCveQueryStr();
+    public String getAggSigContributeQueryStr(CustomPropertiesConfig queryConf, String type, String timeRange) {
+        String queryJson = getGiteeAggSigQueryStr();
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        String typeJson = contributeTypeMap.getOrDefault(type.toLowerCase(), "");
+        if (queryJson == null || StringUtils.isBlank(typeJson)) {
+            return "";
         }
-        if (type.equals("done")) {
-            queryJson = getIssueDoneQueryStr();
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, typeJson);
+    }
+
+    public String getAggIssueQueryStr(CustomPropertiesConfig queryConf, String groupField, String timeRange, String type) {
+        String queryJson = null;
+        switch (type) {
+            case "issue_cve":
+                queryJson = getIssueCveQueryStr();
+                break;
+            case "issue_done":
+                queryJson = getIssueDoneQueryStr();
+                break;
+            default:
+                break;
         }
         if (queryJson == null) {
-            return null;
+            return "";
         }
         long currentTimeMillis = System.currentTimeMillis();
         long lastTimeMillis = getPastTime(timeRange);
+        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
         return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, group);
+    }
+
+    public List<String> getProjectRepos(CustomPropertiesConfig queryConf, String projectName) {
+        YamlUtil yamlUtil = new YamlUtil();
+        InnovationItemYaml items = yamlUtil.readLocalYaml(queryConf.getInnovationItemAddress(), 
+                InnovationItemYaml.class);
+        List<String> repos = new ArrayList<>();
+        for (InnovationItemInfo item : items.getInnovation_projects()) {
+            String name = item.getProject_name().trim();
+            if (projectName.equals(name)) {
+                repos.addAll(item.getRepos());
+                break;
+            }
+        }
+        return repos;
+    }
+
+    public String getAggProjectPrQueryStr(CustomPropertiesConfig queryConf, String timeRange, String groupField, String projectName, String contributeType) {
+        List<String> repos = getProjectRepos(queryConf, projectName);
+        // 判断根据项目找到的仓库是否存在
+        if (repos.size() == 0) {
+            return "";
+        }
+        // 拼接查询仓库的字符串
+        String url = queryConf.getRepoUrlPrefix();
+        String repoStr = getRepoList(repos, url);
+        // 拼接查询项目字符串
+        String queryJson = null;
+        switch (contributeType) {
+            case "pr":
+                queryJson = getProjectPrQueryStr();
+                break;
+            case "issue":
+                queryJson = getProjectIssueQueryStr();
+                break;
+            case "comment":
+                queryJson = getProjectCommentQueryStr();
+                break;
+            case "issue_cve":
+                queryJson = getProjectIssueCveQueryStr();
+                break;
+            case "issue_done":
+                queryJson = getProjectIssueDoneQueryStr();
+                break;
+            default:
+                break;
+        }
+        if (queryJson == null) {
+            return "";
+        }
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, repoStr, group);
+    }
+
+    /**
+     * 拼接查询语句中仓库字符串
+     * @param repos
+     * @param url
+     * @return
+     */
+    public String getRepoList(List<String> repos, String url) {
+        StringBuilder repoSb = new StringBuilder("(\\\"");
+        for (int i = 0; i < repos.size(); i++) {
+            repoSb.append(url);
+            repoSb.append(repos.get(i));
+            repoSb.append("\\\"");
+            if (i < repos.size() - 1) {
+                repoSb.append(", \\\"");
+            }
+        }
+        repoSb.append(")");
+        return repoSb.toString();
+    }
+
+    public String getAggSigDefectQueryStr(CustomPropertiesConfig queryConf, String timeRange, String sigName, String type) {
+        // 拼接查询项目字符串
+        String queryJson = null;
+        String issueRange = null;
+        switch (type) {
+            case "allIssue":
+                issueRange = "(closed, rejected, open, progressing)";
+                queryJson = getSigIssueQueryStr();
+                break;
+            case "closedIssue":
+                issueRange = "(closed, rejected)";
+                queryJson = getSigIssueQueryStr();
+                break;
+            case "allCve":
+                issueRange = "(CVE/FIXED, CVE/UNFIXED, CVE/UNAFFECTED, CVE/PENDING)";
+                queryJson = getSigCveQueryStr();
+                break;
+            case "fixedCve":
+                issueRange = "(CVE/FIXED, CVE/UNAFFECTED)";
+                queryJson = getSigCveQueryStr();
+                break;
+            default:
+                break;
+        }
+        if (queryJson == null) {
+            return "";
+        }
+        long currentTimeMillis = System.currentTimeMillis();
+        long lastTimeMillis = getPastTime(timeRange);
+        return queryStrFormat(queryJson, lastTimeMillis, currentTimeMillis, issueRange, sigName);
+    }
+
+    public String getAggCompanyFeatureQueryStr(CustomPropertiesConfig queryConf, String version, String groupField) {
+        String queryJson = getCompanyFeatureQueryStr();
+        String verisonQuery = "all".equals(version) ? "*" : version;
+        if (queryJson == null) {
+            return "";
+        }
+        // 判断搜索结果是按照公司进行排序还是按照SIG组进行排序
+        String group = groupFieldMap.getOrDefault(groupField.toLowerCase(), "");
+        if (StringUtils.isBlank(group)) {
+            return "";
+        }
+        return queryStrFormat(queryJson, verisonQuery, group);
+    }
+
+    public String getAggSigVersionQuery(CustomPropertiesConfig queryConf, String type, String version) {
+        String queryJson = getSigVersionPrQueryStr();
+        String verisonQuery = "all".equals(version) ? "*" : version;
+        if (queryJson == null) {
+            return "";
+        }
+        return queryStrFormat(queryJson, verisonQuery);
     }
 }

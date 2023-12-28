@@ -1218,30 +1218,58 @@ public class QueryService {
         return result;
     }
 
-    public String queryIssueDone(HttpServletRequest request, String community, String timeRange, String groupField) {
+    public String queryAllProjects(HttpServletRequest request, String community, String timeRange, String groupField, String type) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String item = "issueDone";
-        String key = community.toLowerCase() + item + timeRange.toLowerCase() + groupField.toLowerCase();
+        String key = "allProjects" + community.toLowerCase() + timeRange.toLowerCase() + groupField.toLowerCase() + type.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryIssueDone(queryConf, community, timeRange, groupField);
+            result = queryDao.queryAllProjects(queryConf, community, timeRange, groupField, type);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }
 
-    
-    public String queryIssueCve(HttpServletRequest request, String community, String timeRange, String groupField) {
+    public String queryByProjectName(HttpServletRequest request, String community, String timeRange, String groupField, String projectName, String type) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String item = "issueCve";
-        String key = community.toLowerCase() + item + timeRange.toLowerCase() + groupField.toLowerCase();
+        String key = "projectName" + community.toLowerCase() + timeRange.toLowerCase() + groupField.toLowerCase() + projectName.toLowerCase() + type.toLowerCase();
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryIssueCve(queryConf, community, timeRange, groupField);
+            if (projectName.equals("allInnoItems")) { // 选择所有创新项目
+                result = queryDao.queryAllInnoItems(queryConf, community, timeRange, groupField, type);
+            } else { // 选择单个创新项目
+                result = queryDao.queryByProjectName(queryConf, community, timeRange, groupField, projectName, type);
+            }
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String querySigDefect(HttpServletRequest request, String community, String timeRange, String sigName) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "sigDefect" + community.toLowerCase() + timeRange.toLowerCase() + sigName.toLowerCase();
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySigDefect(queryConf, community, timeRange, sigName);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
+    public String querySigContribute(HttpServletRequest request, String community, String timeRange, String projectName, String type, String version) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "sigcontribute" + StringUtils.lowerCase(community) + StringUtils.lowerCase(timeRange) +
+            StringUtils.lowerCase(projectName) +StringUtils.lowerCase(type) +StringUtils.lowerCase(version);
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySigContribute(queryConf, community, timeRange, projectName, type, version);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;

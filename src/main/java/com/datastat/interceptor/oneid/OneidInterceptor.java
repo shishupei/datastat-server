@@ -299,13 +299,8 @@ public class OneidInterceptor implements HandlerInterceptor {
 
     private List<String> getUserPermission(HttpServletRequest httpServletRequest, Cookie tokenCookie, String permissions) {
         String community = httpServletRequest.getParameter("community");
-        String company = httpServletRequest.getParameter("company");
-        String contributeType = httpServletRequest.getParameter("contributeType");
-        String timeRange = httpServletRequest.getParameter("timeRange");
         String oneIdHost = env.getProperty("oneid.host");
-//        String s = String.format("http://119.8.46.32:9999/oneid/user/permissions?community=%s&company=%s&contributeType=%s&timeRange=%s", community, company, contributeType, timeRange);
-        String s = String.format("%s/oneid/user/permissions?community=%s&company=%s&contributeType=%s&timeRange=%s", oneIdHost, community, company, contributeType, timeRange);
-
+        String s = String.format("%s/oneid/user/permissions?community=%s", oneIdHost, community);
         try {
             HttpResponse<JsonNode> response = Unirest.get(s)
                     .header("token", httpServletRequest.getHeader("token"))
