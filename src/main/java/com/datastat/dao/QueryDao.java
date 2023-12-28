@@ -347,6 +347,22 @@ public class QueryDao {
                     .filter(m -> m.getOrDefault("user_login", "").equals(user)).collect(Collectors.toList());
             resMap.put("data", user_login);
         }
+
+        BulkRequest request = new BulkRequest();
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        Date now = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        String nowStr = simpleDateFormat.format(now);
+        String uuid = UUID.randomUUID().toString();
+        HashMap<String, Object> dataMap = new HashMap<>();
+        dataMap.put("user_login", user);
+        dataMap.put("community", community);
+        dataMap.put("created_at", nowStr);
+        request.add(new IndexRequest("new_year_report", "_doc", uuid + nowStr).source(dataMap));
+        if (request.requests().size() != 0)
+            restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+        restHighLevelClient.close();
+
         return objectMapper.valueToTree(resMap).toString();
     }
 
