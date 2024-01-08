@@ -337,7 +337,7 @@ public class QueryDao {
     public String queryNewYearPer(CustomPropertiesConfig queryConf, String oauth2_proxy, String community, String user, String year) {
         AsyncHttpClient client = EsAsyncHttpUtil.getClient();
         RequestBuilder builder = esAsyncHttpUtil.getBuilder();
-        logger.info("oauth2_proxy = ", oauth2_proxy);
+        logger.info(oauth2_proxy);
         oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
         Request getRequest = builder.setUrl(queryConf.getGiteeUserInfoUrl())
                 .addHeader("Cookie", oauth2_proxy)
@@ -345,13 +345,13 @@ public class QueryDao {
                 .setMethod("GET").build();
         ListenableFuture<Response> responseListenableFuture = client.executeRequest(getRequest);
         Response response = responseListenableFuture.get();
-        logger.info("response = ", response.toString());
+        logger.info(response.toString());
         if (response.getStatusCode() != 200) {
             return resultJsonStr(401, "unauthorized", "ok");
         }
         JsonNode res = objectMapper.readTree(response.getResponseBody());
         String login = res.get("user").asText();
-        logger.info("login = ", login);
+        logger.info(login);
         if (!user.equals(login)) {
             return resultJsonStr(401, "unauthorized", "ok");
         }
