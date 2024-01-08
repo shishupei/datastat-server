@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM openeuler/openeuler:22.03
 
 ARG NEW_YEAR_USER
 ARG BRANCH
@@ -8,17 +8,21 @@ MAINTAINER zhongjun <jun.zhongjun2@gmail.com>
 RUN mkdir -p /var/lib/ds
 WORKDIR /var/lib/ds
 
-RUN apt-get update && \
-    apt-get install --yes software-properties-common
 
-RUN apt install --yes openjdk-17-jdk
-RUN apt-get install --yes wget
-RUN apt-get install --yes git
+RUN yum install -y wget \
+    && wget https://mirrors-i.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/linux/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz \
+    && tar -zxvf OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz \
+    && wget https://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz \
+    && tar -xzvf apache-maven-3.8.8-bin.tar.gz \
+    && yum install -y git
 
-RUN wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz && \
-        tar -xzvf apache-maven-3.8.8-bin.tar.gz
+ENV JAVA_HOME=/var/lib/ds/jdk-17.0.9+9
+ENV PATH=${JAVA_HOME}/bin:$PATH
+
 ENV MAVEN_HOEM=/var/lib/ds/apache-maven-3.8.8
 ENV PATH=$MAVEN_HOEM/bin:$PATH
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 RUN git clone -b ${BRANCH} https://github.com/opensourceways/datastat-server && \
         cd datastat-server && \
@@ -26,9 +30,7 @@ RUN git clone -b ${BRANCH} https://github.com/opensourceways/datastat-server && 
         mv ./target/ds-0.0.1-SNAPSHOT.jar ../ds.jar
 
 RUN useradd -u 1000 datastat -s /bin/bash -m -U && \
-    git clone https://${NEW_YEAR_USER}@gitee.com/lixianlin01/new-year.git && \
     git clone https://gitee.com/opensourceway/om-data.git && \
-    chown -R datastat:datastat new-year && \
     chown -R datastat:datastat om-data
 
 USER datastat

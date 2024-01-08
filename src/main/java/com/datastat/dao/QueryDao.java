@@ -79,6 +79,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -108,6 +109,8 @@ public class QueryDao {
     protected List<String> robotUsers;
     protected List<String> domain_ids;
     private static final Logger logger = LoggerFactory.getLogger(QueryDao.class);
+    private static List<Map<String, Object>> giteeWebhookList = new ArrayList<>();
+    private static List<String> unErasedGiteeWebhookList = new ArrayList<>();
 
     @PostConstruct
     public void init() {
@@ -367,7 +370,7 @@ public class QueryDao {
                     .filter(m -> m.getOrDefault("user_login", "").equals(user)).collect(Collectors.toList());
             resMap.put("data", user_login);
         }
-
+      
         BulkRequest request = new BulkRequest();
         RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
         Date now = new Date();
@@ -383,6 +386,7 @@ public class QueryDao {
             restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
         restHighLevelClient.close();
 
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -481,6 +485,10 @@ public class QueryDao {
     @SneakyThrows
     public String queryCompanyContributors(CustomPropertiesConfig queryConf, String community, String contributeType,
             String timeRange, String version, String repo, String sig) {
+        // 展示特征
+        if (contributeType.equals("feature")) {
+            return getVersionFeature(queryConf, community, version, "company");
+        }
         List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
         List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"), env.getProperty("company.name.local.yaml"));
         Map<String, String> companyNameCnEn = companies.get(0);
@@ -644,6 +652,7 @@ public class QueryDao {
         resMap.put("totalCount", totalCount);
         resMap.put("cursor", cursor);
         resMap.put("msg", "ok");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -655,11 +664,9 @@ public class QueryDao {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         String nowStr = simpleDateFormat.format(now);
         String id = userVo.get("_track_id").asText();
-
         HashMap<String, Object> resMap = objectMapper.convertValue(userVo, HashMap.class);
         resMap.put("created_at", nowStr);
         resMap.put("community", community);
-
         kafkaDao.sendMess(env.getProperty("producer.topic.tracker"), id, objectMapper.valueToTree(resMap).toString());
         return resultJsonStr(200, "track_id", id, "collect over");
     }
@@ -1078,6 +1085,7 @@ public class QueryDao {
             data.remove("value");
             sigList.add(data);
         }
+        logger.info(resultJsonStr(200, objectMapper.valueToTree(sigList), "ok"));
         return resultJsonStr(200, objectMapper.valueToTree(sigList), "ok");
     }
 
@@ -1159,6 +1167,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", res);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1206,6 +1215,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", userData.get(userName.toLowerCase()));
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1224,23 +1234,43 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public void putGiteeHookUser(CustomPropertiesConfig queryConf, Set<Map<String, Object>> users) {
+    public synchronized void putGiteeHookUser(CustomPropertiesConfig queryConf, Set<Map<String, Object>> users) {
+        giteeWebhookList.addAll(users);
+
+        for (Map<String, Object> user : users) {
+            String id = user.get("id").toString();
+            unErasedGiteeWebhookList.add(id);
+        }
+
+        logger.info("unErasedGiteeWebhookList:{}:endunErasedGiteeWebhookList:", unErasedGiteeWebhookList.toString());
+        logger.info("giteeWebhookList:{}:endgiteeWebhookList:", giteeWebhookList.toString());
+
+        if (giteeWebhookList.size() >= 100) {
+            try {
+                writeToEsIndex(giteeWebhookList, queryConf);
+                logger.info("already write {} documents to es", giteeWebhookList.size());
+                giteeWebhookList = new ArrayList<>();
+            } catch (Exception e) {
+                logger.error("write /gitee/webhook to es failed");
+            }
+        }
+    }
+
+    @SneakyThrows
+    private synchronized void writeToEsIndex(List<Map<String, Object>> giteeWebhookList, CustomPropertiesConfig queryConf) {
+        BulkRequest request = new BulkRequest();
+        for (Map<String, Object> user : giteeWebhookList) {
+            String id = user.get("id").toString() + "_" + user.get("email").toString() + "_" + user.get("gitee_id");
+            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", id).source(user));
+        }
         String scheme = env.getProperty("es.private.scheme");
         String host = env.getProperty("es.private.host");
         int port = Integer.parseInt(env.getProperty("es.private.port", "9200"));
         String esUser = env.getProperty("es.private.user");
         String password = env.getProperty("es.private.password");
-        RestHighLevelClient restHighLevelClient = RestHighLevelClientUtil.create(Collections.singletonList(host), port, scheme, esUser, password);
-
-        BulkRequest request = new BulkRequest();
-        for (Map<String, Object> user : users) {
-            String id = user.get("id").toString() + "_" + user.get("email").toString() + "_" + user.get("gitee_id");
-            request.add(new IndexRequest(queryConf.getGiteeEmailIndex(), "_doc", id).source(user));
-            logger.info("putGiteeHookUser user: ", user);
+        try (RestHighLevelClient restHighLevelClient = RestHighLevelClientUtil.create(Collections.singletonList(host), port, scheme, esUser, password)) {
+            restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
         }
-
-        if (request.requests().size() != 0) restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
-        restHighLevelClient.close();
     }
 
     @SneakyThrows
@@ -1262,6 +1292,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", dataMap);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1327,6 +1358,7 @@ public class QueryDao {
         resMap.put("code", 200);
         resMap.put("data", resData);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 
@@ -1406,11 +1438,13 @@ public class QueryDao {
 
 
     public String resultJsonStr(int code, String item, Object data, String msg) {
-        return "{\"code\":" + code + ",\"data\":{\"" + item + "\":" + data + "},\"msg\":\"" + msg + "\"}";
+        String updateAt = (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date());
+        return "{\"code\":" + code + ",\"data\":{\"" + item + "\":" + data + "},\"msg\":\"" + msg + "\",\"update_at\":\"" + updateAt + "\"}";
     }
 
     public String resultJsonStr(int code, Object data, String msg) {
-        return "{\"code\":" + code + ",\"data\":" + data + ",\"msg\":\"" + msg + "\"}";
+        String updateAt = (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date());
+        return "{\"code\":" + code + ",\"data\":" + data + ",\"msg\":\"" + msg + "\",\"update_at\":\"" + updateAt + "\"}";
     }
 
     protected Map<String, Object> queryContributes(CustomPropertiesConfig queryConf, String community) {
@@ -1547,6 +1581,7 @@ public class QueryDao {
             resMap.put("code", 200);
             resMap.put("data", respro);
             resMap.put("msg", statusText);
+            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
             logger.error("exception", e);
@@ -1663,6 +1698,7 @@ public class QueryDao {
             resMap.put("code", statusCode);
             resMap.put("data", res);
             resMap.put("msg", statusText);
+            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
             statusText = "fail";
@@ -2227,7 +2263,7 @@ public class QueryDao {
             resMap.put("code", statusCode);
             resMap.put("data", jsonNode1);
             resMap.put("msg", statusText);
-
+            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
             return objectMapper.valueToTree(resMap).toString();
         } catch (Exception e) {
             logger.error("exception", e);
@@ -2640,6 +2676,7 @@ public class QueryDao {
         res.put("code", status.value());
         res.put("data", data);
         res.put("msg", msg);
+        res.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return new ResponseEntity<>(res, status);
     }
 
@@ -2703,74 +2740,127 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryInnovationItems(CustomPropertiesConfig queryConf) {
-        List<String> res = new ArrayList<>();
+        List<String> res = getInnovationItemsNames(queryConf);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    @SneakyThrows
+    public List<String> getInnovationItemsNames(CustomPropertiesConfig queryConf) {
         YamlUtil yamlUtil = new YamlUtil();
         InnovationItemYaml items = yamlUtil.readLocalYaml(queryConf.getInnovationItemAddress(), 
         InnovationItemYaml.class);
+        List<String> res = new ArrayList<>();
         for (InnovationItemInfo item : items.getInnovation_projects()) {
             String name = item.getProject_name().trim();
             res.add(name);
         }
+        return res;
+    }
+
+    @SneakyThrows
+    public String queryAllProjects(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String type) {
+        String allProjectQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, type);
+        if (StringUtils.isBlank(allProjectQueryStr)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), allProjectQueryStr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        List<Map<String, Object>> res = new ArrayList<>();
+        if ("company".equals(groupField)) {
+            res = packageByCompany(buckets, queryConf);
+        } else if ("sig".equals(groupField)) {
+            res = packageBySig(buckets);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameter");
+        }
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
-    
+
     @SneakyThrows
-    public String queryIssueDone(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField) {
-        String issueDoneQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, "done");
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), issueDoneQueryStr);
+    public String querySigContributors(CustomPropertiesConfig queryConf, String community, String type, String timeRange) {
+        String sigContributeQueryStr = queryConf.getAggSigContributeQueryStr(queryConf, type, timeRange);
+        if (StringUtils.isBlank(sigContributeQueryStr)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), sigContributeQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
-
-        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
-        if (!groupField.equals("company")) {
-            return packageBySig(buckets);
-        } else {
-            return packageByCompany(buckets);
-        }
+        List<Map<String, Object>> res = new ArrayList<>();
+        // 按照SIG组排序
+        res = packageBySig(buckets);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 
     @SneakyThrows
-    public String queryIssueCve(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField) {
-        String issueCveQueryStr = queryConf.getAggIssueQueryStr(queryConf, groupField, timeRange, "cve");
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), issueCveQueryStr);
-        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
-        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
-
-        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
-        if (!groupField.equals("company")) {
-            return packageBySig(buckets);
-        } else {
-            return packageByCompany(buckets);
-        }
-    }
-
-    @SneakyThrows
-    public String packageByCompany(Iterator<JsonNode> buckets) {
-        List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"), env.getProperty("company.name.local.yaml"));
+    public List<Map<String, Object>> packageByCompany(Iterator<JsonNode> buckets, CustomPropertiesConfig queryConf) {
+        // 获取companies变量，保存公司的中英文对应名称
+        List<Map<String, String>> companies = getCompanyNameCnEn(env.getProperty("company.name.yaml"),
+            env.getProperty("company.name.local.yaml"));
         Map<String, String> companyNameCnEn = companies.get(0);
-        ArrayList<JsonNode> dataList = new ArrayList<>();
+        Map<String, String> companyNameAlCn = companies.get(1);
+        List<Map<String, Object>> dataList = new ArrayList<>();
         HashMap<String, Object> dataMap = new HashMap<>();
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
-            String companyCn = bucket.get("key").asText();
+            String company = bucket.get("key").asText();
             long doneNumber = bucket.get("doc_count").asLong();
             if (doneNumber == 0) {
                 continue;
             }
-            String companyEn = companyNameCnEn.getOrDefault(companyCn.trim(), companyCn);
+            String companyCn = companyNameAlCn.getOrDefault(company.trim(), company.trim());
+            String companyEn = companyNameCnEn.getOrDefault(company.trim(), companyCn);
+            dataMap.put("company", company);
             dataMap.put("company_en", companyEn);
             dataMap.put("company_cn", companyCn);
-            dataMap.put("value", doneNumber);
-            JsonNode resNode = objectMapper.valueToTree(dataMap);
-            dataList.add(resNode);
+            dataMap.put("contribute", doneNumber);
+            dataList.add(new HashMap<>(dataMap));
         }
-        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
+        // 过滤返回结果
+        List<Map<String, Object>> newList = filterData(dataList, queryConf);
+        return newList;
     }
 
     @SneakyThrows
-    public String packageBySig(Iterator<JsonNode> buckets) {
-        ArrayList<JsonNode> dataList = new ArrayList<>();
-        HashMap<String, Object> dataMap = new HashMap<>();
+    public List<Map<String, Object>> filterData(List<Map<String, Object>> dataList, CustomPropertiesConfig queryConf) {
+        List<String> claCompanies = queryClaCompany(queryConf.getClaCorporationIndex());
+        List<Map<String, Object>> newList = new ArrayList<>();
+        long independent = 0;
+        Map<String, Object> dataMap = new HashMap<>();
+        for (Map<String, Object> data : dataList) {
+            String company = (String) data.get("company");
+            if (!claCompanies.contains(company) ||
+                    company.equals("深圳易宝软件") ||
+                    company.contains("华为合作方") ||
+                    company.equalsIgnoreCase("openeuler")) {
+                independent += (long) data.get("contribute");
+                continue;
+            }
+            if (company.contains("华为技术有限公司")) {
+                continue;
+            }
+            dataMap.put("company_en", data.get("company_en"));
+            dataMap.put("company_cn", data.get("company_cn"));
+            dataMap.put("contribute", data.get("contribute"));
+            newList.add(new HashMap<>(data));
+        }
+        dataMap.put("company_cn", "个人贡献者");
+        dataMap.put("company_en", "independent");
+        dataMap.put("contribute", independent);
+        // 判断是否没有结果
+        if (newList.size() == 0 && independent == 0) {
+            return newList;
+        }
+        newList.add(new HashMap<>(dataMap));
+        return newList;
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> packageBySig(Iterator<JsonNode> buckets) {
+        List<Map<String, Object>> dataList = new ArrayList<>();
+        Map<String, Object> dataMap = new HashMap<>();
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
             String sigName = bucket.get("key").asText();
@@ -2779,10 +2869,209 @@ public class QueryDao {
                 continue;
             }
             dataMap.put("sig_name", sigName);
-            dataMap.put("value", doneNumber);
-            JsonNode resNode = objectMapper.valueToTree(dataMap);
-            dataList.add(resNode);
+            dataMap.put("contribute", doneNumber);
+            dataList.add(new HashMap<>(dataMap));
         }
-        return resultJsonStr(200, objectMapper.valueToTree(dataList), "ok");
+        return dataList;
+    }
+
+    @SneakyThrows
+    public String queryByProjectName(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String projectName, String type) {
+        // 查询单个项目的结果
+        List<Map<String, Object>> res = getSingleProject(queryConf, community, timeRange, groupField, projectName, type);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> getSingleProject(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String projectName, String type) {
+        String projectQueryStr = queryConf.getAggProjectPrQueryStr(queryConf, timeRange, groupField, projectName, type);
+        if (StringUtils.isBlank(projectQueryStr)) {
+            return new ArrayList<>();
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        List<Map<String, Object>> res = new ArrayList<>();
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        if ("company".equals(groupField)) {
+            res = packageByCompany(buckets, queryConf);
+        } else if ("sig".equals(groupField)) {
+            res = packageBySig(buckets);
+        } else {
+            res = new ArrayList<>();
+        }
+        return res;
+    }
+
+    @SneakyThrows
+    public String queryAllInnoItems(CustomPropertiesConfig queryConf, String community, String timeRange, String groupField, String type) {
+        // 获取所有创新项目的名称
+        List<String> projectNames = getInnovationItemsNames(queryConf);
+        List<Map<String, Object>> res = new ArrayList<>();
+        for (String projectName : projectNames) {
+            List<Map<String, Object>> projectRes = getSingleProject(queryConf, community, timeRange, groupField, projectName, type);
+            res.addAll(projectRes);
+        }
+        // 合并不同创新项目的相同结果
+        List<Map<String, Object>> merged = new ArrayList<>();
+        if (!groupField.equals("company")) {
+            merged = mergeSig(res);
+        } else {
+            merged = mergeCompany(res);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(merged), "ok");
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> mergeSig(List<Map<String, Object>> list) {
+        // 合并sig组集合
+        Set<String> set = new HashSet<>();
+        for (Map<String, Object> map : list) {
+            String sig_name = (String) map.get("sig_name");
+            set.add(sig_name);
+        }
+        List<Map<String, Object>> res = new ArrayList<>();
+        for (String sig_name : set) {
+            Map<String, Object> resMap = new HashMap<>();
+            resMap.put("sig_name", sig_name);
+            resMap.put("contribute", (long) 0);
+            for (Map<String, Object> map : list) {
+                String mapSigName = (String) map.get("sig_name");
+                if (mapSigName.equals(sig_name)) {
+                    long contribute = (long) map.get("contribute");
+                    resMap.put("contribute", (long) ((long) resMap.get("contribute") + contribute));
+                }
+            }
+            res.add(resMap);
+        }
+        return res;
+    }
+
+    @SneakyThrows
+    public List<Map<String, Object>> mergeCompany(List<Map<String, Object>> list) {
+        // 合并公司集合
+        Set<String> set = new HashSet<>();
+        for (Map<String, Object> map : list) {
+            String company_cn = (String) map.get("company_cn");
+            set.add(company_cn);
+        }
+        List<Map<String, Object>> res = new ArrayList<>();
+        for (String company_cn : set) {
+            Map<String, Object> resMap = new HashMap<>();
+            resMap.put("company_cn", company_cn);
+            resMap.put("contribute", (long) 0);
+            for (Map<String, Object> map : list) {
+                String mapCn = (String) map.get("company_cn");
+                String mapEn = (String) map.get("company_en");
+                resMap.put("company_en", mapEn);
+                if (mapCn.equals(company_cn)) {
+                    long contribute = (long) map.get("contribute");
+                    resMap.put("contribute", (long) ((long) resMap.get("contribute") + contribute));
+                }
+            }
+            res.add(resMap);
+        }
+        return res;
+    }
+    
+    @SneakyThrows
+    public String querySigDefect(CustomPropertiesConfig queryConf, String community, String timeRange, String sigName) {
+        // 查询本项目所有issue
+        String[] types = new String[]{"allIssue", "closedIssue", "allCve", "fixedCve"};
+        ListenableFuture<Response> future = null;
+        String projectQueryStr = null;
+        JsonNode dataNode = null;
+        long res = 0;
+        Map<String, Object> resMap = new HashMap<>();
+        for (int i = 0; i < types.length; i++) {
+            String type = types[i];
+            projectQueryStr = queryConf.getAggSigDefectQueryStr(queryConf, timeRange, sigName, type);
+            if (StringUtils.isBlank(projectQueryStr)) {
+                resMap.put(type, (long) 0);
+                continue;
+            }
+            future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), projectQueryStr);
+            dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+            res = dataNode.get("hits").get("total").get("value").asLong();
+            resMap.put(type, res);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(resMap), "ok");
+    }
+
+    @SneakyThrows
+    public String getVersionFeature(CustomPropertiesConfig queryConf, String community, String version, String groupField) {
+        String companyFeature = queryConf.getAggCompanyFeatureQueryStr(queryConf, version, groupField);
+        if (StringUtils.isBlank(companyFeature)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeFeatureIndex(), companyFeature);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        // 如果按公司排序，那么有中英文切换；如果按照SIG组排序，那么只输出英文名称
+        List<Map<String, Object>> res = new ArrayList<>();
+        if ("company".equals(groupField)) {
+            res = packageByCompany(buckets, queryConf);
+        } else if ("sig".equals(groupField)) {
+            res = packageBySig(buckets);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameter");
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    @SneakyThrows
+    public String getVersionSig(CustomPropertiesConfig queryConf, String community, String type, String version) {
+        String sigPr = queryConf.getAggSigVersionQuery(queryConf, type, version);
+        if (StringUtils.isBlank(sigPr)) {
+            return resultJsonStr(400, null, "incorrect query");
+        }
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeVersionIndex(), sigPr);
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        List<Map<String, Object>> res = packageBySig(buckets);
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+    
+    @SneakyThrows
+    public String querySigContribute(CustomPropertiesConfig queryConf, String community, String timeRange, String projectName, String type, String version) {
+        if (timeRange != null && projectName != null && version == null) { // 按照项目查找
+            return queryByProjects(queryConf, community, timeRange, projectName, type);
+        } else if (timeRange == null && projectName == null && version != null) {  // 按照版本查找
+            return queryByVersion(queryConf, community, type, version);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameters.");
+        }
+    }
+
+    @SneakyThrows
+    public String queryByProjects(CustomPropertiesConfig queryConf, String community, String timeRange, String projectName, String type) {
+        // 获取所有创新项目的名称
+        List<String> projectNames = getInnovationItemsNames(queryConf);
+        if ("all".equals(projectName)) { // 项目范围：全部项目
+            if ("issue_cve".equals(type) || "issue_done".equals(type)) { // 度量指标：issue闭环个数,cve闭环个数
+                return queryAllProjects(queryConf, community, timeRange, "sig", type);
+            } else if ("pr".equals(type) || "issue".equals(type) || "comment".equals(type)) { // 度量指标：pr, issue, comment
+                return querySigContributors(queryConf, community, type, timeRange);
+            } else {
+                return resultJsonStr(400, null, "incorrect input parameters.");
+            }
+        } else if ("allInnoItems".equals(projectName)) { // 项目范围：全部创新项目
+            return queryAllInnoItems(queryConf, community, timeRange, "sig", type);
+        } else if (projectNames.contains(projectName)) { // 项目范围：某个创新项目
+            return queryByProjectName(queryConf, community, timeRange, "sig", projectName, type);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameters.");
+        }
+    }
+
+    @SneakyThrows
+    public String queryByVersion(CustomPropertiesConfig queryConf, String community, String type, String version) {
+        if ("feature".equals(type)) {
+            return getVersionFeature(queryConf, community, version, "sig");
+        } else if ("pr".equals(type)) {
+            return getVersionSig(queryConf, community, type, version);
+        } else {
+            return resultJsonStr(400, null, "incorrect input parameters.");
+        }
     }
 }

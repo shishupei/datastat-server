@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.net.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -39,6 +40,7 @@ public class MindSporeQueryDao extends QueryDao {
         resMap.put("code", 200);
         resMap.put("data", resData);
         resMap.put("msg", "success");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
 

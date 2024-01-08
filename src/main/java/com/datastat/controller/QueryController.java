@@ -21,6 +21,10 @@ import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -89,7 +93,6 @@ public class QueryController {
     public String queryAll(HttpServletRequest request,
                            @RequestParam(value = "community") String community) throws Exception {
         return queryService.queryAll(request, community);
-
     }
 
     @RequestMapping("/stars")
@@ -555,20 +558,23 @@ public class QueryController {
         return queryService.queryInnovationItems(request, community);
     }
 
-    @RequestMapping(value = "/issue_done")
-    public String queryIssueDone(HttpServletRequest request,
+    @RequestMapping(value = "/list")
+    public String queryAllProjects(HttpServletRequest request,
             @RequestParam(value = "community") String community,
             @RequestParam(value = "timeRange") String timeRange,
-            @RequestParam(value = "groupField") String groupField) {
-        return queryService.queryIssueDone(request, community, timeRange, groupField);
+            @RequestParam(value = "groupField") String groupField,
+            @RequestParam(value = "type") String type) {
+        return queryService.queryAllProjects(request, community, timeRange, groupField, type);
     }
 
-    @RequestMapping(value = "/issue_cve")
-    public String queryIssueCve(HttpServletRequest request,
+    @RequestMapping(value = "/project")
+    public String queryByProjectName(HttpServletRequest request,
             @RequestParam(value = "community") String community,
             @RequestParam(value = "timeRange") String timeRange,
-            @RequestParam(value = "groupField") String groupField) {
-        return queryService.queryIssueCve(request, community, timeRange, groupField);
+            @RequestParam(value = "groupField") String groupField,
+            @RequestParam(value = "projectName") String projectName,
+            @RequestParam(value = "type") String type) {
+        return queryService.queryByProjectName(request, community, timeRange, groupField, projectName, type);
     }
   
     @RequestMapping(value = "/nps", method = RequestMethod.POST)
@@ -576,4 +582,23 @@ public class QueryController {
             @RequestBody NpsBody body) {
         return queryService.getNps(request, community, body);
     }
+
+    @RequestMapping(value = "/sig_defect")
+    public String querySigDefect(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "timeRange") String timeRange,
+            @RequestParam(value = "sigName") String sigName) {
+        return queryService.querySigDefect(request, community, timeRange, sigName);
+    }
+
+    @RequestMapping(value = "/sig/contribute")
+    public String querySigContribute(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "timeRange", required = false) String timeRange,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "version", required = false) String version) {
+        return queryService.querySigContribute(request, community, timeRange, projectName, type, version);
+    }
+
 }
