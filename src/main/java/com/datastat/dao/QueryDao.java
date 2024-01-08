@@ -335,21 +335,16 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryNewYearPer(CustomPropertiesConfig queryConf, String oauth2_proxy, String community, String user, String year) {
-        AsyncHttpClient client = EsAsyncHttpUtil.getClient();
-        RequestBuilder builder = esAsyncHttpUtil.getBuilder();
         logger.info(oauth2_proxy);
-        oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
-        Request getRequest = builder.setUrl(queryConf.getGiteeUserInfoUrl())
-                .addHeader("Cookie", oauth2_proxy)
-                .addHeader("Content-Type", "application/json;charset=UTF-8")
-                .setMethod("GET").build();
-        ListenableFuture<Response> responseListenableFuture = client.executeRequest(getRequest);
-        Response response = responseListenableFuture.get();
-        logger.info(response.toString());
-        if (response.getStatusCode() != 200) {
+        String cookie_oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
+        HttpResponse<String> response = Unirest.get(queryConf.getGiteeUserInfoUrl())
+            .header("cookie", cookie_oauth2_proxy)
+            .asString();
+        logger.info(response.getBody());
+        if (response.getStatus() != 200) {
             return resultJsonStr(401, "unauthorized", "ok");
         }
-        JsonNode res = objectMapper.readTree(response.getResponseBody());
+        JsonNode res = objectMapper.readTree(response.getBody());
         String login = res.get("user").asText();
         logger.info(login);
         if (!user.equals(login)) {
