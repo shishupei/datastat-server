@@ -152,6 +152,7 @@ public class CustomPropertiesConfig {
     private String innovationItemAddress;
     private String issueDoneQueryStr;
     private String issueCveQueryStr;
+    private String giteeUserInfoUrl;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
 

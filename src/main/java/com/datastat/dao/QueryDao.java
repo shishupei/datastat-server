@@ -332,7 +332,27 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryNewYear(String community, String user, String year) {
+    public String queryNewYear(CustomPropertiesConfig queryConf, String oauth2_proxy, String community, String user, String year) {
+        AsyncHttpClient client = EsAsyncHttpUtil.getClient();
+        RequestBuilder builder = esAsyncHttpUtil.getBuilder();
+        oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
+        Request getRequest = builder.setUrl(queryConf.getGiteeUserInfoUrl())
+                .addHeader("Cookie", oauth2_proxy)
+                .addHeader("Content-Type", "application/json;charset=UTF-8")
+                .setMethod("GET").build();
+        ListenableFuture<Response> responseListenableFuture = client.executeRequest(getRequest);
+        Response response = responseListenableFuture.get();
+        logger.info(response.toString());
+        if (response.getStatusCode() != 200) {
+            return resultJsonStr(401, "unauthorized", "ok");
+        }
+        JsonNode res = objectMapper.readTree(response.getResponseBody());
+        String login = res.get("user").asText();
+        logger.info(login);
+        if (!user.equals(login)) {
+            return resultJsonStr(401, "unauthorized", "ok");
+        }
+
         String localFile = "om-data/obs/" + community.toLowerCase() + "_" + year + ".csv";
         List<HashMap<String, Object>> report = CsvFileUtil.readFile(localFile);
         HashMap<String, Object> resMap = new HashMap<>();
