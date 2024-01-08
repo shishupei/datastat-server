@@ -44,6 +44,7 @@ public class CustomPropertiesConfig {
     private String companyAction;
     private String sigAction;
     private String isvYamlUrl;
+    private String giteeUserInfoUrl;
 
     // -- index --
     private String extOsIndex;
@@ -166,7 +167,7 @@ public class CustomPropertiesConfig {
     private String sigCveQueryStr;
     private String companyFeatureQueryStr;
     private String giteeAggSigQueryStr;
-    private String sigVersionPrQueryStr;
+    private String sigVersionPrQueryStr;  
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
