@@ -334,7 +334,7 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryNewYear(CustomPropertiesConfig queryConf, String oauth2_proxy, String community, String year) {
+    public String queryNewYear(CustomPropertiesConfig queryConf, String oauth2_proxy, String community) {
         String cookie_oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
         HttpResponse<String> response = Unirest.get(queryConf.getGiteeUserInfoUrl())
             .header("cookie", cookie_oauth2_proxy)
@@ -345,7 +345,7 @@ public class QueryDao {
         JsonNode res = objectMapper.readTree(response.getBody());
         String user = res.get("user").asText();
 
-        String localFile = "om-data/obs/" + community.toLowerCase() + "_" + year + ".csv";
+        String localFile = "om-data/obs/" + community.toLowerCase() + "_" + env.getProperty("year") + ".csv";
         List<HashMap<String, Object>> report = CsvFileUtil.readFile(localFile);
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", 200);
