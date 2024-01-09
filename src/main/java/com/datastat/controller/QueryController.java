@@ -156,9 +156,8 @@ public class QueryController {
 
     @RequestMapping("/newYear/monthcount")
     public String queryNewYearMonthCount(HttpServletRequest request,
-                                         @RequestParam(value = "community") String community,
-                                         @RequestParam(value = "user") String user) {
-        return queryService.queryNewYearMonthCount(request, user);
+                                         @CookieValue(value = "_oauth2_proxy", required = true) String oauth2_proxy) {
+        return queryService.queryNewYearMonthCount(request, oauth2_proxy);
     }
 
     @RequestMapping("/bugQuestionnaires")
