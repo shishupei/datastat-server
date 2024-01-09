@@ -325,37 +325,27 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         String referer = request.getHeader("Referer");
         String community = null;
-        logger.info(referer);
         try {
-            community = referer.split("\\.")[0].split("-")[1];
+            community = referer.split("\\.")[1];
         } catch (Exception e) {
             logger.error("exception", e);
             return resultJsonStr(404, "error", "Referer error");
         }      
-        logger.info(community);
         CustomPropertiesConfig queryConf = getQueryConf(community);
         
         return queryDao.queryNewYearPer(queryConf, oauth2_proxy, community);
-    }
-
-    public String queryNewYear(HttpServletRequest request, String oauth2_proxy, String community, String year) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
-        return queryDao.queryNewYear(queryConf, oauth2_proxy, community, year);
     }
 
     public String queryNewYearMonthCount(HttpServletRequest request, String oauth2_proxy) {
         QueryDao queryDao = getQueryDao(request);
         String referer = request.getHeader("Referer");
         String community = null;
-        logger.info(referer);
         try {
-            community = referer.split("\\.")[0].split("-")[1];
+            community = referer.split("\\.")[1];
         } catch (Exception e) {
             logger.error("exception", e);
             return resultJsonStr(404, "error", "Referer error");
         }      
-        logger.info(community);
         CustomPropertiesConfig queryConf = getQueryConf(community);
         return queryDao.queryNewYearMonthCount(queryConf, oauth2_proxy);
     }
