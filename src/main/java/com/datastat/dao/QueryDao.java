@@ -338,7 +338,6 @@ public class QueryDao {
     public String queryNewYearPer(CustomPropertiesConfig queryConf, String oauth2_proxy, String community) {
         String cookie_oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
         logger.info(cookie_oauth2_proxy);
-        logger.info(community);
         HttpResponse<String> response = Unirest.get(queryConf.getGiteeUserInfoUrl())
             .header("cookie", cookie_oauth2_proxy)
             .asString();

@@ -24,7 +24,7 @@ ENV PATH=$MAVEN_HOEM/bin:$PATH
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
-RUN git clone -b ${BRANCH} https://github.com/Kaede10/datastat-server && \
+RUN git clone -b ${BRANCH} https://github.com/opensourceways/datastat-server && \
         cd datastat-server && \
         mvn clean install package -Dmaven.test.skip && \
         mv ./target/ds-0.0.1-SNAPSHOT.jar ../ds.jar
