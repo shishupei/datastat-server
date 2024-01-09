@@ -323,14 +323,14 @@ public class QueryService {
 
     public String queryNewYearPer(HttpServletRequest request, String oauth2_proxy) {
         QueryDao queryDao = getQueryDao(request);
-        String host = request.getHeader("Referer");
+        String referer = request.getHeader("Referer");
         String community = null;
-        logger.info(host);
+        logger.info(referer);
         try {
-            community = host.split("\\.")[0].split("-")[1];
+            community = referer.split("\\.")[0].split("-")[1];
         } catch (Exception e) {
             logger.error("exception", e);
-            return resultJsonStr(404, "error", "Host error");
+            return resultJsonStr(404, "error", "Referer error");
         }      
         logger.info(community);
         CustomPropertiesConfig queryConf = getQueryConf(community);
@@ -344,10 +344,20 @@ public class QueryService {
         return queryDao.queryNewYear(queryConf, oauth2_proxy, community, year);
     }
 
-    public String queryNewYearMonthCount(HttpServletRequest request, String user) {
+    public String queryNewYearMonthCount(HttpServletRequest request, String oauth2_proxy) {
         QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
-        return queryDao.queryNewYearMonthCount(queryConf, user);
+        String referer = request.getHeader("Referer");
+        String community = null;
+        logger.info(referer);
+        try {
+            community = referer.split("\\.")[0].split("-")[1];
+        } catch (Exception e) {
+            logger.error("exception", e);
+            return resultJsonStr(404, "error", "Referer error");
+        }      
+        logger.info(community);
+        CustomPropertiesConfig queryConf = getQueryConf(community);
+        return queryDao.queryNewYearMonthCount(queryConf, oauth2_proxy);
     }
 
     public String queryBugQuestionnaire(HttpServletRequest request, String community, String lastCursor, String pageSize) {

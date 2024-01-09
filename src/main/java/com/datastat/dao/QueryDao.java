@@ -336,19 +336,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryNewYearPer(CustomPropertiesConfig queryConf, String oauth2_proxy, String community) {
-        String cookie_oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
-        logger.info(cookie_oauth2_proxy);
-        HttpResponse<String> response = Unirest.get(queryConf.getGiteeUserInfoUrl())
-            .header("cookie", cookie_oauth2_proxy)
-            .asString();
-        logger.info(response.getBody());
-        if (response.getStatus() != 200) {
-            return resultJsonStr(401, "unauthorized", "ok");
-        }
-        JsonNode res = objectMapper.readTree(response.getBody());
-        String user = res.get("user").asText();
-        logger.info(user);
-
+        String user = getUserFromCookie(queryConf, oauth2_proxy);
         String localFile = "om-data/obs/" + community.toLowerCase() + "_" + env.getProperty("year") + ".csv";
         List<HashMap<String, Object>> report = CsvFileUtil.readFile(localFile);
         HashMap<String, Object> resMap = new HashMap<>();
@@ -385,19 +373,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryNewYear(CustomPropertiesConfig queryConf, String oauth2_proxy, String community, String year) {
-        String cookie_oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
-        logger.info(cookie_oauth2_proxy);
-        HttpResponse<String> response = Unirest.get(queryConf.getGiteeUserInfoUrl())
-            .header("cookie", cookie_oauth2_proxy)
-            .asString();
-        logger.info(response.getBody());
-        if (response.getStatus() != 200) {
-            return resultJsonStr(401, "unauthorized", "ok");
-        }
-        JsonNode res = objectMapper.readTree(response.getBody());
-        String user = res.get("user").asText();
-        logger.info(user);
-
+        String user = getUserFromCookie(queryConf, oauth2_proxy);
         String localFile = "om-data/obs/" + community.toLowerCase() + "_" + year + ".csv";
         List<HashMap<String, Object>> report = CsvFileUtil.readFile(localFile);
         HashMap<String, Object> resMap = new HashMap<>();
@@ -433,7 +409,8 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryNewYearMonthCount(CustomPropertiesConfig queryConf, String user) {
+    public String queryNewYearMonthCount(CustomPropertiesConfig queryConf, String oauth2_proxy) {
+        String user = getUserFromCookie(queryConf, oauth2_proxy);
         String queryJson = String.format(queryConf.getMonthCountQueryStr(), user);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryJson);
         String responseBody = future.get().getResponseBody(UTF_8);
@@ -456,6 +433,22 @@ public class QueryDao {
             dataMap.put("count", count);
         }
         return resultJsonStr(200, objectMapper.valueToTree(dataMap), "ok");
+    }
+
+    @SneakyThrows
+    private String getUserFromCookie(CustomPropertiesConfig queryConf, String oauth2_proxy) {
+        String cookie_oauth2_proxy = "_oauth2_proxy=" + oauth2_proxy;
+        logger.info(cookie_oauth2_proxy);
+        HttpResponse<String> response = Unirest.get(queryConf.getGiteeUserInfoUrl())
+            .header("cookie", cookie_oauth2_proxy)
+            .asString();
+        logger.info(response.getBody());
+        if (response.getStatus() != 200) {
+            return resultJsonStr(401, "unauthorized", "ok");
+        }
+        JsonNode res = objectMapper.readTree(response.getBody());
+        String user = res.get("user").asText();
+        return user;
     }
 
     @SneakyThrows
