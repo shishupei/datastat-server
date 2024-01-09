@@ -321,13 +321,19 @@ public class QueryService {
         return result;
     }
 
-    public String queryNewYear(HttpServletRequest request, String oauth2_proxy) {
+    public String queryNewYearPer(HttpServletRequest request, String oauth2_proxy) {
         QueryDao queryDao = getQueryDao(request);
         String host = request.getHeader("Host");
         String community = host.split("\\.")[1];
         CustomPropertiesConfig queryConf = getQueryConf(community);
         
-        return queryDao.queryNewYear(queryConf, oauth2_proxy, community);
+        return queryDao.queryNewYearPer(queryConf, oauth2_proxy, community);
+    }
+
+    public String queryNewYear(HttpServletRequest request, String oauth2_proxy, String community, String year) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        return queryDao.queryNewYear(queryConf, oauth2_proxy, community, year);
     }
 
     public String queryNewYearMonthCount(HttpServletRequest request, String user) {

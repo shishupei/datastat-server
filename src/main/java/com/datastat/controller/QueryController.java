@@ -140,10 +140,18 @@ public class QueryController {
         return queryService.queryCveDetails(request, community, lastCursor, pageSize);
     }
 
-    @RequestMapping("/newYear/report")
+    @RequestMapping("/newYear/report/test")
     public String queryNewYear(HttpServletRequest request,
                                @CookieValue(value = "_oauth2_proxy", required = true) String oauth2_proxy) {
-        return queryService.queryNewYear(request, oauth2_proxy);
+        return queryService.queryNewYearPer(request, oauth2_proxy);
+    }
+
+    @RequestMapping("/newYear/report")
+    public String queryNewYear(HttpServletRequest request,
+                               @RequestParam(value = "community") String community,
+                               @RequestParam(value = "year") String year,
+                               @CookieValue(value = "_oauth2_proxy", required = true) String oauth2_proxy) {
+        return queryService.queryNewYear(request, oauth2_proxy, community, year);
     }
 
     @RequestMapping("/newYear/monthcount")
