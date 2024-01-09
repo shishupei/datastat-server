@@ -324,6 +324,7 @@ public class QueryService {
     public String queryNewYearPer(HttpServletRequest request, String oauth2_proxy) {
         QueryDao queryDao = getQueryDao(request);
         String host = request.getHeader("Host");
+        logger.info(host);
         String community = host.split("\\.")[0].split("-")[1];
         logger.info(community);
         CustomPropertiesConfig queryConf = getQueryConf(community);
