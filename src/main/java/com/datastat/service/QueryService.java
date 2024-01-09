@@ -330,7 +330,7 @@ public class QueryService {
             community = host.split("\\.")[0].split("-")[1];
         } catch (Exception e) {
             logger.error("exception", e);
-            resultJsonStr(404, "error", "Host error");
+            return resultJsonStr(404, "error", "Host error");
         }      
         logger.info(community);
         CustomPropertiesConfig queryConf = getQueryConf(community);
