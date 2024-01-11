@@ -769,12 +769,6 @@ public class QueryService {
 
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-
-            try {
-                logger.info("userid::{}::email::{}::hook_url::{}::", userRes.get("gitee_id"), userRes.get("email"), action.get("html_url"));
-            } catch (Exception e) {
-            }
-
             queryDao.putGiteeHookUser(queryConf, userSet);
             return resultJsonStr(200, "user_count", userSet.size(), "success");
         } catch (Exception e) {
