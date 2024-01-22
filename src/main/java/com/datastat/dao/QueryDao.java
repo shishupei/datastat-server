@@ -602,6 +602,9 @@ public class QueryDao {
         SearchSourceBuilder mistakeSourceBuilder = assembleMistakeSourceBuilder("update_at", queryBody);
         String mistakeInfoStr = esQueryUtils.esScroll(restHighLevelClient, item, queryConf.getBuildCheckMistakeIndex(), 5000, mistakeSourceBuilder);
 
+        logger.info("mistakeInfoStr::: {}", mistakeInfoStr);
+        logger.info("resultInfo::: {}", resultInfo);
+
         ArrayList<ObjectNode> finalResultJSONArray = new ArrayList<>();
         int totalCount = 0;
         String cursor = "";
