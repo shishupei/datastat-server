@@ -605,6 +605,9 @@ public class QueryDao {
         logger.info("mistakeInfoStr::: {}", mistakeInfoStr);
         logger.info("resultInfo::: {}", resultInfo);
 
+        objectMapper.getFactory()
+		        .setStreamReadConstraints(StreamReadConstraints.builder().maxStringLength(10_000_000).build());
+
         try {
             ArrayList<ObjectNode> finalResultJSONArray = new ArrayList<>();
             int totalCount = 0;
