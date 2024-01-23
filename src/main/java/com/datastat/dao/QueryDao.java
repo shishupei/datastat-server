@@ -609,7 +609,8 @@ public class QueryDao {
         int totalCount = 0;
         String cursor = "";
         JsonNode resNode = objectMapper.readTree(resultInfo);
-        Iterator<JsonNode> resbuckets = resNode.get("data").elements();
+        String dataNodeStr = resNode.get("data").asText();
+        Iterator<JsonNode> resbuckets = objectMapper.readTree(dataNodeStr).elements();
         cursor = resNode.get("cursor").asText();
         totalCount = resNode.get("totalCount").asInt();
         JsonNode dataNode = objectMapper.readTree(mistakeInfoStr);
