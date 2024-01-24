@@ -649,7 +649,7 @@ public class QueryDao {
         resMap.put("data", finalResultJSONArray);
         resMap.put("totalCount", totalCount);
         resMap.put("cursor", cursor);
-        resMap.put("msg", "ok");
+        resMap.put("msg", "susscess");
         resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
         return objectMapper.valueToTree(resMap).toString();
     }
