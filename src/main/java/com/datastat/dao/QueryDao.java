@@ -593,7 +593,7 @@ public class QueryDao {
         return parseIssueScoreFutureRes(future);
     }
 
-    // @SneakyThrows
+    @SneakyThrows
     public String queryBuildCheckInfo(CustomPropertiesConfig queryConf, BuildCheckInfoQueryVo queryBody, String item, String lastCursor, String pageSize) {
         RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
         SearchSourceBuilder queryResultSourceBuilder = assembleResultSourceBuilder("update_at", queryBody);
@@ -604,73 +604,54 @@ public class QueryDao {
         SearchSourceBuilder mistakeSourceBuilder = assembleMistakeSourceBuilder("update_at", queryBody);
         String mistakeInfoStr = esQueryUtils.esScroll(restHighLevelClient, item, queryConf.getBuildCheckMistakeIndex(), 5000, mistakeSourceBuilder);
 
-        logger.info("mistakeInfoStr::: {}", mistakeInfoStr);
-        logger.info("resultInfo::: {}", resultInfo);
-
-        try {
-            objectMapper.getFactory().setStreamReadConstraints(StreamReadConstraints.builder().maxStringLength(10_000_000).build());
-
-            ArrayList<ObjectNode> finalResultJSONArray = new ArrayList<>();
-            int totalCount = 0;
-            String cursor = "";
-            JsonNode resNode = objectMapper.readTree(resultInfo);
-            logger.info("resNode::: {}", resNode);
-            String dataNodeStr = resNode.get("data").asText();
-            logger.info("dataNodeStr::: {}", dataNodeStr);
-            Iterator<JsonNode> resbuckets = objectMapper.readTree(dataNodeStr).elements();
-            logger.info("resbuckets::: {}", resbuckets);
-            cursor = resNode.get("cursor").asText();
-            logger.info("mistcursorakeInfoStr::: {}", cursor);
-            totalCount = resNode.get("totalCount").asInt();
-            logger.info("totalCount::: {}", totalCount);
-            JsonNode dataNode = objectMapper.readTree(mistakeInfoStr);
-            logger.info("dataNode::: {}", dataNode);
-            while (resbuckets.hasNext()) {
-                ObjectNode resbucket = (ObjectNode) resbuckets.next();
-                String pr_url = resbucket.get("pr_url").asText();
-                int build_no = resbucket.get("build_no").asInt();
-                String result_update_at = resbucket.get("update_at").asText();
-                resbucket.put("result_update_at", result_update_at);
-                resbucket.remove("update_at");
-                ArrayList<ObjectNode> mistakeList = new ArrayList<>();
-                Iterator<JsonNode> buckets = dataNode.get("data").elements();
-                while (buckets.hasNext()) {
-                    ObjectNode bucket = (ObjectNode) buckets.next();
-                    String mistake_pr_url = bucket.get("pr_url").asText();
-                    int mistake_build_no = bucket.get("build_no").asInt();
-                    if (mistake_pr_url.equals(pr_url) && mistake_build_no == build_no) {
-                        mistakeList.add(bucket);
-                    }
+        ArrayList<ObjectNode> finalResultJSONArray = new ArrayList<>();
+        int totalCount = 0;
+        String cursor = "";
+        JsonNode resNode = objectMapper.readTree(resultInfo);
+        Iterator<JsonNode> resbuckets = resNode.get("data").elements();
+        cursor = resNode.get("cursor").asText();
+        totalCount = resNode.get("totalCount").asInt();
+        JsonNode dataNode = objectMapper.readTree(mistakeInfoStr);
+        while (resbuckets.hasNext()) {
+            ObjectNode resbucket = (ObjectNode) resbuckets.next();
+            String pr_url = resbucket.get("pr_url").asText();
+            int build_no = resbucket.get("build_no").asInt();
+            String result_update_at = resbucket.get("update_at").asText();
+            resbucket.put("result_update_at", result_update_at);
+            resbucket.remove("update_at");
+            ArrayList<ObjectNode> mistakeList = new ArrayList<>();
+            Iterator<JsonNode> buckets = dataNode.get("data").elements();
+            while (buckets.hasNext()) {
+                ObjectNode bucket = (ObjectNode) buckets.next();
+                String mistake_pr_url = bucket.get("pr_url").asText();
+                int mistake_build_no = bucket.get("build_no").asInt();
+                if (mistake_pr_url.equals(pr_url) && mistake_build_no == build_no) {
+                    mistakeList.add(bucket);
                 }
-                String currentMistakeUpdateAt = mistakeList.size() > 0 ? mistakeList.get(0).get("update_at").asText()
-                        : result_update_at;
-                resbucket.putPOJO("ci_mistake", mistakeList);
-                resbucket.put("ci_mistake_update_at", currentMistakeUpdateAt);
-
-                if (result_update_at.compareTo(currentMistakeUpdateAt) < 0) {
-                    result_update_at = currentMistakeUpdateAt;
-                }
-                boolean isAdd = isLocatedInTimeWindow(queryBody, result_update_at);
-                if (!isAdd) {
-                    continue;
-                }
-                finalResultJSONArray.add(resbucket);
             }
+            String currentMistakeUpdateAt = mistakeList.size() > 0 ? mistakeList.get(0).get("update_at").asText()
+                    : result_update_at;
+            resbucket.putPOJO("ci_mistake", mistakeList);
+            resbucket.put("ci_mistake_update_at", currentMistakeUpdateAt);
 
-            HashMap<String, Object> resMap = new HashMap<>();
-            resMap.put("code", 200);
-            resMap.put("data", finalResultJSONArray);
-            resMap.put("totalCount", totalCount);
-            resMap.put("cursor", cursor);
-            resMap.put("msg", "ok");
-            resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
-            logger.info("resMap::: {}", resMap);
-            return objectMapper.valueToTree(resMap).toString();
-        } catch (Exception e) {
-            logger.info("except::: {}", e);
+            if (result_update_at.compareTo(currentMistakeUpdateAt) < 0) {
+                result_update_at = currentMistakeUpdateAt;
+            }
+            boolean isAdd = isLocatedInTimeWindow(queryBody, result_update_at);
+            if (!isAdd) {
+                continue;
+            }
+            finalResultJSONArray.add(resbucket);
         }
-        return "";
-        
+
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", finalResultJSONArray);
+        resMap.put("totalCount", totalCount);
+        resMap.put("cursor", cursor);
+        resMap.put("msg", "susscess");
+        resMap.put("update_at", (new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")).format(new Date()));
+        return objectMapper.valueToTree(resMap).toString();
     }
 
     @SneakyThrows
