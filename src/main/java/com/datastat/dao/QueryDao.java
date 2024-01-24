@@ -597,7 +597,8 @@ public class QueryDao {
     public String queryBuildCheckInfo(CustomPropertiesConfig queryConf, BuildCheckInfoQueryVo queryBody, String item, String lastCursor, String pageSize) {
         RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
         SearchSourceBuilder queryResultSourceBuilder = assembleResultSourceBuilder("update_at", queryBody);
-        pageSize = pageSize == null ? "5000" : pageSize;
+        pageSize = pageSize == null ? "1000" : pageSize;
+        pageSize = Integer.parseInt(pageSize) > 1000 ? "1000" : pageSize;
         String resultInfo = esQueryUtils.esScrollFromId(restHighLevelClient, item, Integer.parseInt(pageSize),
                 queryConf.getBuildCheckResultIndex(), lastCursor, queryResultSourceBuilder);
         SearchSourceBuilder mistakeSourceBuilder = assembleMistakeSourceBuilder("update_at", queryBody);
