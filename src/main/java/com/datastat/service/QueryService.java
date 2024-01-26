@@ -1307,7 +1307,7 @@ public class QueryService {
     public String queryModelFoundryTrends(HttpServletRequest request, String repo) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
-        String key = "modelfoundrycownloadtrends_repo_" + repo;
+        String key = "modelfoundrycownload_repo_trends_" + repo;
         String result = (String) redisDao.get(key);
         if (result == null) {
             result = queryDao.queryModelFoundryTrends(queryConf, repo);
