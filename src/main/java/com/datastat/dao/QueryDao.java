@@ -665,6 +665,14 @@ public class QueryDao {
         HashMap<String, Object> resMap = objectMapper.convertValue(userVo, HashMap.class);
         resMap.put("created_at", nowStr);
         resMap.put("community", community);
+        if (userVo.has("properties") && userVo.get("properties").has("_U_T_")) {
+            String userInfo = userVo.get("properties").get("_U_T_").asText();
+            if (!"notLog".equalsIgnoreCase(userInfo)) {
+                DecodedJWT decode = JWT.decode(userInfo);
+                String userName = decode.getAudience().get(0);
+                resMap.put("user_login", userName);
+            }
+        }     
         kafkaDao.sendMess(env.getProperty("producer.topic.tracker"), id, objectMapper.valueToTree(resMap).toString());
         return resultJsonStr(200, "track_id", id, "collect over");
     }
