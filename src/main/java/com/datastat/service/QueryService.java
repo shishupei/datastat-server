@@ -23,6 +23,7 @@ import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.vo.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.ArrayListUtil;
+import com.datastat.util.ClientUtil;
 import com.datastat.util.PageUtils;
 import com.datastat.util.RSAUtil;
 import com.datastat.util.StringValidationUtil;
@@ -440,6 +441,7 @@ public class QueryService {
 
     public String putUserActionsInfo(HttpServletRequest request, String community, String data) {
         QueryDao queryDao = getQueryDao(request);
+        ClientUtil.getHeaderValue(request);
         if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         return queryDao.putUserActionsInfo(community, data);
     }
