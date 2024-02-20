@@ -441,7 +441,6 @@ public class QueryService {
 
     public String putUserActionsInfo(HttpServletRequest request, String community, String data) {
         QueryDao queryDao = getQueryDao(request);
-        ClientUtil.getHeaderValue(request);
         if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         return queryDao.putUserActionsInfo(community, data);
     }
@@ -1296,7 +1295,7 @@ public class QueryService {
 
     public String queryModelFoundry(HttpServletRequest request, String repo) {
         QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
+        CustomPropertiesConfig queryConf = getQueryConf("foundry");
         String key = "modelfoundrycownload_repo_" + repo;
         String result = (String) redisDao.get(key);
         if (result == null) {
@@ -1308,7 +1307,7 @@ public class QueryService {
 
     public String queryModelFoundryTrends(HttpServletRequest request, String repo) {
         QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
+        CustomPropertiesConfig queryConf = getQueryConf("foundry");
         String key = "modelfoundrycownload_repo_trends_" + repo;
         String result = (String) redisDao.get(key);
         if (result == null) {
