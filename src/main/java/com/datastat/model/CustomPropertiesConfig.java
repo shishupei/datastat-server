@@ -45,6 +45,7 @@ public class CustomPropertiesConfig {
     private String sigAction;
     private String isvYamlUrl;
     private String giteeUserInfoUrl;
+    private String orgName;
 
     // -- index --
     private String extOsIndex;
@@ -171,6 +172,8 @@ public class CustomPropertiesConfig {
     private String sigVersionPrQueryStr;
     private String modelFoundryDownloadQueryStr;
     private String modelFoundryDownloadTrendQueryStr;
+    private String repoMaintainerQuery;
+    private String repoMaintainerTopQuery;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();

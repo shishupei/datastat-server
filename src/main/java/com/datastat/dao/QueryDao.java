@@ -3127,4 +3127,40 @@ public class QueryDao {
         }
         return resList;
     }
+
+    protected String getFilterList(ArrayList<String> res) {
+        String names = "(";
+        for (String r : res) {
+            names = names + "\\\"" + r + "\\\",";
+        }
+        names = names + ")";
+        return names;
+    }
+
+    @SneakyThrows
+    public String queryRepoMaintainer(CustomPropertiesConfig queryConf, String community, String repo, String timeRange) {
+        ArrayList<String> repos = new ArrayList<>();
+        String[] orgNames = queryConf.getOrgName().split(",");
+        for (String orgName : orgNames) {
+            repos.add(orgName + "/" + repo);
+        }
+        String query = String.format(queryConf.getRepoMaintainerQuery(), getFilterList(repos));
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
+        ArrayList<String> userList = new ArrayList<>();
+        for (JsonNode bucket : buckets) {
+            userList.add(bucket.get("key").asText());
+        }
+
+        String maintainer = null;
+        query = queryConf.getQueryStrWithTimeRange(queryConf.getRepoMaintainerTopQuery(), timeRange, getFilterList(userList));
+        resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query).get().getResponseBody(UTF_8);
+        dataNode = objectMapper.readTree(resBody);
+        buckets = dataNode.get("aggregations").get("group_field").get("buckets");
+        if (buckets.elements().hasNext()) {
+            maintainer = buckets.get(0).get("key").asText();
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(maintainer), "ok");
+    }
 }

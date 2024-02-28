@@ -601,4 +601,12 @@ public class QueryController {
         return queryService.queryModelFoundryTrends(request, repo);
     }
 
+    @RequestMapping(value = "/repo/maintainer")
+    public String queryRepoMaintainer(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "repo") String repo,
+            @RequestParam(value = "timeRange", required = false) String timeRange) {
+        return queryService.queryRepoMaintainer(request, community, repo, timeRange);
+    }
+
 }
