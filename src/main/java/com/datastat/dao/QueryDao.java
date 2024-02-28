@@ -3147,20 +3147,34 @@ public class QueryDao {
         String query = String.format(queryConf.getRepoMaintainerQuery(), getFilterList(repos));
         String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
-        JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
-        ArrayList<String> userList = new ArrayList<>();
-        for (JsonNode bucket : buckets) {
-            userList.add(bucket.get("key").asText());
+        JsonNode hits = dataNode.get("hits").get("hits");
+        if (!hits.elements().hasNext()) {
+            return resultJsonStr(400, null, "repo error");
         }
+        JsonNode hit = hits.get(0);
+        JsonNode maintainers = hit.get("_source").get("maintainers");
+        ArrayList<String> userList = objectMapper.readValue(maintainers.traverse(), new TypeReference<ArrayList<String>>(){});
 
-        String maintainer = null;
-        query = queryConf.getQueryStrWithTimeRange(queryConf.getRepoMaintainerTopQuery(), timeRange, getFilterList(userList));
-        resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query).get().getResponseBody(UTF_8);
-        dataNode = objectMapper.readTree(resBody);
-        buckets = dataNode.get("aggregations").get("group_field").get("buckets");
-        if (buckets.elements().hasNext()) {
-            maintainer = buckets.get(0).get("key").asText();
+        String maintainer = pickMaintainer(queryConf, userList, timeRange);
+        JsonNode maintainerInfos = hit.get("_source").get("maintainer_info");
+        for (JsonNode info : maintainerInfos) {
+            if (maintainer != null && maintainer.equals(info.get("gitee_id").asText())) {
+                return resultJsonStr(200, objectMapper.valueToTree(info), "ok");
+            }
         }
-        return resultJsonStr(200, objectMapper.valueToTree(maintainer), "ok");
+        return resultJsonStr(400, null, "query error");
+    }
+
+    @SneakyThrows
+    public String pickMaintainer(CustomPropertiesConfig queryConf, ArrayList<String> userList, String timeRange) {
+        String query = queryConf.getQueryStrWithTimeRange(queryConf.getRepoMaintainerTopQuery(), timeRange, getFilterList(userList));
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        String resBody = future.get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
+        if (buckets.elements().hasNext()) {
+            return buckets.get(0).get("key").asText();
+        }
+        return null;
     }
 }
