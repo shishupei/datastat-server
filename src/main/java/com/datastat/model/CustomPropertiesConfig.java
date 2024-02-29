@@ -84,6 +84,7 @@ public class CustomPropertiesConfig {
     private String npsIndex;
     private String giteeFeatureIndex;
     private String modelFoundryIndex;
+    private String softwareIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -174,6 +175,7 @@ public class CustomPropertiesConfig {
     private String modelFoundryDownloadTrendQueryStr;
     private String repoMaintainerQuery;
     private String repoMaintainerTopQuery;
+    private String softwareInfoQuery;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
