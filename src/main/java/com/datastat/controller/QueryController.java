@@ -609,4 +609,12 @@ public class QueryController {
         return queryService.queryRepoMaintainer(request, community, repo, timeRange);
     }
 
+    @RequestMapping(value = "/software/info")
+    public String querySoftwareInfo(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "repo") String repo,
+            @RequestParam(value = "tag") String tag) {
+        return queryService.querySoftwareInfo(request, community, repo, tag);
+    }
+
 }

@@ -3177,4 +3177,18 @@ public class QueryDao {
         }
         return null;
     }
+
+    @SneakyThrows
+    public String querySoftwareInfo(CustomPropertiesConfig queryConf, String community, String repo, String tag) {
+
+        String query = String.format(queryConf.getSoftwareInfoQuery(), repo, tag);
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSoftwareIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        JsonNode hits = dataNode.get("hits").get("hits");
+        if (!hits.elements().hasNext()) {
+            return resultJsonStr(400, null, "repo error");
+        }
+        JsonNode hit = hits.get(0).get("_source");
+        return resultJsonStr(200, objectMapper.valueToTree(hit), "ok");
+    }
 }
