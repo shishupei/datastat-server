@@ -3191,4 +3191,23 @@ public class QueryDao {
         JsonNode hit = hits.get(0).get("_source");
         return resultJsonStr(200, objectMapper.valueToTree(hit), "ok");
     }
+
+    @SneakyThrows
+    public String queryRepoSigInfo(CustomPropertiesConfig queryConf, String community, String repo) {
+        ArrayList<String> repos = new ArrayList<>();
+        String[] orgNames = queryConf.getOrgName().split(",");
+        for (String orgName : orgNames) {
+            repos.add(orgName + "/" + repo);
+        }
+        String query = String.format(queryConf.getRepoSigInfoQuery(), getFilterList(repos));
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        JsonNode hits = dataNode.get("hits").get("hits");
+        if (!hits.elements().hasNext()) {
+            return resultJsonStr(400, null, "repo error");
+        }
+        JsonNode hit = hits.get(0);
+        JsonNode sigName = hit.get("_source").get("sig_name");
+        return resultJsonStr(200, objectMapper.valueToTree(sigName), "ok");
+    }
 }

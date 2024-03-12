@@ -1330,6 +1330,19 @@ public class QueryService {
         return result;
     }
 
+    public String queryRepoSigInfo(HttpServletRequest request, String community, String repo) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "reposig" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo);
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryRepoSigInfo(queryConf, community, repo);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
     public String querySoftwareInfo(HttpServletRequest request, String community, String repo, String tag) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = "softwareinfo" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo) + tag;

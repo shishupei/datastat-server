@@ -176,6 +176,7 @@ public class CustomPropertiesConfig {
     private String repoMaintainerQuery;
     private String repoMaintainerTopQuery;
     private String softwareInfoQuery;
+    private String repoSigInfoQuery;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
