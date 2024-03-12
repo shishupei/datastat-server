@@ -624,4 +624,11 @@ public class QueryController {
         return queryService.querySoftwareInfo(request, community, repo, tag);
     }
 
+    @RequestMapping(value = "/software/app/download")
+    public String querySoftwareAppDownload(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "app") String app) {
+        return queryService.querySoftwareAppDownload(request, community, app);
+    }
+
 }

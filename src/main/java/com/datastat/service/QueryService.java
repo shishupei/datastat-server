@@ -1355,4 +1355,17 @@ public class QueryService {
         }
         return result;
     }
+
+    public String querySoftwareAppDownload(HttpServletRequest request, String community, String app) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "softwareappdownload" + StringUtils.lowerCase(community) + StringUtils.lowerCase(app);
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySoftwareAppDownload(queryConf, community, app);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }
