@@ -3210,4 +3210,14 @@ public class QueryDao {
         JsonNode sigName = hit.get("_source").get("sig_name");
         return resultJsonStr(200, objectMapper.valueToTree(sigName), "ok");
     }
+
+    @SneakyThrows
+    public String querySoftwareAppDownload(CustomPropertiesConfig queryConf, String community, String app) {
+
+        String query = String.format(queryConf.getApplicationDownloadQuery(), app);
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getTrackerIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        JsonNode total = dataNode.get("hits").get("total").get("value");
+        return resultJsonStr(200, total, "ok");
+    }
 }
