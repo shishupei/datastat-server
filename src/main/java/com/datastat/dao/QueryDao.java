@@ -2456,7 +2456,7 @@ public class QueryDao {
     public String putMeetupApplyForm(CustomPropertiesConfig queryConf, String item, MeetupApplyForm meetupApplyForm, String token) {
         ArrayList<String> errorMesseages = meetupApplyForm.validMeetupApplyFormField();
         if (errorMesseages.size() > 0) {
-            return "{\"code\":400,\"data\":{\"" + item + "\":\"write error\"},\"msg:" + errorMesseages + "\"}";
+            return resultJsonStr(400, item, objectMapper.valueToTree(errorMesseages), "write error");
         }
         Map meetupApplyFormMap = objectMapper.convertValue(meetupApplyForm, Map.class);
         return putDataSource(queryConf.getMeetupApplyFormIndex(), meetupApplyFormMap, token);

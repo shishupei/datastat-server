@@ -206,16 +206,16 @@ public class OneidInterceptor implements HandlerInterceptor {
             }
 
             // token 签名密码验证
-            String password = permission + env.getProperty("oneid.token.base.password");
+            String password = permission + oneidTokenBasePassword;
             JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(password)).build();
             jwtVerifier.verify(token);
 
             // 退出登录后token失效
-            String redisKey = userId + issuedAt.toString();
-            String beforeToken = (String) redisDao.get(redisKey);
-            if (token.equalsIgnoreCase(beforeToken)) {
-                return "unauthorized";
-            }
+            // String redisKey = userId + issuedAt.toString();
+            // String beforeToken = (String) redisDao.get(redisKey);
+            // if (token.equalsIgnoreCase(beforeToken)) {
+            //     return "unauthorized";
+            // }
         } catch (Exception e) {
             return "unauthorized";
         }
@@ -236,9 +236,9 @@ public class OneidInterceptor implements HandlerInterceptor {
 
             // 服务端校验headerToken是否有效
             String md5Token = DigestUtils.md5DigestAsHex(headerToken.getBytes());
-            if (!redisDao.exists("idToken_" + md5Token)) {
-                return "token expires";
-            }
+            // if (!redisDao.exists("idToken_" + md5Token)) {
+            //     return "token expires";
+            // }
 
             // token 签名密码验证
             String password = oneidTokenBasePassword;
