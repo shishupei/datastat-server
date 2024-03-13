@@ -21,6 +21,7 @@ import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -476,7 +477,7 @@ public class QueryController {
     @RequestMapping(value = "/meetupApplyForm", method = RequestMethod.POST)
     public String addMeetupApplyForm(HttpServletRequest request, 
             @RequestParam String community,
-            @RequestBody MeetupApplyForm meetupApplyForm,
+            @Valid @RequestBody MeetupApplyForm meetupApplyForm,
             @CookieValue(value = "_Y_G_", required = false) String token) {
         String res = queryService.putMeetupApplyForm(request, community, meetupApplyForm, token);
         return res;
@@ -567,7 +568,7 @@ public class QueryController {
   
     @RequestMapping(value = "/nps", method = RequestMethod.POST)
     public String getNps(HttpServletRequest request, @RequestParam(value = "community") String community,
-            @RequestBody NpsBody body) {
+            @Valid @RequestBody NpsBody body) {
         return queryService.getNps(request, community, body);
     }
 
