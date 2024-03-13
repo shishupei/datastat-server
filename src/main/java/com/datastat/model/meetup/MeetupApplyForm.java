@@ -11,43 +11,63 @@
 
 package com.datastat.model.meetup;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class MeetupApplyForm {
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String company;
+
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String topic;
+
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date format error")
     private String date;
+
+    @Valid
     private SurveyAnswer duration;
+
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String city;
+
+    @Size(max = 10, message = "the length can not exceed 10")
+    @Pattern(regexp = "^[0-9\\s\\u4e00-\\u9fa5]+$", message = "Text format error")
     private String meetupSize;
+
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String principalUser;
+
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String principalCompany;
+
+    @Pattern(regexp = "^(?:(?:\\+|00)86)?1[3-9]\\d{9}$", message = "Phone format error")
     private String principalPhone;
+
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Email format error")
     private String principalEmail;
+
+    @Valid
     private SurveyAnswer meetupFormat;
+
+    @Valid
     private ArrayList<SurveyAnswer> supports;
+
+    @Size(max = 500, message = "the length can not exceed 500")
     private String details;
 
     public ArrayList<String> validMeetupApplyFormField() {
         ArrayList<String> errorMesseges = new ArrayList<>();
-        if (!validStringLength()) {
-            errorMesseges.add("text error");
-        }
-        if (!validDate()) {
-            errorMesseges.add("date format error");
-        }
-        if (!validPhone()) {
-            errorMesseges.add("phone format error");
-        }
-        if (!validEmail()) {
-            errorMesseges.add("email format error");
-        }
         if (!validDuration(getDuration())) {
             errorMesseges.add("duration error");
         }
@@ -57,47 +77,10 @@ public class MeetupApplyForm {
         return errorMesseges;
     }
 
-    public Boolean validStringLength() {
-        if (getCompany().length() <= 20
-                && getTopic().length() <= 50
-                && getCity().length() <= 10
-                && getPrincipalUser().length() <= 10
-                && getPrincipalCompany().length() <= 20
-                && getDetails().length() <= 500) {
-            return true;
-        }
-        return false;
-    }
-
-    public Boolean validDate(){
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            LocalDate.parse(getDate(), formatter);
-            return true;
-        } catch (DateTimeParseException e) {
-            return false;
-        }
-    }
-
     public Boolean validDuration(SurveyAnswer value){
         List<String> valueList = Arrays.asList("半天", "全天", "其他");
         String duration = value.getOptional();
         if (valueList.contains(duration)) {
-            return true;
-        }
-        return false;
-    }
-
-    public Boolean validPhone(){
-        if (getPrincipalPhone().length() >= 20) {
-            return false;
-        }
-        return getPrincipalPhone().matches("\\d+");
-    }
-
-    public Boolean validEmail(){
-        String[] parts = getPrincipalEmail().split("@");
-        if (parts.length == 2 && parts[0].length() <=20 && parts[1].length() <=10) {
             return true;
         }
         return false;
