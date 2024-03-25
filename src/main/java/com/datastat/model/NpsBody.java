@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 public class NpsBody {
-    @Size(max = 100,  message = "the length can not exceed 100")
+    @Size(max = 500,  message = "the length can not exceed 500")
     @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String feedbackPageUrl;
 
