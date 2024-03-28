@@ -2,6 +2,8 @@ FROM openeuler/openeuler:22.03
 
 ARG NEW_YEAR_USER
 ARG BRANCH
+ARG GIT_USER
+ARG GIT_PASS
 
 MAINTAINER zhongjun <jun.zhongjun2@gmail.com>
 
