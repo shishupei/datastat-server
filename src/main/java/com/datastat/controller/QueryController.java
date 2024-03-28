@@ -11,6 +11,7 @@
 
 package com.datastat.controller;
 
+import com.datastat.aop.LimitRequest;
 import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
@@ -22,9 +23,6 @@ import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -120,6 +118,7 @@ public class QueryController {
         return queryService.queryBlueZoneContributes(request, body);
     }
 
+    @LimitRequest(callTime = 1, callCount = 100)
     @RequestMapping(value = "/blueZone/users", method = RequestMethod.POST)
     public String putBlueZoneUser(HttpServletRequest request,
                                   @RequestBody BlueZoneUserVo userVo) {
@@ -161,6 +160,7 @@ public class QueryController {
         return queryService.queryBugQuestionnaire(request, community, lastCursor, pageSize);
     }
 
+    @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "add/bugquestionnaire", method = RequestMethod.POST)
     public String addBugQuestionnaire(HttpServletRequest request,
             @RequestParam String community,
@@ -224,6 +224,7 @@ public class QueryController {
         return queryService.queryBuildCheckInfo(request, queryBody, lastCursor, pageSize);
     }
 
+    @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "/track", method = RequestMethod.GET)
     public String putUserActionsInfo(HttpServletRequest request,
                                      @RequestParam(value = "community") String community,
@@ -402,6 +403,7 @@ public class QueryController {
     }
 
 
+    @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "/gitee/webhook", method = RequestMethod.POST)
     public String giteeWebhook(HttpServletRequest request,
                                @RequestBody String requestBody) {
@@ -474,6 +476,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "/meetupApplyForm", method = RequestMethod.POST)
     public String addMeetupApplyForm(HttpServletRequest request, 
             @RequestParam String community,
@@ -505,6 +508,7 @@ public class QueryController {
         return queryService.getRepoReadme(request, community, name);
     }
 
+    @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "user/permission/apply")
     public String putUserPermissionApply(HttpServletRequest request,
             @RequestParam(value = "community") String community,
@@ -566,6 +570,7 @@ public class QueryController {
         return queryService.queryByProjectName(request, community, timeRange, groupField, projectName, type);
     }
   
+    @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "/nps", method = RequestMethod.POST)
     public String getNps(HttpServletRequest request, @RequestParam(value = "community") String community,
             @Valid @RequestBody NpsBody body) {
