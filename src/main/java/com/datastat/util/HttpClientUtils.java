@@ -33,6 +33,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -134,14 +135,13 @@ public class HttpClientUtils implements Serializable {
                 } catch (NoSuchAlgorithmException | KeyManagementException e) {
                     logger.error("exception", e);
                 }
-                return httpAsyncClientBuilder.setSSLContext(sc);
+                return httpAsyncClientBuilder.setSSLContext(sc).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
             });
             builder.setRequestConfigCallback(requestConfigBuilder -> {
                 requestConfigBuilder.setConnectTimeout(5000);
                 requestConfigBuilder.setSocketTimeout(60000);
                 return requestConfigBuilder;
             });
-
             client = new RestHighLevelClient(builder);
         } catch (Exception e) {
             logger.error("exception", e);
