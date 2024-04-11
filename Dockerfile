@@ -29,6 +29,7 @@ COPY . /var/lib/ds/datastat-server
 RUN mvn clean install package -Dmaven.test.skip && \
         mv ./target/ds-0.0.1-SNAPSHOT.jar ../ds.jar
 
+WORKDIR /var/lib/ds
 RUN useradd -u 1000 datastat -s /bin/bash -m -U && \
     git clone https://gitee.com/opensourceway/om-data.git && \
     chown -R datastat:datastat om-data
