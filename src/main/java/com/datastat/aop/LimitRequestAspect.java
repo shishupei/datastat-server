@@ -8,6 +8,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.datastat.dao.RedisDao;
 import com.datastat.result.ResultData;
 import com.datastat.util.ClientUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +30,10 @@ public class LimitRequestAspect {
     @Value("${request_interval:60000}")
     String request_interval;
 
+    @Autowired
+    RedisDao redisDao;
+
     private final ConcurrentHashMap<String, CallMark> callMarkMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> ipAccessCount = new ConcurrentHashMap<>();
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Pointcut("@annotation(limitRequest)")
@@ -83,18 +87,14 @@ public class LimitRequestAspect {
 
         HttpServletRequest request = ((ServletRequestAttributes) attributes).getRequest();
         String ip = ClientUtil.getClientIpAddress(request);
-        if (ipAccessCount.containsKey(ip)) {
-            long lastAccessTime = ipAccessCount.get(ip);
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastAccessTime < Long.parseLong(request_interval)) {
-                ResultData resultData = ResultData.fail(HttpStatus.TOO_MANY_REQUESTS.value(), "Submit too frequently, please try again later");
-                return objectMapper.writeValueAsString(resultData);
-            }
+        String key = "ip_access_record" + ip;
+        String lastAccessTime = (String) redisDao.get(key);
+        if (lastAccessTime != null && System.currentTimeMillis() - Long.valueOf(lastAccessTime) < Long.parseLong(request_interval)) {
+            ResultData resultData = ResultData.fail(HttpStatus.TOO_MANY_REQUESTS.value(), "Submit too frequently, please try again later");
+            return objectMapper.writeValueAsString(resultData);
         }
-        ipAccessCount.put(ip, System.currentTimeMillis());
+        redisDao.set(key,  Long.toString(System.currentTimeMillis()), Long.parseLong(request_interval));
         return joinPoint.proceed();
     }
 
 }
-
-
