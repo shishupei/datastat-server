@@ -12,6 +12,7 @@
 package com.datastat.controller;
 
 import com.datastat.aop.LimitRequest;
+import com.datastat.aop.RateLimit;
 import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
@@ -516,29 +517,29 @@ public class QueryController {
         return queryService.putUserPermissionApply(request, community, username);
     }
 
-    @RequestMapping(value = "qabot/chat", method = RequestMethod.POST)
-    public String QaBotChat(HttpServletRequest request,
-            @RequestBody QaBotRequestBody body) {
-        return queryService.QaBotChat(request, body);
-    }
+    // @RequestMapping(value = "qabot/chat", method = RequestMethod.POST)
+    // public String QaBotChat(HttpServletRequest request,
+    //         @RequestBody QaBotRequestBody body) {
+    //     return queryService.QaBotChat(request, body);
+    // }
 
-    @RequestMapping(value = "qabot/suggestions", method = RequestMethod.POST)
-    public String QaBotSuggestions(HttpServletRequest request,
-            @RequestBody QaBotRequestBody body) {
-        return queryService.QaBotSuggestions(request, body);
-    }
+    // @RequestMapping(value = "qabot/suggestions", method = RequestMethod.POST)
+    // public String QaBotSuggestions(HttpServletRequest request,
+    //         @RequestBody QaBotRequestBody body) {
+    //     return queryService.QaBotSuggestions(request, body);
+    // }
 
-    @RequestMapping(value = "qabot/satisfaction", method = RequestMethod.POST)
-    public String QaBotSatisfaction(HttpServletRequest request,
-            @RequestBody QaBotRequestBody body) {
-        return queryService.QaBotSatisfaction(request, body);
-    }
+    // @RequestMapping(value = "qabot/satisfaction", method = RequestMethod.POST)
+    // public String QaBotSatisfaction(HttpServletRequest request,
+    //         @RequestBody QaBotRequestBody body) {
+    //     return queryService.QaBotSatisfaction(request, body);
+    // }
 
-    @RequestMapping(value = "qabot/user_feedback", method = RequestMethod.POST)
-    public String QaBotUserFeedback(HttpServletRequest request,
-            @RequestBody QaBotRequestBody body) {
-        return queryService.QaBotUserFeedback(request, body);
-    }
+    // @RequestMapping(value = "qabot/user_feedback", method = RequestMethod.POST)
+    // public String QaBotUserFeedback(HttpServletRequest request,
+    //         @RequestBody QaBotRequestBody body) {
+    //     return queryService.QaBotUserFeedback(request, body);
+    // }
 
     @RequestMapping(value = "/reviewer/recommend", method = RequestMethod.POST)
     public ResponseEntity queryReviewerRecommend(@RequestBody PrReviewerVo input) {
@@ -571,6 +572,7 @@ public class QueryController {
     }
   
     @LimitRequest(callTime = 1, callCount = 1000)
+    @RateLimit
     @RequestMapping(value = "/nps", method = RequestMethod.POST)
     public String getNps(HttpServletRequest request, @RequestParam(value = "community") String community,
             @Valid @RequestBody NpsBody body) {
