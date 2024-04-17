@@ -633,13 +633,18 @@ public class QueryService {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String keyStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String key = community.toLowerCase() + "sigscoreall" + keyStr;
+        long t1 = System.currentTimeMillis();
         String result = (String) redisDao.get(key);
+        long t2 = System.currentTimeMillis();
+        logger.info("Get redis cost {} ms", t2 - t1);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.querySigScoreAll(queryConf);
             redisDao.set(key, result, redisDefaultExpire);
         }
+        long t3 = System.currentTimeMillis();
+        logger.info("query or return cost {} ms", t3 - t2);
         return result;
     }
 
