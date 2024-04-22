@@ -3078,7 +3078,7 @@ public class QueryDao {
         String query = String.format(queryConf.getModelFoundryDownloadQueryStr(), 0, System.currentTimeMillis(), repo);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundryIndex(), query);
         Response response = future.get();
-        Double count = 0.0;
+        int count = 0;
         int statusCode = response.getStatusCode();
         String statusText = response.getStatusText();
         String responseBody = response.getResponseBody(UTF_8);
@@ -3086,7 +3086,7 @@ public class QueryDao {
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
-            count += bucket.get("res").get("value").asDouble();
+            count += bucket.get("res").get("value").asInt();
         }
         return resultJsonStr(statusCode, count, statusText);
     }
@@ -3116,9 +3116,9 @@ public class QueryDao {
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
             Long period = bucket.get("key").asLong();
-            Double cur = 0.0;
+            int cur = 0;
             if (bucket.has("res")) {
-                cur = bucket.get("res").get("value").asDouble();
+                cur = bucket.get("res").get("value").asInt();
             }
             HashMap<String, Object> tmpMap = new HashMap<>();
             tmpMap.put("date", period);
@@ -3236,7 +3236,6 @@ public class QueryDao {
         if(testStr.isArray()){
           for(int i = 0; i < testStr.size(); i++){
             JsonNode item = testStr.get(i);
-            System.out.println(item);
             ObjectNode bucket = objectMapper.createObjectNode();
             bucket.put("name",item.get("key").asText());
             bucket.put("download",(int)item.get("download_count").get("value").asDouble());
