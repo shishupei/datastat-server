@@ -1375,4 +1375,16 @@ public class QueryService {
         if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
         return resultJsonStr(200, objectMapper.valueToTree(req), "ok");
     }
+
+    public String queryModelFoundryCount(HttpServletRequest request) {
+      QueryDao queryDao = getQueryDao(request);
+      CustomPropertiesConfig queryConf = getQueryConf("foundry");
+      String key = "modelfoundrycownload_repo_count";
+      String result = (String) redisDao.get(key);
+      if (result == null) {
+          result = queryDao.queryModelFoundryCount(queryConf);
+          redisDao.set(key, result, redisDefaultExpire);
+      }
+      return result;
+  }
 }

@@ -178,6 +178,7 @@ public class CustomPropertiesConfig {
     private String softwareInfoQuery;
     private String repoSigInfoQuery;
     private String applicationDownloadQuery;
+    private String modelFoundryDownloadCountQueryStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();

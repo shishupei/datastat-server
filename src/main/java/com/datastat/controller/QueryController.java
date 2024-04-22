@@ -647,4 +647,8 @@ public class QueryController {
         return queryService.callback(request, community, req);
     }
 
+    @RequestMapping(value = "/modelfoundry/download/count")
+    public String queryModelFoundryCount(HttpServletRequest request) {
+        return queryService.queryModelFoundryCount(request);
+    }
 }
