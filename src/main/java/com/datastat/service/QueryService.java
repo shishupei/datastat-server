@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.HmsExportDataReq;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
@@ -1367,5 +1368,11 @@ public class QueryService {
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
+    }
+
+    public String callback(HttpServletRequest request, String community, HmsExportDataReq req) {
+        QueryDao queryDao = getQueryDao(request);
+        if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
+        return resultJsonStr(200, objectMapper.valueToTree(req), "ok");
     }
 }
