@@ -3199,15 +3199,15 @@ public class QueryDao {
         String statusText = response.getStatusText();
         String responseBody = response.getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(responseBody);
-        JsonNode testStr = dataNode.get("aggregations").get("2").get("buckets");
+        JsonNode testStr = dataNode.get("aggregations").get("hit").get("buckets");
         ArrayNode buckets = objectMapper.createArrayNode();
         if(testStr.isArray()){
           for(int i = 0; i < testStr.size(); i++){
             JsonNode item = testStr.get(i);
             ObjectNode bucket = objectMapper.createObjectNode();
-            bucket.put("repo_id",item.get("5").get("buckets").get(0).get("key").asText());
+            bucket.put("repo_id",item.get("details").get("buckets").get(0).get("key").asText());
             bucket.put("repo",item.get("key").asText());
-            bucket.put("download",(int)item.get("5").get("buckets").get(0).get("4").get("value").asDouble());
+            bucket.put("download",(int)item.get("details").get("buckets").get(0).get("sum").get("value").asDouble());
             buckets.add(bucket);
           }
         }
