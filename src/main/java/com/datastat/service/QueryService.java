@@ -1370,6 +1370,7 @@ public class QueryService {
         return result;
     }
 
+
     public String callback(HttpServletRequest request, String community, HmsExportDataReq req) {
         QueryDao queryDao = getQueryDao(request);
         if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
@@ -1388,3 +1389,4 @@ public class QueryService {
       return result;
   }
 }
+
