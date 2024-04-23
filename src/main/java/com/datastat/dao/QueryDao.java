@@ -3205,8 +3205,9 @@ public class QueryDao {
           for(int i = 0; i < testStr.size(); i++){
             JsonNode item = testStr.get(i);
             ObjectNode bucket = objectMapper.createObjectNode();
-            bucket.put("name",item.get("key").asText());
-            bucket.put("download",(int)item.get("download_count").get("value").asDouble());
+            bucket.put("repo_id",item.get("5").get("buckets").get(0).get("key").asText());
+            bucket.put("repo",item.get("key").asText());
+            bucket.put("download",(int)item.get("5").get("buckets").get(0).get("4").get("value").asDouble());
             buckets.add(bucket);
           }
         }
