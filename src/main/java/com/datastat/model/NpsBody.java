@@ -1,5 +1,7 @@
 package com.datastat.model;
 
+import com.datastat.aop.moderation.ModerationValid;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -18,5 +20,6 @@ public class NpsBody {
 
     @Size(max = 500,  message = "the length can not exceed 500")
     @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
+    @ModerationValid
     private String feedbackText;
 }

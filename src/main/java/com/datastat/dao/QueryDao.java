@@ -2527,24 +2527,6 @@ public class QueryDao {
         return resultJsonStr(400, null, "error");
     }
 
-    public String getHuaweiCloudToken(String username, String password, String domain, String endpoint) {
-        try {
-            String body = "{\"auth\":{\"identity\":{\"methods\":[\"password\"],\"password\":{\"user\":{\"name\":\"%s\","
-                    + " \"password\":\"%s\",\"domain\":{\"name\":\"%s\"}}}},\"scope\":{\"project\":{\"name\":\"cn-north-4\"}}}}";
-            body = String.format(body, username, password, domain);
-            HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest
-                    .post(endpoint)
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .asJson();
-
-            String token = response.getHeaders().get("X-Subject-Token").get(0);
-            return token;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public HashMap<String, Object> getExtends(QaBotRequestBody body){
         List<String> domain_Ids = domain_ids;
         HashMap<String, Object> extend = body.getExtend();
@@ -2606,7 +2588,8 @@ public class QueryDao {
     public String QaBotRequest(String dataStr, String urlStr) {
         try {
             URL url = new URL(String.format(urlStr, env.getProperty("qa.project_id"), env.getProperty("qabot_id")));
-            String token = getHuaweiCloudToken(env.getProperty("qa.user.name"), env.getProperty("qa.user.password"),
+            String token = ModerationUtil.getHuaweiCloudToken(env.getProperty("moderation.body.format"),
+                    env.getProperty("qa.user.name"), env.getProperty("qa.user.password"),
                     env.getProperty("qa.domain.name"), env.getProperty("qa.token.endpoint"));
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -2694,27 +2677,12 @@ public class QueryDao {
 
     }
 
-    @SneakyThrows
-    public Boolean moderation(String text, String token) {
-        String body = String.format("{\"items\":[{\"text\":\"%s\",\"type\":\"content\"}]}", text);
-        HttpResponse<String> response = Unirest.post(env.getProperty("moderation.url"))
-                    .header("X-Auth-Token", token)
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .asString();
-        JsonNode resp = objectMapper.readTree(response.getBody());
-        if (response.getStatus() == 200 && resp.get("result").get("suggestion").asText().equals("pass"))
-            return true;
-        return false;
-    }
-
-    public String getNps(CustomPropertiesConfig queryConf, String community, NpsBody body, String token) {
+    public String getNps(CustomPropertiesConfig queryConf, String community, NpsBody body) {
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("community", community);
         resMap.put("feedbackPageUrl", body.getFeedbackPageUrl());
         resMap.put("feedbackValue", body.getFeedbackValue());
         resMap.put("feedbackText", body.getFeedbackText());
-        if (!moderation(body.getFeedbackText(), token)) return resultJsonStr(400, null, "Content is not compliant");
         try{
             Date now = new Date();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");

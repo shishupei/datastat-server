@@ -1213,13 +1213,7 @@ public class QueryService {
         if (!checkCommunity(community) && !community.equals("xihe")) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
-        String token = (String) redisDao.get("nps_moderation_token");
-        if (token == null) {
-            token = queryDao.getHuaweiCloudToken(env.getProperty("moderation.user.name"), env.getProperty("moderation.user.password"),
-                        env.getProperty("moderation.domain.name"), env.getProperty("moderation.token.endpoint"));
-            redisDao.set("nps_moderation_token", token, 36000l);
-        }
-        return queryDao.getNps(queryConf, community, body, token);
+        return queryDao.getNps(queryConf, community, body);
     }
 
     public String queryInnovationItems(HttpServletRequest request, String community) {
