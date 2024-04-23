@@ -17,6 +17,7 @@ import com.datastat.interceptor.authentication.UserLoginToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
+import com.datastat.model.HmsExportDataReq;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
@@ -639,4 +640,15 @@ public class QueryController {
         return queryService.querySoftwareAppDownload(request, community, app);
     }
 
+    @RequestMapping(value = "/agc/analytics/callback", method = RequestMethod.POST)
+    public String callback(HttpServletRequest request,
+            @RequestBody @Valid HmsExportDataReq req,
+            @RequestParam(value = "community") String community) {
+        return queryService.callback(request, community, req);
+    }
+
+    @RequestMapping(value = "/modelfoundry/download/count")
+    public String queryModelFoundryCount(HttpServletRequest request) {
+        return queryService.queryModelFoundryCount(request);
+    }
 }

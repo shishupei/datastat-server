@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.mashape.unirest.http.HttpResponse;
@@ -3077,7 +3078,7 @@ public class QueryDao {
         String query = String.format(queryConf.getModelFoundryDownloadQueryStr(), 0, System.currentTimeMillis(), repo);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundryIndex(), query);
         Response response = future.get();
-        Double count = 0.0;
+        int count = 0;
         int statusCode = response.getStatusCode();
         String statusText = response.getStatusText();
         String responseBody = response.getResponseBody(UTF_8);
@@ -3085,7 +3086,7 @@ public class QueryDao {
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
-            count += bucket.get("res").get("value").asDouble();
+            count += bucket.get("res").get("value").asInt();
         }
         return resultJsonStr(statusCode, count, statusText);
     }
@@ -3115,9 +3116,9 @@ public class QueryDao {
         while (buckets.hasNext()) {
             JsonNode bucket = buckets.next();
             Long period = bucket.get("key").asLong();
-            Double cur = 0.0;
+            int cur = 0;
             if (bucket.has("res")) {
-                cur = bucket.get("res").get("value").asDouble();
+                cur = bucket.get("res").get("value").asInt();
             }
             HashMap<String, Object> tmpMap = new HashMap<>();
             tmpMap.put("date", period);
@@ -3218,5 +3219,29 @@ public class QueryDao {
         JsonNode dataNode = objectMapper.readTree(resBody);
         JsonNode total = dataNode.get("hits").get("total").get("value");
         return resultJsonStr(200, total, "ok");
+    }
+
+    @SneakyThrows
+    public String queryModelFoundryCount(CustomPropertiesConfig queryConf) {
+        long currentTimeMillis = System.currentTimeMillis();
+        String query = String.format(queryConf.getModelFoundryDownloadCountQueryStr(), 0, currentTimeMillis);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundryIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode testStr = dataNode.get("aggregations").get("2").get("buckets");
+        ArrayNode buckets = objectMapper.createArrayNode();
+        if(testStr.isArray()){
+          for(int i = 0; i < testStr.size(); i++){
+            JsonNode item = testStr.get(i);
+            ObjectNode bucket = objectMapper.createObjectNode();
+            bucket.put("name",item.get("key").asText());
+            bucket.put("download",(int)item.get("download_count").get("value").asDouble());
+            buckets.add(bucket);
+          }
+        }
+        return resultJsonStr(statusCode, buckets, statusText);
     }
 }
