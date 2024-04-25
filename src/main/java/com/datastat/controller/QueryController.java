@@ -641,10 +641,8 @@ public class QueryController {
     }
 
     @RequestMapping(value = "/agc/analytics/callback", method = RequestMethod.POST)
-    public String callback(HttpServletRequest request,
-            @RequestBody @Valid HmsExportDataReq req,
-            @RequestParam(value = "community") String community) {
-        return queryService.callback(request, community, req);
+    public String callback(@RequestBody @Valid HmsExportDataReq req) {
+        return queryService.callback(req);
     }
 
     @RequestMapping(value = "/modelfoundry/download/count")

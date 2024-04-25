@@ -1365,10 +1365,9 @@ public class QueryService {
     }
 
 
-    public String callback(HttpServletRequest request, String community, HmsExportDataReq req) {
-        QueryDao queryDao = getQueryDao(request);
-        if (!checkCommunity(community)) return queryDao.resultJsonStr(404, "error", "not found");
-        return resultJsonStr(200, objectMapper.valueToTree(req), "ok");
+    public String callback(HmsExportDataReq req) {
+        logger.info("export file path: {}", req.getFilePath());
+        return resultJsonStr(0, null, "success");
     }
 
     public String queryModelFoundryCount(HttpServletRequest request) {
