@@ -3205,9 +3205,13 @@ public class QueryDao {
           for(int i = 0; i < testStr.size(); i++){
             JsonNode item = testStr.get(i);
             ObjectNode bucket = objectMapper.createObjectNode();
-            bucket.put("repo_id",item.get("details").get("buckets").get(0).get("key").asText());
-            bucket.put("repo",item.get("key").asText());
-            bucket.put("download",(int)item.get("details").get("buckets").get(0).get("sum").get("value").asDouble());
+            try{
+              bucket.put("repo_id",item.get("details").get("buckets").get(0).get("key").asText());
+              bucket.put("repo",item.get("key").asText());
+              bucket.put("download",(int)item.get("details").get("buckets").get(0).get("sum").get("value").asDouble());
+            } catch (Exception e) {
+              logger.error("function queryModelFoundryCount get error", e.getMessage());
+            }
             buckets.add(bucket);
           }
         }
