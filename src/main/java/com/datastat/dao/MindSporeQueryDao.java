@@ -118,4 +118,31 @@ public class MindSporeQueryDao extends QueryDao {
         }
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
+
+    @SneakyThrows
+    @Override
+    public String queryContributors(CustomPropertiesConfig queryConf, String item) {
+        int count = 0;
+        String[] indexes = queryConf.getAggContributorsIndex().split(";");
+        String[] queries = queryConf.getAggContributorsQueryStr().split(";");
+        String[] codeQueries = queryConf.getAggCodeContributorsQueryStr().split(";");
+        
+        count = queryCountContributors(indexes, queries) + queryCountContributors(indexes, codeQueries);
+        return resultJsonStr(200, count, "ok");
+    }
+
+    @SneakyThrows
+    public int queryCountContributors(String[] indexes, String queries[]) {
+        int count = 0;
+        for (int i = 0; i < indexes.length; i++) {
+            ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, indexes[i], queries[i]);
+            String resBody = future.get().getResponseBody(UTF_8);
+            JsonNode dataNode = objectMapper.readTree(resBody);
+            JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");       
+            if (buckets.elements().hasNext()) {
+                count +=  buckets.get(0).get("users").get("value").asInt();
+            }
+        }
+        return count;
+    }
 }

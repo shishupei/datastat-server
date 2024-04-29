@@ -85,12 +85,15 @@ public class CustomPropertiesConfig {
     private String giteeFeatureIndex;
     private String modelFoundryIndex;
     private String softwareIndex;
+    private String aggContributorsIndex;
 
     // -- query str --
     private String extOsQueryStr;
     private String sigQueryStr;
     private String usersQueryStr;
     private String contributorsQueryStr;
+    private String aggContributorsQueryStr;
+    private String aggCodeContributorsQueryStr;
     private String giteeContributesQueryStr;
     private String noticeUsersQueryStr;
     private String communityMembersQueryStr;

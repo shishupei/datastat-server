@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @ConfigurationProperties(prefix = "mindspore")
-@PropertySource(value = {"file:${user.dir}/mindSpore.properties"})
+@PropertySource(value = {"file:${user.dir}/mindSpore.properties"}, encoding = "UTF-8")
 @Configuration("mindsporeConf")
 @Data
 public class MindSporeConfig extends CustomPropertiesConfig {
