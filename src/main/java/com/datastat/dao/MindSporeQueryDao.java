@@ -128,7 +128,7 @@ public class MindSporeQueryDao extends QueryDao {
         String[] codeQueries = queryConf.getAggCodeContributorsQueryStr().split(";");
         
         count = queryCountContributors(indexes, queries) + queryCountContributors(indexes, codeQueries);
-        return resultJsonStr(200, count, "ok");
+        return resultJsonStr(200, item, count, "ok");
     }
 
     @SneakyThrows
