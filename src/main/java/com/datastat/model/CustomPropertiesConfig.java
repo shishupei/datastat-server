@@ -46,6 +46,7 @@ public class CustomPropertiesConfig {
     private String isvYamlUrl;
     private String giteeUserInfoUrl;
     private String orgName;
+    private String isvCountToken;
 
     // -- index --
     private String extOsIndex;
@@ -86,6 +87,8 @@ public class CustomPropertiesConfig {
     private String modelFoundryIndex;
     private String softwareIndex;
     private String aggContributorsIndex;
+    private String exportWebsiteViewIndex;
+    private String isvCountIndex;
 
     // -- query str --
     private String extOsQueryStr;

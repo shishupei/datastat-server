@@ -15,6 +15,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
+import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
@@ -49,6 +50,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
@@ -3208,7 +3210,7 @@ public class QueryDao {
             try{
               bucket.put("repo_id",item.get("details").get("buckets").get(0).get("key").asText());
               bucket.put("repo",item.get("key").asText());
-              bucket.put("download",(int)item.get("details").get("buckets").get(0).get("sum").get("value").asDouble());
+              bucket.put("download",item.get("details").get("buckets").get(0).get("sum").get("value").asInt());
             } catch (Exception e) {
               logger.error("function queryModelFoundryCount get error", e.getMessage());
             }
@@ -3216,5 +3218,56 @@ public class QueryDao {
           }
         }
         return resultJsonStr(statusCode, buckets, statusText);
+    }
+
+    public int putExportData(CustomPropertiesConfig queryConf, String dataPath, String downloadDir) {
+        int status_code = 400;
+        try {
+            List<HashMap<String, Object>> documents = CsvFileUtil.getZipFile(dataPath, downloadDir);
+            BulkRequest bulkRequest = new BulkRequest();
+            RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+
+            for (HashMap<String, Object> document : documents) {
+                JsonNode non_stru_field = objectMapper.readTree(document.get("non_stru_field").toString());
+                HashMap<String, Object> field = objectMapper.convertValue(non_stru_field, HashMap.class);
+                document.put("non_stru_field", field);
+                document.put("created_at", document.get("eventtime").toString());
+                IndexRequest indexRequest = new IndexRequest(queryConf.getExportWebsiteViewIndex());
+                indexRequest.id(UUID.randomUUID().toString());
+                indexRequest.source(document, XContentType.JSON);
+                bulkRequest.add(indexRequest);
+            }
+            if (bulkRequest.requests().size() != 0) {
+                BulkResponse bulk = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                status_code = bulk.status().getStatus();
+            }
+            restHighLevelClient.close();
+        } catch (Exception e) {
+            logger.error("putExportData exception", e);
+        }
+        return status_code;
+    }
+
+    @SneakyThrows
+    public String putIsvCount(CustomPropertiesConfig queryConf, IsvCount body) {
+        int status_code = 400;
+        HashMap<String, Object> resMap = new HashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+        String nowStr = now.toString().split("\\.")[0] + "+08:00";
+        resMap.put("count", body.getCount());
+        resMap.put("created_at", nowStr);
+
+        BulkRequest bulkRequest = new BulkRequest();
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        IndexRequest indexRequest = new IndexRequest(queryConf.getIsvCountIndex());
+        indexRequest.id(nowStr);
+        indexRequest.source(resMap, XContentType.JSON);
+        bulkRequest.add(indexRequest);
+        if (bulkRequest.requests().size() != 0) {
+            BulkResponse bulk = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+            status_code = bulk.status().getStatus();
+        }
+        restHighLevelClient.close();
+        return resultJsonStr(status_code, null, null);
     }
 }
