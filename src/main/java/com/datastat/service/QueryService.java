@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
 import com.datastat.model.HmsExportDataReq;
+import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
@@ -1365,8 +1366,12 @@ public class QueryService {
     }
 
 
-    public String callback(HmsExportDataReq req) {
-        logger.info("export file path: {}", req.getFilePath());
+    public String callback(HttpServletRequest request, HmsExportDataReq req) {
+        String dataPath = req.getFilePath();
+        String csvPath = "export";
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf("foundry");
+        queryDao.putExportData(queryConf, dataPath, csvPath);
         return resultJsonStr(0, null, "success");
     }
 
@@ -1380,6 +1385,17 @@ public class QueryService {
           redisDao.set(key, result, redisDefaultExpire);
       }
       return result;
-  }
+    }
+
+    public String queryIsvCount(HttpServletRequest request, IsvCount body) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+
+        String token = queryConf.getIsvCountToken();
+        if (StringUtils.isBlank(body.getToken()) || !body.getToken().equals(token)) {
+            return queryDao.resultJsonStr(401, "token error", "token error");
+        }
+        return queryDao.putIsvCount(queryConf, body);
+    }
 }
 
