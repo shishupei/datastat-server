@@ -1392,7 +1392,7 @@ public class QueryService {
         CustomPropertiesConfig queryConf = getQueryConf(request);
 
         String token = queryConf.getIsvCountToken();
-        if (StringUtils.isBlank(body.getToken()) || !body.getToken().equals(token)) {
+        if (StringUtils.isBlank(request.getHeader("token")) || !request.getHeader("token").equals(token)) {
             return queryDao.resultJsonStr(401, "token error", "token error");
         }
         return queryDao.putIsvCount(queryConf, body);
