@@ -13,7 +13,6 @@ package com.datastat.dao;
 
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.result.ReturnCode;
-import com.datastat.util.EsAsyncHttpUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.SneakyThrows;
 
@@ -24,13 +23,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 
-import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Repository("openeulerDao")
 public class OpenEulerQueryDao extends QueryDao {
@@ -85,5 +83,20 @@ public class OpenEulerQueryDao extends QueryDao {
             logger.error("exception", e);
         }
         return resultJsonStr(400, null, "ok");
+    }
+
+    @Override
+    @SneakyThrows
+    public String queryIsvCount(CustomPropertiesConfig queryConf, String item) {
+        String query = queryConf.getIsvCountQuery();
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getIsvCountIndex(), query);
+        Response response = future.get();
+        long count;
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        count = dataNode.get("aggregations").get("count").get("value").asLong();
+        return resultJsonStr(statusCode, item, count, statusText);
     }
 }

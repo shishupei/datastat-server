@@ -657,4 +657,10 @@ public class QueryController {
     public String queryModelFoundryCount(HttpServletRequest request) {
         return queryService.queryModelFoundryCount(request);
     }
+
+    @RequestMapping(value = "/modelfoundry/download_sh")
+    public String queryModelFoundrySH(HttpServletRequest request,
+            @RequestParam(value = "repo_id") String repo) {
+        return queryService.queryModelFoundrySH(request, repo);
+    }
 }
