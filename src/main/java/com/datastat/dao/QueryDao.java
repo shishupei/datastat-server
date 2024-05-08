@@ -220,6 +220,11 @@ public class QueryDao {
     }
 
     @SneakyThrows
+    public String queryIsvCount(CustomPropertiesConfig queryConf, String item) {
+        return resultJsonStr(404, item, 0, "not found");
+    }
+
+    @SneakyThrows
     public String queryAll(CustomPropertiesConfig queryConf, String community) {
         Map<String, Object> contributes = queryContributes(queryConf, community);
         JsonNode contributorsNode = objectMapper.readTree(this.queryContributors(queryConf, "contributors")).get("data").get("contributors");
@@ -242,6 +247,8 @@ public class QueryDao {
             downloadUser = users;
             users = downloads;
         }
+        JsonNode isvNode = objectMapper.readTree(this.queryIsvCount(queryConf, "isv")).get("data").get("isv");
+        Object isv = sigsNode == null ? null : isvNode.intValue();
         contributes.put("downloads", downloads);
         contributes.put("contributors", contributorsNode.intValue());
         contributes.put("users", users);
@@ -251,6 +258,7 @@ public class QueryDao {
         contributes.put("businessosv", businessOsv);
         contributes.put("communitymembers", communityMembers);
         contributes.put("downloaduser", downloadUser);
+        contributes.put("isv", isv);
 
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", 200);
@@ -3251,6 +3259,7 @@ public class QueryDao {
     @SneakyThrows
     public String putIsvCount(CustomPropertiesConfig queryConf, IsvCount body) {
         int status_code = 400;
+        String msg = "error";
         HashMap<String, Object> resMap = new HashMap<>();
         LocalDateTime now = LocalDateTime.now();
         String nowStr = now.toString().split("\\.")[0] + "+08:00";
@@ -3266,8 +3275,27 @@ public class QueryDao {
         if (bulkRequest.requests().size() != 0) {
             BulkResponse bulk = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
             status_code = bulk.status().getStatus();
+            msg = "success";
         }
         restHighLevelClient.close();
-        return resultJsonStr(status_code, null, null);
+        return resultJsonStr(status_code, null, msg);
+    }
+
+    @SneakyThrows
+    public String queryModelFoundrySH(CustomPropertiesConfig queryConf, String repo) {
+        String query = String.format(queryConf.getModelFoundryDownloadQueryStr(), 0, System.currentTimeMillis(), repo);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundrySHIndex(), query);
+        Response response = future.get();
+        int count = 0;
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            count += bucket.get("res").get("value").asInt();
+        }
+        return resultJsonStr(statusCode, count, statusText);
     }
 }

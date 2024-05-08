@@ -1397,5 +1397,17 @@ public class QueryService {
         }
         return queryDao.putIsvCount(queryConf, body);
     }
+
+    public String queryModelFoundrySH(HttpServletRequest request, String repo) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf("foundry");
+        String key = "modelfoundrycownload_sh_repo_" + repo;
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            result = queryDao.queryModelFoundrySH(queryConf, repo);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }
 

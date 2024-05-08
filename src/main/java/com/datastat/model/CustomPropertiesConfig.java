@@ -89,6 +89,7 @@ public class CustomPropertiesConfig {
     private String aggContributorsIndex;
     private String exportWebsiteViewIndex;
     private String isvCountIndex;
+    private String modelFoundrySHIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -185,6 +186,7 @@ public class CustomPropertiesConfig {
     private String repoSigInfoQuery;
     private String applicationDownloadQuery;
     private String modelFoundryDownloadCountQueryStr;
+    private String isvCountQuery;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
