@@ -3230,7 +3230,9 @@ public class QueryDao {
 
     public int putExportData(CustomPropertiesConfig queryConf, String dataPath) {
         int status_code = 400;
-        String downloadDir = env.getProperty("export_path");
+        String[] paths = dataPath.split(".csv")[0].split("/");
+        String fileName = paths[paths.length - 1];
+        String downloadDir = env.getProperty("export_path") + fileName;
         try {
             List<HashMap<String, Object>> documents = CsvFileUtil.getZipFile(dataPath, downloadDir);
             BulkRequest bulkRequest = new BulkRequest();
