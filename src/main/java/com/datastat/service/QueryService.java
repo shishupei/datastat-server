@@ -1368,10 +1368,9 @@ public class QueryService {
 
     public String callback(HttpServletRequest request, HmsExportDataReq req) {
         String dataPath = req.getFilePath();
-        String csvPath = "export";
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("foundry");
-        queryDao.putExportData(queryConf, dataPath, csvPath);
+        queryDao.putExportData(queryConf, dataPath);
         return resultJsonStr(0, null, "success");
     }
 
@@ -1409,5 +1408,17 @@ public class QueryService {
         }
         return result;
     }
+
+    public String queryModelFoundryCountSH(HttpServletRequest request) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf("foundry");
+        String key = "modelfoundrycownload_sh_repo_count";
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            result = queryDao.queryModelFoundryCountSH(queryConf);
+            redisDao.set(key, result, 300l);
+        }
+        return result;
+      }
 }
 

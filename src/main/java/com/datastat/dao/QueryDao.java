@@ -3228,8 +3228,11 @@ public class QueryDao {
         return resultJsonStr(statusCode, buckets, statusText);
     }
 
-    public int putExportData(CustomPropertiesConfig queryConf, String dataPath, String downloadDir) {
+    public int putExportData(CustomPropertiesConfig queryConf, String dataPath) {
         int status_code = 400;
+        String[] paths = dataPath.split(".csv")[0].split("/");
+        String fileName = paths[paths.length - 1];
+        String downloadDir = env.getProperty("export_path") + fileName;
         try {
             List<HashMap<String, Object>> documents = CsvFileUtil.getZipFile(dataPath, downloadDir);
             BulkRequest bulkRequest = new BulkRequest();
@@ -3297,5 +3300,34 @@ public class QueryDao {
             count += bucket.get("res").get("value").asInt();
         }
         return resultJsonStr(statusCode, count, statusText);
+    }
+
+    @SneakyThrows
+    public String queryModelFoundryCountSH(CustomPropertiesConfig queryConf) {
+        long currentTimeMillis = System.currentTimeMillis();
+        String query = String.format(queryConf.getModelFoundryDownloadCountQueryStr(), 0, currentTimeMillis);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundrySHIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode testStr = dataNode.get("aggregations").get("hit").get("buckets");
+        ArrayNode buckets = objectMapper.createArrayNode();
+        if(testStr.isArray()){
+          for(int i = 0; i < testStr.size(); i++){
+            JsonNode item = testStr.get(i);
+            ObjectNode bucket = objectMapper.createObjectNode();
+            try{
+              bucket.put("repo_id",item.get("details").get("buckets").get(0).get("key").asText());
+              bucket.put("repo",item.get("key").asText());
+              bucket.put("download",item.get("details").get("buckets").get(0).get("sum").get("value").asInt());
+            } catch (Exception e) {
+              logger.error("function queryModelFoundryCountSH get error", e.getMessage());
+            }
+            buckets.add(bucket);
+          }
+        }
+        return resultJsonStr(statusCode, buckets, statusText);
     }
 }
