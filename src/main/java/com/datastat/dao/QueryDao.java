@@ -73,6 +73,9 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -3242,7 +3245,13 @@ public class QueryDao {
                 JsonNode non_stru_field = objectMapper.readTree(document.get("non_stru_field").toString());
                 HashMap<String, Object> field = objectMapper.convertValue(non_stru_field, HashMap.class);
                 document.put("non_stru_field", field);
-                document.put("created_at", document.get("eventtime").toString());
+                DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+                LocalDateTime localDateTime = LocalDateTime.parse(document.get("eventtime").toString(), inputFormatter);
+                ZoneOffset offset = ZoneOffset.ofHours(8);
+                OffsetDateTime offsetDateTime = localDateTime.atOffset(offset);
+                DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+                String created_at = offsetDateTime.format(outputFormatter);
+                document.put("created_at", created_at);
                 IndexRequest indexRequest = new IndexRequest(queryConf.getExportWebsiteViewIndex());
                 indexRequest.id(UUID.randomUUID().toString());
                 indexRequest.source(document, XContentType.JSON);
