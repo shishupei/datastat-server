@@ -90,6 +90,8 @@ public class CustomPropertiesConfig {
     private String exportWebsiteViewIndex;
     private String isvCountIndex;
     private String modelFoundrySHIndex;
+    private String modelFoundryYiDongIndex;
+    private String modelFoundryTianYiIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -584,5 +586,19 @@ public class CustomPropertiesConfig {
             return "";
         }
         return queryStrFormat(queryJson, verisonQuery);
+    }
+
+    public String  getModelFoundryPathIndex(String path) {
+        if (path.equalsIgnoreCase("sh")) {
+            return getModelFoundrySHIndex();
+        } else if (path.equalsIgnoreCase("yidong")) {
+            return getModelFoundryYiDongIndex();
+        } else if (path.equalsIgnoreCase("tianyi")) {
+            return getModelFoundryTianYiIndex();
+        } else if (path.equalsIgnoreCase("pro")){
+            return getModelFoundryIndex();
+        } else {
+            return "";
+        }
     }
 }
