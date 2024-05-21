@@ -3202,35 +3202,6 @@ public class QueryDao {
         return resultJsonStr(200, total, "ok");
     }
 
-    @SneakyThrows
-    public String queryModelFoundryCount(CustomPropertiesConfig queryConf) {
-        long currentTimeMillis = System.currentTimeMillis();
-        String query = String.format(queryConf.getModelFoundryDownloadCountQueryStr(), 0, currentTimeMillis);
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundryIndex(), query);
-        Response response = future.get();
-        int statusCode = response.getStatusCode();
-        String statusText = response.getStatusText();
-        String responseBody = response.getResponseBody(UTF_8);
-        JsonNode dataNode = objectMapper.readTree(responseBody);
-        JsonNode testStr = dataNode.get("aggregations").get("hit").get("buckets");
-        ArrayNode buckets = objectMapper.createArrayNode();
-        if(testStr.isArray()){
-          for(int i = 0; i < testStr.size(); i++){
-            JsonNode item = testStr.get(i);
-            ObjectNode bucket = objectMapper.createObjectNode();
-            try{
-              bucket.put("repo_id",item.get("details").get("buckets").get(0).get("key").asText());
-              bucket.put("repo",item.get("key").asText());
-              bucket.put("download",item.get("details").get("buckets").get(0).get("sum").get("value").asInt());
-            } catch (Exception e) {
-              logger.error("function queryModelFoundryCount get error", e.getMessage());
-            }
-            buckets.add(bucket);
-          }
-        }
-        return resultJsonStr(statusCode, buckets, statusText);
-    }
-
     public int putExportData(CustomPropertiesConfig queryConf, String dataPath) {
         int status_code = 400;
         String[] paths = dataPath.split(".csv")[0].split("/");
@@ -3312,10 +3283,11 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryModelFoundryCountSH(CustomPropertiesConfig queryConf) {
+    public String queryModelFoundryCountPath(CustomPropertiesConfig queryConf, String path) {
         long currentTimeMillis = System.currentTimeMillis();
         String query = String.format(queryConf.getModelFoundryDownloadCountQueryStr(), 0, currentTimeMillis);
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getModelFoundrySHIndex(), query);
+        String index = queryConf.getModelFoundryPathIndex(path);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, query);
         Response response = future.get();
         int statusCode = response.getStatusCode();
         String statusText = response.getStatusText();

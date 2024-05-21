@@ -1374,18 +1374,6 @@ public class QueryService {
         return resultJsonStr(0, null, "success");
     }
 
-    public String queryModelFoundryCount(HttpServletRequest request) {
-      QueryDao queryDao = getQueryDao(request);
-      CustomPropertiesConfig queryConf = getQueryConf("foundry");
-      String key = "modelfoundrycownload_repo_count";
-      String result = (String) redisDao.get(key);
-      if (result == null) {
-          result = queryDao.queryModelFoundryCount(queryConf);
-          redisDao.set(key, result, redisDefaultExpire);
-      }
-      return result;
-    }
-
     public String queryIsvCount(HttpServletRequest request, IsvCount body) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
@@ -1409,16 +1397,17 @@ public class QueryService {
         return result;
     }
 
-    public String queryModelFoundryCountSH(HttpServletRequest request) {
+    public String queryModelFoundryCountPath(HttpServletRequest request, String path) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("foundry");
-        String key = "modelfoundrycownload_sh_repo_count";
+        path = path == null ? "pro" : path;
+        String key = "modelfoundrycownload_repo_count_" + path;
         String result = (String) redisDao.get(key);
         if (result == null) {
-            result = queryDao.queryModelFoundryCountSH(queryConf);
+            result = queryDao.queryModelFoundryCountPath(queryConf, path);
             redisDao.set(key, result, 300l);
         }
         return result;
-      }
+    }
 }
 

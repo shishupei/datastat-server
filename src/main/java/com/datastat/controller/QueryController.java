@@ -653,10 +653,6 @@ public class QueryController {
         return queryService.queryIsvCount(request, body);
     }
 
-    @RequestMapping(value = "/modelfoundry/download/count")
-    public String queryModelFoundryCount(HttpServletRequest request) {
-        return queryService.queryModelFoundryCount(request);
-    }
 
     @RequestMapping(value = "/modelfoundry/download_sh")
     public String queryModelFoundrySH(HttpServletRequest request,
@@ -664,8 +660,9 @@ public class QueryController {
         return queryService.queryModelFoundrySH(request, repo);
     }
 
-    @RequestMapping(value = "/modelfoundry/download_sh/count")
-    public String queryModelFoundryCountSH(HttpServletRequest request) {
-        return queryService.queryModelFoundryCountSH(request);
+    @RequestMapping(value = "/modelfoundry/download/count")
+    public String queryModelFoundryCountPath(HttpServletRequest request,
+            @RequestParam(value = "path", required = false) String path) {
+        return queryService.queryModelFoundryCountPath(request, path);
     }
 }
