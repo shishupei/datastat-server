@@ -598,7 +598,7 @@ public class CustomPropertiesConfig {
         } else if (path.equalsIgnoreCase("pro")){
             return getModelFoundryIndex();
         } else {
-            return "";
+            return null;
         }
     }
 }
