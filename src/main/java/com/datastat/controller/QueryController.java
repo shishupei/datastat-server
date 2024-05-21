@@ -665,4 +665,11 @@ public class QueryController {
             @RequestParam(value = "path", required = false) String path) {
         return queryService.queryModelFoundryCountPath(request, path);
     }
+
+    @RequestMapping(value = "/repo/developer")
+    public String queryRepoDeveloper(HttpServletRequest request,
+            @RequestParam (value = "community") String community,
+            @RequestParam(value = "timeRange") String timeRange) {
+        return queryService.queryRepoDeveloper(request, timeRange);
+    }
 }

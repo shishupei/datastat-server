@@ -1409,5 +1409,17 @@ public class QueryService {
         }
         return result;
     }
+
+    public String queryRepoDeveloper(HttpServletRequest request, String timeRange) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        String key = "docker_image_maintainer" + timeRange;
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            result = queryDao.queryRepoDeveloper(queryConf, timeRange);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }
 
