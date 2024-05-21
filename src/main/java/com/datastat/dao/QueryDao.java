@@ -3311,4 +3311,44 @@ public class QueryDao {
         }
         return resultJsonStr(statusCode, buckets, statusText);
     }
+
+    @SneakyThrows
+    public String queryRepoDeveloper(CustomPropertiesConfig queryConf, String timeRange) {
+        String query = queryConf.getQueryStrWithTimeRange(queryConf.getRepoDeveloperQueryStr(), timeRange);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        String user = null;
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            user = bucket.get("key").asText();
+            String email = queryUserEmail(queryConf, user);
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("gitee_id", user);
+            userInfo.put("name", user);
+            userInfo.put("email", email);
+            return resultJsonStr(statusCode, objectMapper.valueToTree(userInfo), statusText);
+        }
+        return resultJsonStr(statusCode, user, statusText);
+    }
+
+    @SneakyThrows
+    public String queryUserEmail(CustomPropertiesConfig queryConf, String user) {
+        String query = String.format(queryConf.getUserEmailQuery(), user);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getAccountOrgIndex(), query);
+        Response response = future.get();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        Iterator<JsonNode> buckets = dataNode.get("hits").get("hits").elements();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next().get("_source");
+            String email = bucket.get("email").asText();
+            return email;
+        }
+        return "";
+    }
 }
