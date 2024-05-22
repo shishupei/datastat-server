@@ -578,6 +578,24 @@ public class EsQueryUtils {
         return res;
     }
 
+    public String QueryUserEmail(RestHighLevelClient restHighLevelClient, String indexName, String user) throws Exception {
+        SearchSourceBuilder builder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.matchQuery("gitee_id.keyword", user));
+        builder.query(boolQueryBuilder);
+        builder.sort("created_at", SortOrder.DESC);
+        SearchRequest request = new SearchRequest(indexName);
+        request.source(builder);
+        SearchResponse search = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        SearchHits hits = search.getHits();
+        for (SearchHit hit : hits) {
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            String email = sourceAsMap.get("email").toString();
+            return email;
+        }
+        return "";
+    }
+
     private double calcUserComment(List<HashMap<String, Object>> repoComments) {
         return 0.0d;
     }

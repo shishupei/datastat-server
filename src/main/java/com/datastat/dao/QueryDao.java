@@ -3338,17 +3338,14 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryUserEmail(CustomPropertiesConfig queryConf, String user) {
-        String query = String.format(queryConf.getUserEmailQuery(), user);
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getAccountOrgIndex(), query);
-        Response response = future.get();
-        String responseBody = response.getResponseBody(UTF_8);
-        JsonNode dataNode = objectMapper.readTree(responseBody);
-        Iterator<JsonNode> buckets = dataNode.get("hits").get("hits").elements();
-        while (buckets.hasNext()) {
-            JsonNode bucket = buckets.next().get("_source");
-            String email = bucket.get("email").asText();
-            return email;
-        }
-        return "";
+        String host = env.getProperty("es.private.host");
+        int port = Integer.parseInt(env.getProperty("es.private.port", "9200"));
+        String scheme = env.getProperty("es.private.scheme");
+        String esUser = env.getProperty("es.private.user");
+        String password = env.getProperty("es.private.password");
+        RestHighLevelClient restHighLevelClient = HttpClientUtils.restClient(host, port, scheme, esUser, password);
+        EsQueryUtils esQueryUtils = new EsQueryUtils();
+        String email = esQueryUtils.QueryUserEmail(restHighLevelClient, queryConf.getGiteeEmailIndex(), user);
+        return email;
     }
 }
