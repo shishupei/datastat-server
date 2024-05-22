@@ -3348,4 +3348,79 @@ public class QueryDao {
         String email = esQueryUtils.QueryUserEmail(restHighLevelClient, queryConf.getGiteeEmailIndex(), user);
         return email;
     }
+    
+    @SneakyThrows
+    public String queryPulls(CustomPropertiesConfig queryConf,String org,String repo,String sig,String state,String ref,
+      String author,String sort,String label,String exclusion,String direction,String search,Integer page,Integer per_page 
+      ) {
+        if(page==null)
+          page = 1;
+        if(per_page==null)
+          per_page = 10;
+        if(sort==null)
+          sort = "created_at";
+        if(direction==null)
+          direction = "desc";
+        if(per_page > 100)
+          per_page = 100;
+        long currentTimeMillis = System.currentTimeMillis();
+
+        String matchStr = "";
+        String excluStr = "";
+        if(org != null )
+          matchStr += ",{\"match\":{\"org_name\":\"" + org + "\"}}";
+        if(repo != null )
+          matchStr += ",{\"match\":{\"gitee_repo\":\"" + repo + "\"}}";
+        if(sig != null )
+          matchStr += ",{\"match\":{\"tag_sig_names\":\"" + sig + "\"}}";
+        if(state != null )
+          matchStr += ",{\"match\":{\"pull_state\":\"" + state + "\"}}";
+        if(ref != null )
+          matchStr += ",{\"match\":{\"head_label_ref\":\"" + ref + "\"}}";
+        if(author != null )
+          matchStr += ",{\"match\":{\"author_name\":\"" + author + "\"}}";
+        if(label != null )
+          matchStr += ",{\"terms\":{\"pull_labels\":[\"" + label + "\"]}}";
+        if(search != null)
+          matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"*%s*\"}},{\"wildcard\":{\"tag_sig_names\":\"*%s*\"}},{\"wildcard\":{\"gitee_repo\":\"*%s*\"}}]}}", search,search,search) ;
+        if(exclusion != null)
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\"bowen9799\"]}}]";
+
+        String query = String.format(queryConf.getPullsQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode hits = dataNode.get("hits");
+        ArrayNode buckets = objectMapper.createArrayNode();
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total",hits.get("total").get("value").asInt());
+        bucket.put("page",page);
+        bucket.put("per_page",per_page);
+
+        var item = hits.get("hits");
+        for(int i = 0; i < item.size(); i++){
+          JsonNode node = item.get(i).get("_source");
+          ObjectNode temp = objectMapper.createObjectNode();
+          temp.put("org",node.get("org_name").asText());
+          temp.put("repo",node.get("gitee_repo").asText());
+          temp.put("ref",node.get("head_label_ref").asText());
+          temp.put("sig",node.get("tag_sig_names").asText());
+          temp.put("link",node.get("pull_url").asText());
+          temp.put("state",node.get("pull_state").asText());
+          temp.put("author",node.get("author_name").asText());
+          temp.put("created_at",node.get("created_at").asText());
+          temp.put("updated_at",node.get("updated_at").asText());
+          temp.put("title",node.get("issue_title").asText());
+          temp.set("labels",node.get("pull_labels"));
+          buckets.add(temp);
+        }
+        bucket.set("data",buckets);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
 }

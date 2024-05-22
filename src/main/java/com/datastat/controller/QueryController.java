@@ -672,4 +672,24 @@ public class QueryController {
             @RequestParam(value = "timeRange") String timeRange) {
         return queryService.queryRepoDeveloper(request, timeRange);
     }
+    
+    @RequestMapping(value = "/pulls")
+    public String queryPulls(HttpServletRequest request,
+                            @RequestParam(value = "org", required = false) String org,
+                            @RequestParam(value = "repo", required = false) String repo,
+                            @RequestParam(value = "sig", required = false) String sig,
+                            @RequestParam(value = "state", required = false) String state,
+                            @RequestParam(value = "ref", required = false) String ref,
+                            @RequestParam(value = "author", required = false) String author,
+                            @RequestParam(value = "sort", required = false) String sort,
+                            @RequestParam(value = "direction", required = false) String direction,
+                            @RequestParam(value = "label", required = false) String label,
+                            @RequestParam(value = "exclusion", required = false) String exclusion,
+                            @RequestParam(value = "search", required = false) String search, 
+                            @RequestParam(value = "page", required = false) Integer page,
+                            @RequestParam(value = "per_page", required = false) Integer per_page
+                            ) {
+        return queryService.queryPulls(request, org, repo, sig, state,ref, author, 
+          sort,label, exclusion, direction, search, page, per_page);
+    }
 }

@@ -1421,5 +1421,19 @@ public class QueryService {
         }
         return result;
     }
+
+    public String queryPulls(HttpServletRequest request,String org,String repo,String sig,String state,String ref,
+      String author,String sort,String label,String exclusion,String direction,String search,Integer page,Integer per_page
+      ) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+        String key = "pulls";
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            result = queryDao.queryPulls(queryConf,org,repo,sig,state,ref,author,sort,label,exclusion,direction,search,page,per_page);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+      }
 }
 
