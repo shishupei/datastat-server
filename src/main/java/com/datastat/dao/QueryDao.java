@@ -3382,11 +3382,12 @@ public class QueryDao {
         if(label != null )
           matchStr += ",{\"terms\":{\"pull_labels\":[\"" + label + "\"]}}";
         if(search != null)
-          matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"tag_sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
+          matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null)
           excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
 
         String query = String.format(queryConf.getPullsQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
+        System.out.println(query);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
         int statusCode = response.getStatusCode();
