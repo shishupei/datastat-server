@@ -3372,7 +3372,7 @@ public class QueryDao {
         if(repo != null )
           matchStr += ",{\"match\":{\"gitee_repo\":\"" + repo + "\"}}";
         if(sig != null )
-          matchStr += ",{\"match\":{\"tag_sig_names\":\"" + sig + "\"}}";
+          matchStr += ",{\"terms\":{\"sig_names\":[\"" + sig + "\"]}}";
         if(state != null )
           matchStr += ",{\"match\":{\"pull_state\":\"" + state + "\"}}";
         if(ref != null )
@@ -3382,9 +3382,9 @@ public class QueryDao {
         if(label != null )
           matchStr += ",{\"terms\":{\"pull_labels\":[\"" + label + "\"]}}";
         if(search != null)
-          matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"*%s*\"}},{\"wildcard\":{\"tag_sig_names\":\"*%s*\"}},{\"wildcard\":{\"gitee_repo\":\"*%s*\"}}]}}", search,search,search) ;
+          matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"tag_sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null)
-          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\"bowen9799\"]}}]";
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
 
         String query = String.format(queryConf.getPullsQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
@@ -3392,11 +3392,10 @@ public class QueryDao {
         int statusCode = response.getStatusCode();
         String statusText = response.getStatusText();
         String responseBody = response.getResponseBody(UTF_8);
-
+        
         JsonNode dataNode = objectMapper.readTree(responseBody);
         JsonNode hits = dataNode.get("hits");
         ArrayNode buckets = objectMapper.createArrayNode();
-
         ObjectNode bucket = objectMapper.createObjectNode();
         bucket.put("total",hits.get("total").get("value").asInt());
         bucket.put("page",page);
@@ -3409,7 +3408,7 @@ public class QueryDao {
           temp.put("org",node.get("org_name").asText());
           temp.put("repo",node.get("gitee_repo").asText());
           temp.put("ref",node.get("head_label_ref").asText());
-          temp.put("sig",node.get("tag_sig_names").asText());
+          temp.set("sig",node.get("sig_names"));
           temp.put("link",node.get("pull_url").asText());
           temp.put("state",node.get("pull_state").asText());
           temp.put("author",node.get("author_name").asText());
