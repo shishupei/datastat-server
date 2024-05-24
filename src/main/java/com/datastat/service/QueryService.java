@@ -1427,7 +1427,12 @@ public class QueryService {
       ) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String result = queryDao.queryPulls(queryConf,org,repo,sig,state,ref,author,sort,label,exclusion,direction,search,page,per_page);
+        String key = "pulls" + org + repo + sig + state + ref + author + sort + label + exclusion + direction + search + page + per_page;
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            result = queryDao.queryPulls(queryConf,org,repo,sig,state,ref,author,sort,label,exclusion,direction,search,page,per_page);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
         return result;
       }
 }

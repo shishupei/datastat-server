@@ -3353,13 +3353,13 @@ public class QueryDao {
     public String queryPulls(CustomPropertiesConfig queryConf,String org,String repo,String sig,String state,String ref,
       String author,String sort,String label,String exclusion,String direction,String search,Integer page,Integer per_page 
       ) {
-        if(page==null)
+        if(page == null)
           page = 1;
-        if(per_page==null)
+        if(per_page == null)
           per_page = 10;
-        if(sort==null)
+        if(sort == null || sort == "")
           sort = "created_at";
-        if(direction==null)
+        if(direction == null || direction == "")
           direction = "desc";
         if(per_page > 100)
           per_page = 100;
@@ -3367,27 +3367,26 @@ public class QueryDao {
 
         String matchStr = "";
         String excluStr = "";
-        if(org != null )
+        if(org != null && org != "")
           matchStr += ",{\"match\":{\"org_name\":\"" + org + "\"}}";
-        if(repo != null )
+        if(repo != null && repo != "")
           matchStr += ",{\"match\":{\"gitee_repo\":\"" + repo + "\"}}";
-        if(sig != null )
+        if(sig != null && sig != "")
           matchStr += ",{\"terms\":{\"sig_names\":[\"" + sig + "\"]}}";
-        if(state != null )
+        if(state != null && state != "")
           matchStr += ",{\"match\":{\"pull_state\":\"" + state + "\"}}";
-        if(ref != null )
+        if(ref != null && ref != "")
           matchStr += ",{\"match\":{\"head_label_ref\":\"" + ref + "\"}}";
-        if(author != null )
+        if(author != null && author != "")
           matchStr += ",{\"match\":{\"author_name\":\"" + author + "\"}}";
-        if(label != null )
+        if(label != null && label != "")
           matchStr += ",{\"terms\":{\"pull_labels\":[\"" + label + "\"]}}";
-        if(search != null)
+        if(search != null && search != "")
           matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
-        if(exclusion != null)
+        if(exclusion != null && exclusion != "")
           excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
 
         String query = String.format(queryConf.getPullsQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
-        System.out.println(query);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
         int statusCode = response.getStatusCode();

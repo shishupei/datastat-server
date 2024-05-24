@@ -673,7 +673,7 @@ public class QueryController {
         return queryService.queryRepoDeveloper(request, timeRange);
     }
     
-    @RequestMapping(value = "/pulls")
+    @RequestMapping(value = {"/pulls", "/pulls/"})
     public String queryPulls(HttpServletRequest request,
                             @RequestParam(value = "org", required = false) String org,
                             @RequestParam(value = "repo", required = false) String repo,
