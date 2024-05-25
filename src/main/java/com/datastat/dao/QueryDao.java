@@ -3370,9 +3370,9 @@ public class QueryDao {
         if(org != null && org != "")
           matchStr += ",{\"match\":{\"org_name\":\"" + org + "\"}}";
         if(repo != null && repo != "")
-          matchStr += ",{\"match\":{\"gitee_repo\":\"" + repo + "\"}}";
+          matchStr += ",{\"match_phrase\":{\"gitee_repo\":\"" + repo + "\"}}";
         if(sig != null && sig != "")
-          matchStr += ",{\"terms\":{\"sig_names\":[\"" + sig + "\"]}}";
+          matchStr += ",{\"terms\":{\"sig_names.keyword\":[\"" + sig + "\"]}}";
         if(state != null && state != "")
           matchStr += ",{\"match\":{\"pull_state\":\"" + state + "\"}}";
         if(ref != null && ref != "")
@@ -3380,7 +3380,7 @@ public class QueryDao {
         if(author != null && author != "")
           matchStr += ",{\"match\":{\"author_name\":\"" + author + "\"}}";
         if(label != null && label != "")
-          matchStr += ",{\"terms\":{\"pull_labels\":[\"" + label + "\"]}}";
+          matchStr += ",{\"terms\":{\"pull_labels.keyword\":[\"" + label + "\"]}}";
         if(search != null && search != "")
           matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null && exclusion != "")
