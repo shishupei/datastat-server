@@ -1434,6 +1434,23 @@ public class QueryService {
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
+    }
+    
+    public String queryIssue(HttpServletRequest request,String org,String repo,String sig,String state,String number,
+    String author,String assignee,String label,String exclusion,String issue_state,String issue_type,
+    Integer priority,String sort,String direction,String search,Integer page,Integer per_page
+    ) {
+      QueryDao queryDao = getQueryDao(request);
+      CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+      String key = "issue" + org + repo + sig + state + number + author + assignee + label + exclusion + issue_state + issue_type + priority + sort + direction + search + page + per_page;
+      String result = (String) redisDao.get(key);
+      if (result == null) {
+          result = queryDao.queryIssue(queryConf,org,repo,sig,state,number,author,assignee,label,exclusion,issue_state,issue_type,priority,sort,direction,search,page,per_page);
+          redisDao.set(key, result, redisDefaultExpire);
       }
+      return result;
+    }
+    
+      
 }
 

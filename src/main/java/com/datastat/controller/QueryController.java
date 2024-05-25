@@ -692,4 +692,28 @@ public class QueryController {
         return queryService.queryPulls(request, org, repo, sig, state,ref, author, 
           sort,label, exclusion, direction, search, page, per_page);
     }
+
+    @RequestMapping(value = {"/issue", "/issue/"})
+    public String queryIssue(HttpServletRequest request,
+                            @RequestParam(value = "org", required = false) String org,
+                            @RequestParam(value = "repo", required = false) String repo,
+                            @RequestParam(value = "sig", required = false) String sig,
+                            @RequestParam(value = "state", required = false) String state,
+                            @RequestParam(value = "number", required = false) String number,
+                            @RequestParam(value = "author", required = false) String author,
+                            @RequestParam(value = "assignee", required = false) String assignee,
+                            @RequestParam(value = "label", required = false) String label,
+                            @RequestParam(value = "exclusion", required = false) String exclusion,
+                            @RequestParam(value = "issue_state", required = false) String issue_state,
+                            @RequestParam(value = "issue_type", required = false) String issue_type,
+                            @RequestParam(value = "priority", required = false) Integer priority,
+                            @RequestParam(value = "sort", required = false) String sort,
+                            @RequestParam(value = "direction", required = false) String direction,
+                            @RequestParam(value = "search", required = false) String search, 
+                            @RequestParam(value = "page", required = false) Integer page,
+                            @RequestParam(value = "per_page", required = false) Integer per_page
+                            ) {
+        return queryService.queryIssue(request, org, repo, sig, state, number, author, assignee, 
+          label, exclusion, issue_state, issue_type, priority, sort, direction, search, page, per_page);
+    }
 }

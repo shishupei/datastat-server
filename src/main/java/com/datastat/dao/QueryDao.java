@@ -3378,7 +3378,7 @@ public class QueryDao {
         if(ref != null && ref != "")
           matchStr += ",{\"match\":{\"head_label_ref\":\"" + ref + "\"}}";
         if(author != null && author != "")
-          matchStr += ",{\"match\":{\"author_name\":\"" + author + "\"}}";
+          matchStr += ",{\"match\":{\"author_name.keyword\":\"" + author + "\"}}";
         if(label != null && label != "")
           matchStr += ",{\"terms\":{\"pull_labels.keyword\":[\"" + label + "\"]}}";
         if(search != null && search != "")
@@ -3420,6 +3420,90 @@ public class QueryDao {
         }
         bucket.set("data",buckets);
 
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
+    @SneakyThrows
+    public String queryIssue(CustomPropertiesConfig queryConf,String org,String repo,String sig,String state,String number,
+      String author,String assignee,String label,String exclusion,String issue_state,String issue_type,
+      Integer priority,String sort,String direction,String search,Integer page,Integer per_page ) {
+
+        if(page == null)
+          page = 1;
+        if(per_page == null)
+          per_page = 10;
+        if(sort == null || sort == "")
+          sort = "created_at";
+        if(direction == null || direction == "")
+          direction = "desc";
+        if(per_page > 100)
+          per_page = 100;
+        long currentTimeMillis = System.currentTimeMillis();
+
+        String matchStr = "";
+        String excluStr = "";
+        if(org != null && org != "")
+          matchStr += ",{\"match\":{\"org_name\":\"" + org + "\"}}";
+        if(repo != null && repo != "")
+          matchStr += ",{\"match_phrase\":{\"repository\":\"" + repo + "\"}}";
+        if(sig != null && sig != "")
+          matchStr += ",{\"terms\":{\"sig_names.keyword\":[\"" + sig + "\"]}}";
+        if(issue_state != null && issue_state != "")
+          matchStr += ",{\"match\":{\"issue_state\":\"" + issue_state + "\"}}";
+        if(issue_type != null && issue_type != "")
+          matchStr += ",{\"match\":{\"issue_type\":\"" + issue_type + "\"}}";
+        if(number != null && number != "")
+          matchStr += ",{\"match\":{\"issue_number\":\"" + number + "\"}}";
+        if(author != null && author != "")
+          matchStr += ",{\"match\":{\"author_name.keyword\":\"" + author + "\"}}";
+        if(assignee != null && assignee != "")
+          matchStr += ",{\"match\":{\"assignee_name.keyword\":\"" + assignee + "\"}}";
+        if(priority != null)
+          matchStr += ",{\"match\":{\"priority\":\"" + priority + "\"}}";
+        if(label != null && label != "")
+          matchStr += ",{\"terms\":{\"issue_labels.keyword\":[\"" + label + "\"]}}";
+        if(search != null && search != "")
+          matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"issue_number\":\"%s\"}},{\"wildcard\":{\"repository\":\"%s\"}}]}}", search,search,search) ;
+        if(exclusion != null && exclusion != "")
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
+
+        String query = String.format(queryConf.getIssueQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode hits = dataNode.get("hits");
+        ArrayNode buckets = objectMapper.createArrayNode();
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total",hits.get("total").get("value").asInt());
+        bucket.put("page",page);
+        bucket.put("per_page",per_page);
+
+        var item = hits.get("hits");
+        for(int i = 0; i < item.size(); i++){
+          JsonNode node = item.get(i).get("_source");
+          ObjectNode temp = objectMapper.createObjectNode();
+          temp.put("org",node.get("org_name").asText());
+          temp.put("repo",node.get("gitee_repo").asText());
+          temp.set("sig",node.get("sig_names"));
+          temp.put("link",node.get("issue_url").asText());
+          temp.put("number",node.get("issue_id_in_repo").asText());
+          temp.put("issue_type",node.get("issue_type").asText());
+          temp.put("issue_state",node.get("issue_state").asText());
+          temp.put("author",node.get("author_name").asText());
+          temp.put("assignee",node.get("assignee_name").asText());
+          temp.put("created_at",node.get("created_at").asText());
+          temp.put("updated_at",node.get("updated_at").asText());
+          temp.put("title",node.get("issue_title").asText());
+          temp.put("priority",node.get("priority").asInt());
+          temp.set("labels",node.get("issue_labels"));
+          buckets.add(temp);
+        }
+
+        bucket.set("data",buckets);
         return resultJsonStr(statusCode, bucket, statusText);
     }
 }
