@@ -3380,8 +3380,8 @@ public class QueryDao {
           sort = "created_at";
         if(direction == null || direction == "")
           direction = "desc";
-        if(per_page > 50)
-          per_page = 50;
+        if(per_page > 20)
+          per_page = 20;
         long currentTimeMillis = System.currentTimeMillis();
 
         String matchStr = "";
@@ -3409,9 +3409,9 @@ public class QueryDao {
         if(search != null && search != "")
           matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"issue_number\":\"%s\"}},{\"wildcard\":{\"repository\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null && exclusion != "")
-          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\"" + exclusion + "\"]}}]";
 
-        String query = String.format(queryConf.getIssueQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
+        String query = String.format(queryConf.getIssueQueryStr(), 0, currentTimeMillis, matchStr, excluStr, sort, direction, page - 1, per_page);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
         int statusCode = response.getStatusCode();
@@ -3423,9 +3423,9 @@ public class QueryDao {
         ArrayNode buckets = objectMapper.createArrayNode();
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",hits.get("total").get("value").asInt());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
+        bucket.put("total", hits.get("total").get("value").asInt());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
 
         var item = hits.get("hits");
         for(int i = 0; i < item.size(); i++){
@@ -3453,7 +3453,7 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryPulls(CustomPropertiesConfig queryConf,PullsDetailsParmas pullsDetailsParmas) {
+    public String queryPulls(CustomPropertiesConfig queryConf ,PullsDetailsParmas pullsDetailsParmas) {
 
         String org = pullsDetailsParmas.getOrg();
         String repo = pullsDetailsParmas.getRepo();
@@ -3477,8 +3477,8 @@ public class QueryDao {
           sort = "created_at";
         if(direction == null || direction == "")
           direction = "desc";
-        if(per_page > 50)
-          per_page = 50;
+        if(per_page > 20)
+          per_page = 20;
         long currentTimeMillis = System.currentTimeMillis();
 
         String matchStr = "";
@@ -3500,9 +3500,9 @@ public class QueryDao {
         if(search != null && search != "")
           matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null && exclusion != "")
-          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\"" + exclusion + "\"]}}]";
 
-        String query = String.format(queryConf.getPullsQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
+        String query = String.format(queryConf.getPullsQueryStr(), 0, currentTimeMillis, matchStr, excluStr, sort, direction, page - 1, per_page);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
         int statusCode = response.getStatusCode();
@@ -3515,8 +3515,8 @@ public class QueryDao {
 
         ObjectNode bucket = objectMapper.createObjectNode();
         bucket.put("total",hits.get("total").get("value").asInt());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
 
         var item = hits.get("hits");
         for(int i = 0; i < item.size(); i++){
@@ -3541,7 +3541,7 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryPullsAuthors(CustomPropertiesConfig queryConf,String keyword,Integer page,Integer per_page) {
+    public String queryPullsAuthors(CustomPropertiesConfig queryConf, String keyword, Integer page, Integer per_page) {
         if(page == null)
           page = 1;
         if(per_page == null)
@@ -3570,10 +3570,10 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",nameList.size());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
-        bucket.set("data",arrayNode);
+        bucket.put("total", nameList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
         return resultJsonStr(statusCode, bucket, statusText);
     }
     

@@ -1424,37 +1424,37 @@ public class QueryService {
         return result;
     }
 
-    public String queryIssue(HttpServletRequest request,IssueDetailsParmas issueDetailsParmas) {
+    public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
       QueryDao queryDao = getQueryDao(request);
       CustomPropertiesConfig queryConf = getQueryConf("openGauss");
       String key = "issue" + issueDetailsParmas.toString();
       String result = (String) redisDao.get(key);
       if (result == null) {
-          result = queryDao.queryIssue(queryConf,issueDetailsParmas);
+          result = queryDao.queryIssue(queryConf, issueDetailsParmas);
           redisDao.set(key, result, redisDefaultExpire);
       }
       return result;
   }
 
-  public String queryPulls(HttpServletRequest request,PullsDetailsParmas pullsDetailsParmas) {
+  public String queryPulls(HttpServletRequest request, PullsDetailsParmas pullsDetailsParmas) {
       QueryDao queryDao = getQueryDao(request);
       CustomPropertiesConfig queryConf = getQueryConf("openGauss");
       String key = "pulls" + pullsDetailsParmas.toString();
       String result = (String) redisDao.get(key);
       if (result == null) {
-          result = queryDao.queryPulls(queryConf,pullsDetailsParmas);
+          result = queryDao.queryPulls(queryConf, pullsDetailsParmas);
           redisDao.set(key, result, redisDefaultExpire);
       }
       return result;
   }
   
-  public String queryPullsAuthors(HttpServletRequest request,String keyword,Integer page,Integer per_page) {
+  public String queryPullsAuthors(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
     QueryDao queryDao = getQueryDao(request);
     CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-    String key = "pullsAuthors" + keyword + page + per_page;
+    String key = String.format("pullsAuthorskeyword%Spage%dper_page%d", keyword, page, per_page );
     String result = (String) redisDao.get(key);
     if (result == null) {
-        result = queryDao.queryPullsAuthors(queryConf,keyword,page,per_page);
+        result = queryDao.queryPullsAuthors(queryConf, keyword, page, per_page);
         redisDao.set(key, result, redisDefaultExpire);
     }
     return result;
