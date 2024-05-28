@@ -32,8 +32,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
 import com.datastat.model.HmsExportDataReq;
+import com.datastat.model.IssueDetailsParmas;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
+import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 
@@ -1422,35 +1424,40 @@ public class QueryService {
         return result;
     }
 
-    public String queryPulls(HttpServletRequest request,String org,String repo,String sig,String state,String ref,
-      String author,String sort,String label,String exclusion,String direction,String search,Integer page,Integer per_page
-      ) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = "pulls" + org + repo + sig + state + ref + author + sort + label + exclusion + direction + search + page + per_page;
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPulls(queryConf,org,repo,sig,state,ref,author,sort,label,exclusion,direction,search,page,per_page);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-    
-    public String queryIssue(HttpServletRequest request,String org,String repo,String sig,String state,String number,
-    String author,String assignee,String label,String exclusion,String issue_state,String issue_type,
-    Integer priority,String sort,String direction,String search,Integer page,Integer per_page
-    ) {
+    public String queryIssue(HttpServletRequest request,IssueDetailsParmas issueDetailsParmas) {
       QueryDao queryDao = getQueryDao(request);
       CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-      String key = "issue" + org + repo + sig + state + number + author + assignee + label + exclusion + issue_state + issue_type + priority + sort + direction + search + page + per_page;
+      String key = "issue" + issueDetailsParmas.toString();
       String result = (String) redisDao.get(key);
       if (result == null) {
-          result = queryDao.queryIssue(queryConf,org,repo,sig,state,number,author,assignee,label,exclusion,issue_state,issue_type,priority,sort,direction,search,page,per_page);
+          result = queryDao.queryIssue(queryConf,issueDetailsParmas);
           redisDao.set(key, result, redisDefaultExpire);
       }
       return result;
+  }
+
+  public String queryPulls(HttpServletRequest request,PullsDetailsParmas pullsDetailsParmas) {
+      QueryDao queryDao = getQueryDao(request);
+      CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+      String key = "pulls" + pullsDetailsParmas.toString();
+      String result = (String) redisDao.get(key);
+      if (result == null) {
+          result = queryDao.queryPulls(queryConf,pullsDetailsParmas);
+          redisDao.set(key, result, redisDefaultExpire);
+      }
+      return result;
+  }
+  
+  public String queryPullsAuthors(HttpServletRequest request,String keyword,Integer page,Integer per_page) {
+    QueryDao queryDao = getQueryDao(request);
+    CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+    String key = "pullsAuthors" + keyword + page + per_page;
+    String result = (String) redisDao.get(key);
+    if (result == null) {
+        result = queryDao.queryPullsAuthors(queryConf,keyword,page,per_page);
+        redisDao.set(key, result, redisDefaultExpire);
     }
-    
-      
+    return result;
+  }     
 }
 

@@ -192,6 +192,7 @@ public class CustomPropertiesConfig {
     private String repoDeveloperQueryStr;
     private String pullsQueryStr;
     private String issueQueryStr;
+    private String pullsQueryAuthorsStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();

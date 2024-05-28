@@ -18,8 +18,10 @@ import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
 import com.datastat.model.HmsExportDataReq;
+import com.datastat.model.IssueDetailsParmas;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
+import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
@@ -673,47 +675,21 @@ public class QueryController {
         return queryService.queryRepoDeveloper(request, timeRange);
     }
     
-    @RequestMapping(value = {"/pulls", "/pulls/"})
-    public String queryPulls(HttpServletRequest request,
-                            @RequestParam(value = "org", required = false) String org,
-                            @RequestParam(value = "repo", required = false) String repo,
-                            @RequestParam(value = "sig", required = false) String sig,
-                            @RequestParam(value = "state", required = false) String state,
-                            @RequestParam(value = "ref", required = false) String ref,
-                            @RequestParam(value = "author", required = false) String author,
-                            @RequestParam(value = "sort", required = false) String sort,
-                            @RequestParam(value = "direction", required = false) String direction,
-                            @RequestParam(value = "label", required = false) String label,
-                            @RequestParam(value = "exclusion", required = false) String exclusion,
-                            @RequestParam(value = "search", required = false) String search, 
-                            @RequestParam(value = "page", required = false) Integer page,
-                            @RequestParam(value = "per_page", required = false) Integer per_page
-                            ) {
-        return queryService.queryPulls(request, org, repo, sig, state,ref, author, 
-          sort,label, exclusion, direction, search, page, per_page);
+    @RequestMapping(value = {"/issue", "/issue/"})
+    public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
+        return queryService.queryIssue(request, issueDetailsParmas);
     }
 
-    @RequestMapping(value = {"/issue", "/issue/"})
-    public String queryIssue(HttpServletRequest request,
-                            @RequestParam(value = "org", required = false) String org,
-                            @RequestParam(value = "repo", required = false) String repo,
-                            @RequestParam(value = "sig", required = false) String sig,
-                            @RequestParam(value = "state", required = false) String state,
-                            @RequestParam(value = "number", required = false) String number,
-                            @RequestParam(value = "author", required = false) String author,
-                            @RequestParam(value = "assignee", required = false) String assignee,
-                            @RequestParam(value = "label", required = false) String label,
-                            @RequestParam(value = "exclusion", required = false) String exclusion,
-                            @RequestParam(value = "issue_state", required = false) String issue_state,
-                            @RequestParam(value = "issue_type", required = false) String issue_type,
-                            @RequestParam(value = "priority", required = false) Integer priority,
-                            @RequestParam(value = "sort", required = false) String sort,
-                            @RequestParam(value = "direction", required = false) String direction,
-                            @RequestParam(value = "search", required = false) String search, 
-                            @RequestParam(value = "page", required = false) Integer page,
-                            @RequestParam(value = "per_page", required = false) Integer per_page
-                            ) {
-        return queryService.queryIssue(request, org, repo, sig, state, number, author, assignee, 
-          label, exclusion, issue_state, issue_type, priority, sort, direction, search, page, per_page);
+    @RequestMapping(value = {"/pulls", "/pulls/"})
+    public String queryPulls(HttpServletRequest request, PullsDetailsParmas pullsDetailsParmas) {
+        return queryService.queryPulls(request, pullsDetailsParmas);
+    }
+    
+    @RequestMapping(value = "/pulls/authors")
+    public String queryPullsAuthors(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsAuthors(request, keyword, page, per_page);
     }
 }
