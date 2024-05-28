@@ -3399,9 +3399,9 @@ public class QueryDao {
         if(number != null && number != "")
           matchStr += ",{\"match\":{\"issue_number\":\"" + number + "\"}}";
         if(author != null && author != "")
-          matchStr += ",{\"match\":{\"author_name.keyword\":\"" + author + "\"}}";
+          matchStr += ",{\"match\":{\"user_login.keyword\":\"" + author + "\"}}";
         if(assignee != null && assignee != "")
-          matchStr += ",{\"match\":{\"assignee_name.keyword\":\"" + assignee + "\"}}";
+          matchStr += ",{\"match\":{\"assignee_login.keyword\":\"" + assignee + "\"}}";
         if(priority != null)
           matchStr += ",{\"match\":{\"priority\":\"" + priority + "\"}}";
         if(label != null && label != "")
@@ -3438,8 +3438,8 @@ public class QueryDao {
           temp.put("number",node.get("issue_id_in_repo").asText());
           temp.put("issue_type",node.get("issue_type").asText());
           temp.put("issue_state",node.get("issue_state").asText());
-          temp.put("author",node.get("author_name").asText());
-          temp.put("assignee",node.get("assignee_name").asText());
+          temp.put("author",node.get("user_login").asText());
+          temp.put("assignee",node.get("assignee_login").asText());
           temp.put("created_at",node.get("created_at").asText());
           temp.put("updated_at",node.get("updated_at").asText());
           temp.put("title",node.get("issue_title").asText());
@@ -3494,7 +3494,7 @@ public class QueryDao {
         if(ref != null && ref != "")
           matchStr += ",{\"match\":{\"head_label_ref\":\"" + ref + "\"}}";
         if(author != null && author != "")
-          matchStr += ",{\"match\":{\"author_name.keyword\":\"" + author + "\"}}";
+          matchStr += ",{\"match\":{\"user_login.keyword\":\"" + author + "\"}}";
         if(label != null && label != "")
           matchStr += ",{\"terms\":{\"pull_labels.keyword\":[\"" + label + "\"]}}";
         if(search != null && search != "")
@@ -3503,7 +3503,6 @@ public class QueryDao {
           excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
 
         String query = String.format(queryConf.getPullsQueryStr(),0,currentTimeMillis,matchStr,excluStr,sort,direction,page-1,per_page);
-        System.out.println(query);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
         int statusCode = response.getStatusCode();
@@ -3529,7 +3528,7 @@ public class QueryDao {
           temp.set("sig",node.get("sig_names"));
           temp.put("link",node.get("pull_url").asText());
           temp.put("state",node.get("pull_state").asText());
-          temp.put("author",node.get("author_name").asText());
+          temp.put("author",node.get("user_login").asText());
           temp.put("created_at",node.get("created_at").asText());
           temp.put("updated_at",node.get("updated_at").asText());
           temp.put("title",node.get("issue_title").asText());
@@ -3540,15 +3539,16 @@ public class QueryDao {
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
-    
+
     @SneakyThrows
     public String queryPullsAuthors(CustomPropertiesConfig queryConf,String keyword,Integer page,Integer per_page) {
         if(page == null)
           page = 1;
         if(per_page == null)
           per_page = 10;
+        if(keyword == null)
+          keyword = "";
         String query = String.format(queryConf.getPullsQueryAuthorsStr(),keyword);
-        System.out.println(query);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
         int statusCode = response.getStatusCode();
@@ -3561,17 +3561,20 @@ public class QueryDao {
         var nameList = aggregations.get("uni_names").get("buckets");
         ArrayNode arrayNode = objectMapper.createArrayNode();
         for(int i = (page-1) * per_page;i < page * per_page;i++){
-            System.out.println(i);
+          try {
             arrayNode.add(nameList.get(i).get("key"));
-            System.out.println(nameList.get(i).get("key"));
+          } catch (Exception e) {
+            logger.info("当前查询数据条数超过获取数据条数");
+            break;
+          }  
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-
         bucket.put("total",nameList.size());
         bucket.put("page",page);
         bucket.put("per_page",per_page);
         bucket.set("data",arrayNode);
         return resultJsonStr(statusCode, bucket, statusText);
     }
+    
 }
