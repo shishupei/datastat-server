@@ -684,12 +684,42 @@ public class QueryController {
     public String queryPulls(HttpServletRequest request, PullsDetailsParmas pullsDetailsParmas) {
         return queryService.queryPulls(request, pullsDetailsParmas);
     }
-    
+
+    @RequestMapping(value = "/pulls/repos")
+    public String queryPullsRepos(HttpServletRequest request,
+            @RequestParam(value = "sig", required = false) String sig,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsRepos(request, sig, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/assignees")
+    public String queryPullsAssignees(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsAssignees(request, keyword, page, per_page);
+    }
+
     @RequestMapping(value = "/pulls/authors")
     public String queryPullsAuthors(HttpServletRequest request,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "per_page", required = false) Integer per_page) {
         return queryService.queryPullsAuthors(request, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/refs")
+    public String queryPullsRefs(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsRefs(request, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/sigs")
+    public String queryPullsSigs(HttpServletRequest request, @RequestParam(value = "keyword", required = false) String keyword) {
+        return queryService.queryPullsSigs(request, keyword);
     }
 }

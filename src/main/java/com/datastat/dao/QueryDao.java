@@ -3409,7 +3409,7 @@ public class QueryDao {
         if(search != null && search != "")
           matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"issue_number\":\"%s\"}},{\"wildcard\":{\"repository\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null && exclusion != "")
-          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\"" + exclusion + "\"]}}]";
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
 
         String query = String.format(queryConf.getIssueQueryStr(), 0, currentTimeMillis, matchStr, excluStr, sort, direction, page - 1, per_page);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
@@ -3421,7 +3421,6 @@ public class QueryDao {
         JsonNode dataNode = objectMapper.readTree(responseBody);
         JsonNode hits = dataNode.get("hits");
         ArrayNode buckets = objectMapper.createArrayNode();
-
         ObjectNode bucket = objectMapper.createObjectNode();
         bucket.put("total", hits.get("total").get("value").asInt());
         bucket.put("page", page);
@@ -3453,7 +3452,7 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryPulls(CustomPropertiesConfig queryConf ,PullsDetailsParmas pullsDetailsParmas) {
+    public String queryPulls(CustomPropertiesConfig queryConf,PullsDetailsParmas pullsDetailsParmas) {
 
         String org = pullsDetailsParmas.getOrg();
         String repo = pullsDetailsParmas.getRepo();
@@ -3500,7 +3499,7 @@ public class QueryDao {
         if(search != null && search != "")
           matchStr += String.format(",{\"bool\":{\"should\":[{\"wildcard\":{\"issue_title\":\"%s\"}},{\"wildcard\":{\"sig_names\":\"%s\"}},{\"wildcard\":{\"gitee_repo\":\"%s\"}}]}}", search,search,search) ;
         if(exclusion != null && exclusion != "")
-          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\"" + exclusion + "\"]}}]";
+          excluStr += ",\"must_not\":[{\"terms\":{\"pull_labels\":[\""+ exclusion +"\"]}}]";
 
         String query = String.format(queryConf.getPullsQueryStr(), 0, currentTimeMillis, matchStr, excluStr, sort, direction, page - 1, per_page);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
@@ -3512,9 +3511,8 @@ public class QueryDao {
         JsonNode dataNode = objectMapper.readTree(responseBody);
         JsonNode hits = dataNode.get("hits");
         ArrayNode buckets = objectMapper.createArrayNode();
-
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",hits.get("total").get("value").asInt());
+        bucket.put("total", hits.get("total").get("value").asInt());
         bucket.put("page", page);
         bucket.put("per_page", per_page);
 
@@ -3541,7 +3539,91 @@ public class QueryDao {
     }
 
     @SneakyThrows
-    public String queryPullsAuthors(CustomPropertiesConfig queryConf, String keyword, Integer page, Integer per_page) {
+    public String queryPullsRepos(CustomPropertiesConfig queryConf,String sig,String keyword,Integer page,Integer per_page) {
+        if(page == null)
+          page = 1;
+        if(per_page == null)
+          per_page = 10;
+        if(sig == null)
+          sig = "";
+        if(keyword == null)
+          keyword = "";
+        if(per_page > 20)
+          per_page = 20;
+
+        String matchStr = "";
+        if(sig != null && sig != "")
+          matchStr += ",{\"terms\": {\"sig_names.keyword\": [\"" + sig + "\"]}}";
+        String query = String.format(queryConf.getPullsQueryReposStr(), keyword, matchStr);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode aggregations = dataNode.get("aggregations");
+        var repoList = aggregations.get("uni_repos").get("buckets");
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for(int i = (page - 1) * per_page;i < page * per_page;i++){
+          try {
+            arrayNode.add(repoList.get(i).get("key"));
+          } catch (Exception e) {
+            logger.info("当前查询数据条数超过获取数据条数");
+            break;
+          }  
+        }
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total",repoList.size());
+        bucket.put("page",page);
+        bucket.put("per_page",per_page);
+        bucket.set("data",arrayNode);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
+
+    @SneakyThrows
+    public String queryPullsAssignees(CustomPropertiesConfig queryConf,String keyword,Integer page,Integer per_page) {
+        if(page == null)
+          page = 1;
+        if(per_page == null)
+          per_page = 10;
+        if(keyword == null)
+          keyword = "";
+        if(per_page > 20)
+          per_page = 20;
+        String query = String.format(queryConf.getPullsQueryAssigneesStr(), keyword);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode aggregations = dataNode.get("aggregations");
+        var assigneeList = aggregations.get("uni_assignees").get("buckets");
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for(int i = (page-1) * per_page;i < page * per_page;i++){
+          try {
+            arrayNode.add(assigneeList.get(i).get("key"));
+          } catch (Exception e) {
+            logger.info("当前查询数据条数超过获取数据条数");
+            break;
+          }  
+        }
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total",assigneeList.size());
+        bucket.put("page",page);
+        bucket.put("per_page",per_page);
+        bucket.set("data",arrayNode);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
+
+    @SneakyThrows
+    public String queryPullsAuthors(CustomPropertiesConfig queryConf,String keyword,Integer page,Integer per_page) {
         if(page == null)
           page = 1;
         if(per_page == null)
@@ -3557,12 +3639,11 @@ public class QueryDao {
 
         JsonNode dataNode = objectMapper.readTree(responseBody);
         JsonNode aggregations = dataNode.get("aggregations");
-
-        var nameList = aggregations.get("uni_names").get("buckets");
+        var authorList = aggregations.get("uni_names").get("buckets");
         ArrayNode arrayNode = objectMapper.createArrayNode();
         for(int i = (page-1) * per_page;i < page * per_page;i++){
           try {
-            arrayNode.add(nameList.get(i).get("key"));
+            arrayNode.add(authorList.get(i).get("key"));
           } catch (Exception e) {
             logger.info("当前查询数据条数超过获取数据条数");
             break;
@@ -3570,11 +3651,76 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total", nameList.size());
-        bucket.put("page", page);
-        bucket.put("per_page", per_page);
-        bucket.set("data", arrayNode);
+        bucket.put("total",authorList.size());
+        bucket.put("page",page);
+        bucket.put("per_page",per_page);
+        bucket.set("data",arrayNode);
+
         return resultJsonStr(statusCode, bucket, statusText);
     }
-    
+
+    @SneakyThrows
+    public String queryPullsRefs(CustomPropertiesConfig queryConf,String keyword,Integer page,Integer per_page) {
+        if(page == null)
+          page = 1;
+        if(per_page == null)
+          per_page = 10;
+        if(keyword == null)
+          keyword = "";
+        if(per_page > 20)
+          per_page = 20;
+        String query = String.format(queryConf.getPullsQueryRefsStr(), keyword);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode aggregations = dataNode.get("aggregations");
+        var refList = aggregations.get("uni_refs").get("buckets");
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for(int i = (page-1) * per_page;i < page * per_page;i++){
+          try {
+            arrayNode.add(refList.get(i).get("key"));
+          } catch (Exception e) {
+            logger.info("当前查询数据条数超过获取数据条数");
+            break;
+          }  
+        }
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total",refList.size());
+        bucket.put("page",page);
+        bucket.put("per_page",per_page);
+        bucket.set("data",arrayNode);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
+
+    @SneakyThrows
+    public String queryPullsSigs(CustomPropertiesConfig queryConf,String keyword) {
+        if(keyword == null)
+          keyword = "";
+        String query = String.format(queryConf.getPullsQuerySigsStr(), keyword);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode aggregations = dataNode.get("aggregations");
+        var sigList = aggregations.get("uni_sigs").get("buckets");
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for(int i = 0; i < sigList.size(); i++){
+            arrayNode.add(sigList.get(i).get("key"));
+        }
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.set("data",arrayNode);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+        }
+
 }
