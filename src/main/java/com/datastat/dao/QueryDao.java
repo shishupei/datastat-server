@@ -3352,7 +3352,7 @@ public class QueryDao {
     }
     
     @SneakyThrows
-    public String queryIssue(CustomPropertiesConfig queryConf,IssueDetailsParmas issueDetailsParmas) {
+    public String queryIssue(CustomPropertiesConfig queryConf, IssueDetailsParmas issueDetailsParmas) {
 
         String org = issueDetailsParmas.getOrg();
         String repo = issueDetailsParmas.getRepo();
@@ -3447,12 +3447,12 @@ public class QueryDao {
           buckets.add(temp);
         }
 
-        bucket.set("data",buckets);
+        bucket.set("data", buckets);
         return resultJsonStr(statusCode, bucket, statusText);
     }
 
     @SneakyThrows
-    public String queryPulls(CustomPropertiesConfig queryConf,PullsDetailsParmas pullsDetailsParmas) {
+    public String queryPulls(CustomPropertiesConfig queryConf, PullsDetailsParmas pullsDetailsParmas) {
 
         String org = pullsDetailsParmas.getOrg();
         String repo = pullsDetailsParmas.getRepo();
@@ -3533,13 +3533,13 @@ public class QueryDao {
           temp.set("label",node.get("pull_labels"));
           buckets.add(temp);
         }
-        bucket.set("data",buckets);
+        bucket.set("data", buckets);
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
 
     @SneakyThrows
-    public String queryPullsRepos(CustomPropertiesConfig queryConf,String sig,String keyword,Integer page,Integer per_page) {
+    public String queryPullsRepos(CustomPropertiesConfig queryConf, String sig, String keyword, Integer page, Integer per_page) {
         if(page == null)
           page = 1;
         if(per_page == null)
@@ -3575,10 +3575,10 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",repoList.size());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
-        bucket.set("data",arrayNode);
+        bucket.put("total", repoList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
@@ -3604,7 +3604,7 @@ public class QueryDao {
         JsonNode aggregations = dataNode.get("aggregations");
         var assigneeList = aggregations.get("uni_assignees").get("buckets");
         ArrayNode arrayNode = objectMapper.createArrayNode();
-        for(int i = (page-1) * per_page;i < page * per_page;i++){
+        for(int i = (page - 1) * per_page;i < page * per_page;i++){
           try {
             arrayNode.add(assigneeList.get(i).get("key"));
           } catch (Exception e) {
@@ -3614,22 +3614,24 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",assigneeList.size());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
-        bucket.set("data",arrayNode);
+        bucket.put("total", assigneeList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
 
     @SneakyThrows
-    public String queryPullsAuthors(CustomPropertiesConfig queryConf,String keyword,Integer page,Integer per_page) {
+    public String queryPullsAuthors(CustomPropertiesConfig queryConf, String keyword, Integer page, Integer per_page) {
         if(page == null)
           page = 1;
         if(per_page == null)
           per_page = 10;
         if(keyword == null)
           keyword = "";
+        if(per_page > 20)
+          per_page = 20;
         String query = String.format(queryConf.getPullsQueryAuthorsStr(),keyword);
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
         Response response = future.get();
@@ -3641,7 +3643,7 @@ public class QueryDao {
         JsonNode aggregations = dataNode.get("aggregations");
         var authorList = aggregations.get("uni_names").get("buckets");
         ArrayNode arrayNode = objectMapper.createArrayNode();
-        for(int i = (page-1) * per_page;i < page * per_page;i++){
+        for(int i = (page - 1) * per_page;i < page * per_page;i++){
           try {
             arrayNode.add(authorList.get(i).get("key"));
           } catch (Exception e) {
@@ -3651,10 +3653,10 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",authorList.size());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
-        bucket.set("data",arrayNode);
+        bucket.put("total", authorList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
@@ -3680,7 +3682,7 @@ public class QueryDao {
         JsonNode aggregations = dataNode.get("aggregations");
         var refList = aggregations.get("uni_refs").get("buckets");
         ArrayNode arrayNode = objectMapper.createArrayNode();
-        for(int i = (page-1) * per_page;i < page * per_page;i++){
+        for(int i = (page-1) * per_page; i < page * per_page; i++){
           try {
             arrayNode.add(refList.get(i).get("key"));
           } catch (Exception e) {
@@ -3690,16 +3692,16 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.put("total",refList.size());
-        bucket.put("page",page);
-        bucket.put("per_page",per_page);
-        bucket.set("data",arrayNode);
+        bucket.put("total", refList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
 
     @SneakyThrows
-    public String queryPullsSigs(CustomPropertiesConfig queryConf,String keyword) {
+    public String queryPullsSigs(CustomPropertiesConfig queryConf, String keyword) {
         if(keyword == null)
           keyword = "";
         String query = String.format(queryConf.getPullsQuerySigsStr(), keyword);
@@ -3718,9 +3720,88 @@ public class QueryDao {
         }
 
         ObjectNode bucket = objectMapper.createObjectNode();
-        bucket.set("data",arrayNode);
+        bucket.set("data", arrayNode);
 
         return resultJsonStr(statusCode, bucket, statusText);
+    }
+
+    @SneakyThrows
+    public String queryPullsLabels(CustomPropertiesConfig queryConf, String keyword, Integer page, Integer per_page) {
+        if(page == null)
+          page = 1;
+        if(per_page == null)
+          per_page = 10;
+        if(keyword == null)
+          keyword = "";
+        if(per_page > 20)
+          per_page = 20;
+        String query = String.format(queryConf.getPullsQueryLabelsStr(), keyword);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode aggregations = dataNode.get("aggregations");
+
+        var refList = aggregations.get("uni_labels").get("buckets");
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for(int i = (page - 1) * per_page; i < page * per_page; i++){
+          try {
+            arrayNode.add(refList.get(i).get("key"));
+          } catch (Exception e) {
+            logger.info("当前查询数据条数超过获取数据条数");
+            break;
+          }  
         }
 
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total", refList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
+
+    @SneakyThrows
+    public String queryIssueLabels(CustomPropertiesConfig queryConf, String keyword, Integer page, Integer per_page) {
+        if(page == null)
+          page = 1;
+        if(per_page == null)
+          per_page = 10;
+        if(keyword == null)
+          keyword = "";
+        if(per_page > 20)
+          per_page = 20;
+        String query = String.format(queryConf.getIssueQueryLabelsStr(), keyword);
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode aggregations = dataNode.get("aggregations");
+
+        var refList = aggregations.get("uni_labels").get("buckets");
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for(int i = (page - 1) * per_page; i < page * per_page; i++){
+          try {
+            arrayNode.add(refList.get(i).get("key"));
+          } catch (Exception e) {
+            logger.info("当前查询数据条数超过获取数据条数");
+            break;
+          }  
+        }
+
+        ObjectNode bucket = objectMapper.createObjectNode();
+        bucket.put("total", refList.size());
+        bucket.put("page", page);
+        bucket.put("per_page", per_page);
+        bucket.set("data", arrayNode);
+
+        return resultJsonStr(statusCode, bucket, statusText);
+    }
 }

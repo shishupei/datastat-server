@@ -1507,5 +1507,29 @@ public class QueryService {
       }
       return result;
   }
+  
+  public String queryPullsLabels(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
+    QueryDao queryDao = getQueryDao(request);
+    CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+    String key = "pullslabels" + keyword;
+    String result = (String) redisDao.get(key);
+    if (result == null) {
+        result = queryDao.queryPullsLabels(queryConf, keyword, page, per_page);
+        redisDao.set(key, result, redisDefaultExpire);
+    }
+    return result;
+  }
+
+  public String queryIssueLabels(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
+      QueryDao queryDao = getQueryDao(request);
+      CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+      String key = "issuelabels" + keyword;
+      String result = (String) redisDao.get(key);
+      if (result == null) {
+          result = queryDao.queryIssueLabels(queryConf, keyword, page, per_page);
+          redisDao.set(key, result, redisDefaultExpire);
+      }
+      return result;
+  }
 }
 

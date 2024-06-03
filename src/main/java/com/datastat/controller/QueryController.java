@@ -722,4 +722,20 @@ public class QueryController {
     public String queryPullsSigs(HttpServletRequest request, @RequestParam(value = "keyword", required = false) String keyword) {
         return queryService.queryPullsSigs(request, keyword);
     }
+
+    @RequestMapping(value = "/pulls/labels")
+    public String queryPullsLabels(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsLabels(request, keyword, page, per_page);
+    }
+    
+    @RequestMapping(value = "/issue/labels")
+    public String queryIssueLabels(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryIssueLabels(request, keyword, page, per_page);
+    }
 }

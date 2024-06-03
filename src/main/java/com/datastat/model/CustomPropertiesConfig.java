@@ -197,6 +197,8 @@ public class CustomPropertiesConfig {
     private String pullsQueryAuthorsStr;
     private String pullsQueryRefsStr;
     private String pullsQuerySigsStr;
+    private String pullsQueryLabelsStr;
+    private String issueQueryLabelsStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
