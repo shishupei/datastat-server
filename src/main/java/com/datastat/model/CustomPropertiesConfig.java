@@ -192,6 +192,7 @@ public class CustomPropertiesConfig {
     private String repoDeveloperQueryStr;
     private String pullsQueryStr;
     private String issueQueryStr;
+    private String viewCountQueryStr;
     private String pullsQueryReposStr;
     private String pullsQueryAssigneesStr;
     private String pullsQueryAuthorsStr;

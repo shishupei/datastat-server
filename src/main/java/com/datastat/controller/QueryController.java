@@ -674,8 +674,14 @@ public class QueryController {
             @RequestParam(value = "timeRange") String timeRange) {
         return queryService.queryRepoDeveloper(request, timeRange);
     }
-    
-    @RequestMapping(value = {"/issue", "/issue/"})
+
+    @RequestMapping(value = "/modelfoundry/view/count")
+    public String queryViewCount(HttpServletRequest request,
+            @RequestParam(value = "path", required = false) String path) {
+        return queryService.queryViewCount(request, path);
+    }
+
+    @RequestMapping(value = {"/issue", "/issue"})
     public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
         return queryService.queryIssue(request, issueDetailsParmas);
     }
