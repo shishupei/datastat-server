@@ -672,4 +672,10 @@ public class QueryController {
             @RequestParam(value = "timeRange") String timeRange) {
         return queryService.queryRepoDeveloper(request, timeRange);
     }
+
+    @RequestMapping(value = "/modelfoundry/view/count")
+    public String queryViewCount(HttpServletRequest request,
+            @RequestParam(value = "path", required = false) String path) {
+        return queryService.queryViewCount(request, path);
+    }
 }
