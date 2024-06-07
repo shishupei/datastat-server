@@ -635,16 +635,14 @@ public class QueryService {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String keyStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String key = community.toLowerCase() + "sigscoreall" + keyStr;
-        // String result = (String) redisDao.get(key);
-        // if (result == null) {
-        //     QueryDao queryDao = getQueryDao(request);
-        //     CustomPropertiesConfig queryConf = getQueryConf(request);
-        //     result = queryDao.querySigScoreAll(queryConf);
-        //     redisDao.set(key, result, redisDefaultExpire);
-        // }
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
-        return queryDao.querySigScoreAll(queryConf);
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.querySigScoreAll(queryConf);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
     }
 
     public String querySigRadarScore(HttpServletRequest request, String community, String sig, String timeRange) {
