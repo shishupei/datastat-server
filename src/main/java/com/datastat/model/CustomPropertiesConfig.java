@@ -190,6 +190,8 @@ public class CustomPropertiesConfig {
     private String modelFoundryDownloadCountQueryStr;
     private String isvCountQuery;
     private String repoDeveloperQueryStr;
+    private String pullsQueryStr;
+    private String issueQueryStr;
     private String viewCountQueryStr;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
