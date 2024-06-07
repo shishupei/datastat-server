@@ -679,8 +679,9 @@ public class QueryController {
     public String queryViewCount(HttpServletRequest request,
             @RequestParam(value = "path", required = false) String path) {
         return queryService.queryViewCount(request, path);
-    
-    @RequestMapping(value = {"/issue", "/issue/"})
+    }
+
+    @RequestMapping(value = {"/issue", "/issue"})
     public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
         return queryService.queryIssue(request, issueDetailsParmas);
     }

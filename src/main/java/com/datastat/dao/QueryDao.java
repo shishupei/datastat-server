@@ -3356,8 +3356,14 @@ public class QueryDao {
         long currentTimeMillis = System.currentTimeMillis();
         String query = String.format(queryConf.getViewCountQueryStr(), 0, currentTimeMillis, path);
         String index = queryConf.getExportWebsiteViewIndex();
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, query); 
-  
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode testStr = dataNode.get("aggregations").get("group_field").get("buckets");
+        ArrayNode buckets = objectMapper.createArrayNode();
         if (testStr.isArray()) {
             for (int i = 0; i < testStr.size(); i++) {
                 JsonNode item = testStr.get(i);
@@ -3368,7 +3374,8 @@ public class QueryDao {
             }
         }
         return resultJsonStr(statusCode, buckets, statusText);
-    
+    }
+
     @SneakyThrows
     public String queryIssue(CustomPropertiesConfig queryConf, IssueDetailsParmas issueDetailsParmas) {
 
@@ -3526,7 +3533,7 @@ public class QueryDao {
         String statusText = response.getStatusText();
         String responseBody = response.getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(responseBody);
-        JsonNode testStr = dataNode.get("aggregations").get("group_field").get("buckets");
+        JsonNode hits = dataNode.get("hits");
         ArrayNode buckets = objectMapper.createArrayNode();
 
         ObjectNode bucket = objectMapper.createObjectNode();
