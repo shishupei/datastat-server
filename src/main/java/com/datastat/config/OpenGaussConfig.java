@@ -16,6 +16,7 @@ import com.datastat.model.CustomPropertiesConfig;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +37,9 @@ public class OpenGaussConfig extends CustomPropertiesConfig {
     public String getAggCountQueryStr(CustomPropertiesConfig queryConf, String groupField, String contributeType, String timeRange, String community, String repo, String sig) {
         String queryJson = groupField.equals("company") ? queryConf.getGiteeAggCompanyQueryStr() : queryConf.getGiteeAggUserQueryStr();
         if(repo.equals("coreRepo") ){
-          ArrayList<String> list = new ArrayList<>();
-          list.add("https://gitee.com/opengauss/DMS");
-          list.add("https://gitee.com/opengauss/openGauss-server");
-          list.add("https://gitee.com/opengauss/openGauss-OM");
-          list.add("https://gitee.com/opengauss/DSS");
-          list.add("https://gitee.com/opengauss/CBB");
-          list.add("https://gitee.com/opengauss/DCF");
-          list.add("https://gitee.com/opengauss/DCC");
-          list.add("https://gitee.com/opengauss/CM");
-          System.out.println(list.get(0));
-          repo = convertList2QueryStr(list);
+          String repoListStr = queryConf.getCoreRepo();
+          ArrayList<String> repoList = new ArrayList<>(Arrays.asList(repoListStr.split(",")));
+          repo = convertList2QueryStr(repoList);
         }else {
           repo = repo == null ? "*" : String.format(env.getProperty("gitee.url"), repo);
         }
