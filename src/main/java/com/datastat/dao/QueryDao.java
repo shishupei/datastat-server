@@ -541,7 +541,6 @@ public class QueryDao {
         dataMap.put("company_cn", "个人贡献者");
         dataMap.put("company_en", "independent");
         dataMap.put("contribute", independent);
-        dataMap.put("query",contributesQueryStr);
         JsonNode resNode = objectMapper.valueToTree(dataMap);
         dataList.add(resNode);
 
