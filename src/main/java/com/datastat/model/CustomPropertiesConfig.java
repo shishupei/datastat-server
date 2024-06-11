@@ -190,6 +190,16 @@ public class CustomPropertiesConfig {
     private String modelFoundryDownloadCountQueryStr;
     private String isvCountQuery;
     private String repoDeveloperQueryStr;
+    private String pullsQueryStr;
+    private String issueQueryStr;
+    private String viewCountQueryStr;
+    private String pullsQueryReposStr;
+    private String pullsQueryAssigneesStr;
+    private String pullsQueryAuthorsStr;
+    private String pullsQueryRefsStr;
+    private String pullsQuerySigsStr;
+    private String pullsQueryLabelsStr;
+    private String issueQueryLabelsStr;
     private String coreRepo;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
