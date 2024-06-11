@@ -200,6 +200,7 @@ public class CustomPropertiesConfig {
     private String pullsQuerySigsStr;
     private String pullsQueryLabelsStr;
     private String issueQueryLabelsStr;
+    private String coreRepo;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
