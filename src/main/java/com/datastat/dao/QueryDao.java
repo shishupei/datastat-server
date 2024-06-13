@@ -3348,4 +3348,30 @@ public class QueryDao {
         String email = esQueryUtils.QueryUserEmail(restHighLevelClient, queryConf.getGiteeEmailIndex(), user);
         return email;
     }
+
+    @SneakyThrows
+    public String queryViewCount(CustomPropertiesConfig queryConf, String path) {
+        long currentTimeMillis = System.currentTimeMillis();
+        String query = String.format(queryConf.getViewCountQueryStr(), 0, currentTimeMillis, path);
+        String index = queryConf.getExportWebsiteViewIndex();
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        JsonNode testStr = dataNode.get("aggregations").get("group_field").get("buckets");
+        ArrayNode buckets = objectMapper.createArrayNode();
+        if (testStr.isArray()) {
+            for (int i = 0; i < testStr.size(); i++) {
+                JsonNode item = testStr.get(i);
+                ObjectNode bucket = objectMapper.createObjectNode();
+                bucket.put("repo_id", item.get("key").asText());
+                bucket.put("count", item.get("doc_count").asInt());
+                buckets.add(bucket);
+            }
+        }
+        return resultJsonStr(statusCode, buckets, statusText);
+    }
+
 }
