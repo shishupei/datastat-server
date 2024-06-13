@@ -1421,5 +1421,18 @@ public class QueryService {
         }
         return result;
     }
+
+    public String queryViewCount(HttpServletRequest request, String path) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf("foundry");
+        path = path == null ? "space" : path;
+        String key = "view_count_" + path;
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            result = queryDao.queryViewCount(queryConf, path);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }
 
