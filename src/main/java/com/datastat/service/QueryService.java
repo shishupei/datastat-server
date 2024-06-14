@@ -1434,5 +1434,17 @@ public class QueryService {
         }
         return result;
     }
+
+    public String queryCommunityCoreRepos(HttpServletRequest request, String community) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = community.toLowerCase() + "corerepos";
+        String result = null; 
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryCommunityCoreRepos(queryConf);
+        }
+        return result;
+    }
 }
 

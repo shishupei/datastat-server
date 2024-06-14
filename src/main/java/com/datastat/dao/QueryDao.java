@@ -3374,4 +3374,23 @@ public class QueryDao {
         return resultJsonStr(statusCode, buckets, statusText);
     }
 
+    @SneakyThrows
+    public String queryCommunityCoreRepos(CustomPropertiesConfig queryConf) {
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryConf.getCommunityRepoQueryStr());
+        JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+        Iterator<JsonNode> hits = dataNode.get("hits").get("hits").elements();
+        String repoListStr = queryConf.getCoreRepo();
+
+        ArrayList<HashMap<String, String>> res = new ArrayList<>();
+        while (hits.hasNext()) {
+            JsonNode hit = hits.next();
+            String repository = hit.get("_source").get("repository").asText();
+            res.add(new HashMap<>(){{
+                put("repo", repository);
+                put("isCoreRepo", repoListStr.contains(repository) ? "1" : "0");
+            }});
+        }
+
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
 }
