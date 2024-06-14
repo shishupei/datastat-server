@@ -92,6 +92,7 @@ public class CustomPropertiesConfig {
     private String modelFoundrySHIndex;
     private String modelFoundryYiDongIndex;
     private String modelFoundryTianYiIndex;
+    private String teamupApplyFormIndex;
 
     // -- query str --
     private String extOsQueryStr;

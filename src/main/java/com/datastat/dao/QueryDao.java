@@ -22,6 +22,7 @@ import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
+import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
@@ -3829,4 +3830,59 @@ public class QueryDao {
 
         return resultJsonStr(statusCode, bucket, statusText);
     }
+
+    public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm) {
+        Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
+        return putTeamupDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap);
+    }
+
+    public String putTeamupDataSource(String indexName, Map dataSource) {
+        LocalDateTime now = LocalDateTime.now();
+        String nowStr = now.toString().split("\\.")[0] + "+08:00";
+        dataSource.put("created_at", nowStr);
+
+        BulkRequest request = new BulkRequest();
+        request.add(new IndexRequest(indexName, "_doc", dataSource.get("name") + nowStr).source(dataSource));
+
+        String res = "{\"code\":400,\"data\":\"failed\",\"msg\":\"failed\"}";
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        if (request.requests().size() != 0) {
+            try {
+                BulkResponse bulk = restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+                int status_code = bulk.status().getStatus();
+                if (status_code == 200) {
+                    res = "{\"code\":200,\"data\":\"success\",\"msg\":\"success\"}";
+                }
+            } catch (IOException e) {
+                logger.error("exception", e);
+            }
+        }
+        try {
+            restHighLevelClient.close();
+        } catch (IOException e) {
+            logger.error("exception", e);
+        }
+        return res;
+    }
+
+      @SneakyThrows
+  public String queryCommunityCoreRepos(CustomPropertiesConfig queryConf) {
+      ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryConf.getCommunityRepoQueryStr());
+      JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
+      Iterator<JsonNode> hits = dataNode.get("hits").get("hits").elements();
+      
+      String repoListStr = queryConf.getCoreRepo();
+
+      ArrayList<HashMap<String, String>> res = new ArrayList<>();
+      while (hits.hasNext()) {
+          JsonNode hit = hits.next();
+          String repository = hit.get("_source").get("repository").asText();
+          res.add(new HashMap<>(){{
+              put("repo", repository);
+              put("isCoreRepo", repoListStr.contains(repository) ? "1" : "0");
+          }});
+      }
+
+      return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+  }
 }

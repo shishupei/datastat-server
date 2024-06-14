@@ -23,6 +23,7 @@ import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
@@ -743,5 +744,17 @@ public class QueryController {
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "per_page", required = false) Integer per_page) {
         return queryService.queryIssueLabels(request, keyword, page, per_page);
+    }
+
+    @LimitRequest(callTime = 1, callCount = 1000)
+    @RequestMapping(value = "/teamupApplyForm", method = RequestMethod.POST)
+    public String addTeamupApplyForm(HttpServletRequest request, @Valid @RequestBody TeamupApplyForm teamupApplyForm) {
+        String res = queryService.putTeamupApplyForm(request, teamupApplyForm);
+        return res;
+    }
+
+    @RequestMapping("/community/coreRepos")
+    public String queryCoreRepos(HttpServletRequest request, @RequestParam(value = "community") String community) {
+        return queryService.queryCommunityCoreRepos(request, community);
     }
 }
