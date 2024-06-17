@@ -203,6 +203,14 @@
             <version>5.9</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-web -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>6.1.6</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>
@@ -249,3 +257,4 @@
     </pluginRepositories>
 
 </project>
+
