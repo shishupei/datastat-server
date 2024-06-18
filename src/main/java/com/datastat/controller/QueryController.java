@@ -21,6 +21,7 @@ import com.datastat.model.HmsExportDataReq;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
@@ -682,5 +683,16 @@ public class QueryController {
     @RequestMapping("/community/coreRepos")
     public String queryCoreRepos(HttpServletRequest request, @RequestParam(value = "community") String community) {
         return queryService.queryCommunityCoreRepos(request, community);
+    }
+
+    @OneidToken
+    @LimitRequest(callTime = 1, callCount = 1000)
+    @RequestMapping(value = "/teamupApplyForm", method = RequestMethod.POST)
+    public String addTeamupApplyForm(HttpServletRequest request, 
+            @RequestParam String community,
+            @Valid @RequestBody TeamupApplyForm teamupApplyForm,
+            @CookieValue(value = "_Y_G_", required = false) String token) {
+        String res = queryService.putTeamupApplyForm(request, community, teamupApplyForm, token);
+        return res;
     }
 }

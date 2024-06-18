@@ -81,6 +81,7 @@ public class CustomPropertiesConfig {
     private String ecosystemRepoIndex;
     private String giteeVersionIndex;
     private String meetupApplyFormIndex;
+    private String teamupApplyFormIndex;
     private String userTagIndex;
     private String npsIndex;
     private String giteeFeatureIndex;

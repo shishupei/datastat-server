@@ -35,6 +35,7 @@ import com.datastat.model.HmsExportDataReq;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 
 import jakarta.annotation.PostConstruct;
@@ -1445,6 +1446,19 @@ public class QueryService {
             result = queryDao.queryCommunityCoreRepos(queryConf);
         }
         return result;
+    }
+
+    public String putTeamupApplyForm(HttpServletRequest request, String community, TeamupApplyForm teamupApplyForm, String token) {
+        String item = "teamupApplyForm";
+        String res = "";
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        try {
+            res = queryDao.putTeamupApplyForm(queryConf, item, teamupApplyForm, token);
+        } catch (Exception e) {
+            logger.error("exception", e);
+        }
+        return res;
     }
 }
 
