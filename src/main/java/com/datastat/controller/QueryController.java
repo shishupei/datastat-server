@@ -746,10 +746,15 @@ public class QueryController {
         return queryService.queryIssueLabels(request, keyword, page, per_page);
     }
 
+    @OneidToken
     @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "/teamupApplyForm", method = RequestMethod.POST)
-    public String addTeamupApplyForm(HttpServletRequest request, @Valid @RequestBody TeamupApplyForm teamupApplyForm) {
-        String res = queryService.putTeamupApplyForm(request, teamupApplyForm);
+    public String addTeamupApplyForm(HttpServletRequest request, 
+            @RequestParam String community,    
+            @Valid @RequestBody TeamupApplyForm teamupApplyForm,
+            @CookieValue(value = "_Y_G_", required = false) String token
+        ) {
+        String res = queryService.putTeamupApplyForm(request, community, teamupApplyForm, token);
         return res;
     }
 

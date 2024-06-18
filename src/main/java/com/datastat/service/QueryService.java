@@ -1546,13 +1546,13 @@ public class QueryService {
         return result;
     }
 
-    public String putTeamupApplyForm(HttpServletRequest request, TeamupApplyForm teamupApplyForm) {
+    public String putTeamupApplyForm(HttpServletRequest request, String community, TeamupApplyForm teamupApplyForm, String token) {
         String item = "teamupApplyForm";
         String res = "";
         QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
+        CustomPropertiesConfig queryConf = getQueryConf(request);
         try {
-            res = queryDao.putTeamupApplyForm(queryConf, item, teamupApplyForm);
+            res = queryDao.putTeamupApplyForm(queryConf, item, teamupApplyForm, token);
         } catch (Exception e) {
             logger.error("exception", e);
         }
@@ -1561,12 +1561,13 @@ public class QueryService {
 
     public String queryCommunityCoreRepos(HttpServletRequest request, String community) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String key = community.toLowerCase() + "corerepos";
-        String result = null; 
+        String key = "community_corerepos_" + community.toLowerCase();
+        String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
             result = queryDao.queryCommunityCoreRepos(queryConf);
+            redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
     }

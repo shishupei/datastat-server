@@ -3831,38 +3831,9 @@ public class QueryDao {
         return resultJsonStr(statusCode, bucket, statusText);
     }
 
-    public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm) {
+    public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm, String token) {
         Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
-        return putTeamupDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap);
-    }
-
-    public String putTeamupDataSource(String indexName, Map dataSource) {
-        LocalDateTime now = LocalDateTime.now();
-        String nowStr = now.toString().split("\\.")[0] + "+08:00";
-        dataSource.put("created_at", nowStr);
-
-        BulkRequest request = new BulkRequest();
-        request.add(new IndexRequest(indexName, "_doc", dataSource.get("name") + nowStr).source(dataSource));
-
-        String res = "{\"code\":400,\"data\":\"failed\",\"msg\":\"failed\"}";
-        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
-        if (request.requests().size() != 0) {
-            try {
-                BulkResponse bulk = restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
-                int status_code = bulk.status().getStatus();
-                if (status_code == 200) {
-                    res = "{\"code\":200,\"data\":\"success\",\"msg\":\"success\"}";
-                }
-            } catch (IOException e) {
-                logger.error("exception", e);
-            }
-        }
-        try {
-            restHighLevelClient.close();
-        } catch (IOException e) {
-            logger.error("exception", e);
-        }
-        return res;
+        return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
     }
 
     @SneakyThrows
@@ -3872,7 +3843,7 @@ public class QueryDao {
         Iterator<JsonNode> hits = dataNode.get("hits").get("hits").elements();
         
         String repoListStr = queryConf.getCoreRepo();
-
+  
         ArrayList<HashMap<String, String>> res = new ArrayList<>();
         while (hits.hasNext()) {
             JsonNode hit = hits.next();
@@ -3882,23 +3853,27 @@ public class QueryDao {
                 put("isCoreRepo", repoListStr.contains(repository) ? "1" : "0");
             }});
         }
-
-        Collections.sort(res, new Comparator<Map<String, String>>() {
+        coreReposSort(res);
+  
+        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+      }
+  
+  
+    public void coreReposSort(ArrayList<HashMap<String, String>> repos){
+        Collections.sort(repos, new Comparator<Map<String, String>>() {
             @Override
-            public int compare(Map<String, String> o1, Map<String, String> o2) {
-                String isCoreRepo1 = o1.get("isCoreRepo");
-                String isCoreRepo2 = o2.get("isCoreRepo");
-                String repo1 = o1.get("repo");
-                String repo2 = o2.get("repo");
+            public int compare(Map<String, String> repo1, Map<String, String> repo2) {
+                String isCoreRepo1 = repo1.get("isCoreRepo");
+                String isCoreRepo2 = repo2.get("isCoreRepo");
+                String repoName1 = repo1.get("repo");
+                String repoName2 = repo2.get("repo");
         
                 if (isCoreRepo1.equals(isCoreRepo2)) {
-                    return repo1.compareToIgnoreCase(repo2);
+                    return repoName1.compareToIgnoreCase(repoName2);
                 } else {
                     return isCoreRepo2.compareToIgnoreCase(isCoreRepo1);
                 }
             }
-        });
-
-        return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+      }); 
     }
 }
