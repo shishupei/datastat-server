@@ -20,6 +20,7 @@ import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
+import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
@@ -3392,5 +3393,10 @@ public class QueryDao {
         }
 
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
+    }
+
+    public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm, String token) {
+        Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
+        return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
     }
 }
