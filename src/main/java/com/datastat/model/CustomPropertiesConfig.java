@@ -163,6 +163,8 @@ public class CustomPropertiesConfig {
     private String claNameQuery;
     private String ecosystemRepoQuery;
     private String companyVersionPrQuery;
+    private String companyVersionCommentQuery;
+    private String companyVersionIssueQuery;
     private String companyVersionClocQuery;
     private String communityVersions;
     private String eurPackagesQuery;
@@ -417,9 +419,13 @@ public class CustomPropertiesConfig {
         String versionQueryStr = version.equalsIgnoreCase("all") ? "*" : version;
         if (contributeType.equalsIgnoreCase("cloc")) {
             contributesQueryStr = String.format(getCompanyVersionClocQuery(), versionQueryStr);
-        }
-        if (contributeType.equalsIgnoreCase("pr")) {
+        } else if (contributeType.equalsIgnoreCase("pr")) {
             contributesQueryStr = String.format(getCompanyVersionPrQuery(), versionQueryStr);
+        } else if (contributeType.equalsIgnoreCase("issue")) {
+            versionQueryStr = versionQueryStr.equalsIgnoreCase("*") ? "" : versionQueryStr;
+            contributesQueryStr = String.format(getCompanyVersionIssueQuery(), versionQueryStr);
+        } else if (contributeType.equalsIgnoreCase("comment")) {            
+            contributesQueryStr = String.format(getCompanyVersionCommentQuery(), versionQueryStr);
         }
         return contributesQueryStr;
     }
