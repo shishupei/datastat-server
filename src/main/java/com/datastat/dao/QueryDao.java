@@ -506,7 +506,7 @@ public class QueryDao {
         Map<String, String> companyNameAlCn = companies.get(1);
 
         String contributesQueryStr = queryConf.getCompanyContributorsQuery(queryConf, community, contributeType, timeRange, version, repo, sig);
-        String index = version == null ? queryConf.getGiteeAllIndex() : queryConf.getGiteeVersionIndex();
+        String index = (version != null && "pr".equalsIgnoreCase(contributeType)) ? queryConf.getGiteeVersionIndex() : queryConf.getGiteeAllIndex();
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, contributesQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
