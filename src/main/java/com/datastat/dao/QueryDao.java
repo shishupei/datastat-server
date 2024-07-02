@@ -3375,6 +3375,16 @@ public class QueryDao {
         return resultJsonStr(statusCode, buckets, statusText);
     }
 
+    public boolean checkQueryAllData(CustomPropertiesConfig queryConf, JsonNode newData) {
+        String[] fields = queryConf.getCheckField().split(",");
+        for(String field : fields) {
+            if (newData.get(field).asInt() == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @SneakyThrows
     public String queryCommunityCoreRepos(CustomPropertiesConfig queryConf) {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryConf.getCommunityRepoQueryStr());
@@ -3399,4 +3409,5 @@ public class QueryDao {
         Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
         return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
     }
+
 }

@@ -47,6 +47,7 @@ public class CustomPropertiesConfig {
     private String giteeUserInfoUrl;
     private String orgName;
     private String isvCountToken;
+    private String checkField;
 
     // -- index --
     private String extOsIndex;
