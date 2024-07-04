@@ -1543,8 +1543,8 @@ public class QueryDao {
             statusText = response.getStatusText();
             String responseBody = response.getResponseBody(UTF_8);
             JsonNode dataNode = objectMapper.readTree(responseBody);
-            Iterator<JsonNode> buckets = dataNode.get("aggregations").get("distinct_field").get("buckets").elements();
-            count = Lists.newArrayList(buckets).size();
+            JsonNode buckets = dataNode.get("aggregations").get("distinct_field");
+            count = buckets.get("value").asInt();
         } catch (Exception e) {
             logger.error("exception", e);
         }
