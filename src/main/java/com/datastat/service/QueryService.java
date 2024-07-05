@@ -224,18 +224,47 @@ public class QueryService {
         String item = "all";
         String key = community.toLowerCase() + item;
         String result = (String) redisDao.get(key);
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
-        String resultNew = queryDao.queryAll(queryConf, community);
 
-        try {
-            JsonNode newData = objectMapper.readTree(resultNew).get("data");
-            if (result != null && queryDao.checkQueryAllData(queryConf, newData) || result == null){
-                redisDao.set(key, resultNew, -1L);
-                result = resultNew;
+        JsonNode newData;
+        JsonNode oldData = null;
+        boolean isFlush = false;
+
+        if (result != null) {
+            JsonNode all = objectMapper.readTree(result);
+            String updateAt = all.get("update_at").asText();
+            oldData = all.get("data");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+            try {
+                Date updateDate = sdf.parse(updateAt);
+                Date now = new Date();
+                long diffs = (now.getTime() - updateDate.getTime());
+                if (diffs > Long.parseLong(env.getProperty("redis.flush.interval", "7200000"))) {
+                    isFlush = true;
+                }
+            } catch (ParseException e) {
+                logger.error("exception", e);
             }
-        } catch (Exception e) {
-            logger.error("exception: " + e.getMessage());
+        }
+
+        if (isFlush || result == null) {
+            boolean flag = false;
+            try {
+                QueryDao queryDao = getQueryDao(request);
+                CustomPropertiesConfig queryConf = getQueryConf(request);
+                String resultNew = queryDao.queryAll(queryConf, community);
+
+                JsonNode allNew = objectMapper.readTree(resultNew);
+                newData = allNew.get("data");
+                if (oldData != null) {
+                    flag = false; //TODO errorAlertService.errorAlert(community, oldData, newData);
+                }
+                if (!flag) {
+                    redisDao.set(key, resultNew, -1L);
+                    result = resultNew;
+                }
+            } catch (Exception e) {
+                logger.error("exception", e);
+            }
         }
 
         return result;
