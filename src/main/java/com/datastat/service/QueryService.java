@@ -36,6 +36,7 @@ import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
+import com.datastat.util.ClientUtil;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +49,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.security.interfaces.RSAPrivateKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
