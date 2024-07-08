@@ -256,6 +256,7 @@ public class QueryService {
         }
         if (result == null) {
             logger.error("QueryAll key is not existed");
+            return resultJsonStr(404, "error", "Redis error");
         }
         return result;
     }
