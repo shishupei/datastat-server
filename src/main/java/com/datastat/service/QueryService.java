@@ -222,11 +222,12 @@ public class QueryService {
     }
 
     public String queryAll(HttpServletRequest request, String community) throws Exception {
-        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        if (!checkCommunity(community))
+            return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "all";
         String key = community.toLowerCase() + item;
         String result = (String) redisDao.get(key);
-        Boolean isFlush = true;
+        Boolean isUpdate = true;
         try {
             if (result != null) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
@@ -234,15 +235,18 @@ public class QueryService {
                 Date updateDate = sdf.parse(updateAt);
                 Date now = new Date();
                 long diffs = (now.getTime() - updateDate.getTime());
+                // The redis cache is valid
                 if (diffs < Long.parseLong(env.getProperty("redis.flush.interval", "7200000"))) {
-                    isFlush = false;
+                    isUpdate = false;
                 }
-            } else {
+            }
+            // The redis cache is expired and needs to be updated
+            if (isUpdate) {
                 QueryDao queryDao = getQueryDao(request);
                 CustomPropertiesConfig queryConf = getQueryConf(request);
                 String resultNew = queryDao.queryAll(queryConf, community);
                 JsonNode newData = objectMapper.readTree(resultNew).get("data");
-                if (isFlush && queryDao.checkQueryAllData(queryConf, newData) || result == null){
+                if (queryDao.checkQueryAllData(queryConf, newData)) {
                     redisDao.set(key, resultNew, -1L);
                     result = resultNew;
                 }
@@ -250,7 +254,9 @@ public class QueryService {
         } catch (Exception e) {
             logger.error("queryAll exception: " + e.getMessage());
         }
-      
+        if (result == null) {
+            logger.error("QueryAll key is not existed");
+        }
         return result;
     }
 
