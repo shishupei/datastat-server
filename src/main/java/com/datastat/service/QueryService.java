@@ -224,18 +224,29 @@ public class QueryService {
         String item = "all";
         String key = community.toLowerCase() + item;
         String result = (String) redisDao.get(key);
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
-        String resultNew = queryDao.queryAll(queryConf, community);
-
+        Boolean isFlush = true;
         try {
-            JsonNode newData = objectMapper.readTree(resultNew).get("data");
-            if (result != null && queryDao.checkQueryAllData(queryConf, newData) || result == null){
-                redisDao.set(key, resultNew, -1L);
-                result = resultNew;
+            if (result != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+                String updateAt = objectMapper.readTree(result).get("update_at").asText();
+                Date updateDate = sdf.parse(updateAt);
+                Date now = new Date();
+                long diffs = (now.getTime() - updateDate.getTime());
+                if (diffs < Long.parseLong(env.getProperty("redis.flush.interval", "7200000"))) {
+                    isFlush = false;
+                }
+            } else {
+                QueryDao queryDao = getQueryDao(request);
+                CustomPropertiesConfig queryConf = getQueryConf(request);
+                String resultNew = queryDao.queryAll(queryConf, community);
+                JsonNode newData = objectMapper.readTree(resultNew).get("data");
+                if (isFlush && queryDao.checkQueryAllData(queryConf, newData) || result == null){
+                    redisDao.set(key, resultNew, -1L);
+                    result = resultNew;
+                }
             }
         } catch (Exception e) {
-            logger.error("exception: " + e.getMessage());
+            logger.error("queryAll exception: " + e.getMessage());
         }
 
         return result;
