@@ -44,6 +44,16 @@ public class SigGathering {
     @Size(max = 50, message = "the length can not exceed 50")
     private List<String> technicalSeminars;
 
+    @Pattern(regexp = "^[是|否]$", message = "value format error")
+    private String attend;
+
+    @Size(max = 50, message = "the length can not exceed 50")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
+    private String privacyVersion;
+
+    @Pattern(regexp = "^[是|否]$", message = "value format error")
+    private String acceptPrivacyVersion;
+
     public Boolean validSeminars(List<String> technicalSeminars, String templates){
         List<String>valueList = Arrays.asList(templates.split(","));
         for (String technicalSeminar : technicalSeminars) {
