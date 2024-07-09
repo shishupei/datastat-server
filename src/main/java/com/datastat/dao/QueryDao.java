@@ -2493,8 +2493,9 @@ public class QueryDao {
         String userId = getUserId(token);
         if (userId == null)
             return "{\"code\":400,\"data\":\"user failed\",\"msg\":\"user failed\"}";
-        LocalDateTime now = LocalDateTime.now();
-        String nowStr = now.toString().split("\\.")[0] + "+08:00";
+        Date now = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        String nowStr = simpleDateFormat.format(now);
         dataSource.put("created_at", nowStr);
         dataSource.put("user_id", userId);
 
