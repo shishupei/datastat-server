@@ -94,6 +94,8 @@ public class CustomPropertiesConfig {
     private String modelFoundrySHIndex;
     private String modelFoundryYiDongIndex;
     private String modelFoundryTianYiIndex;
+    private String sigGatheringIndex;
+    private String sigGatheringTemplate;
 
     // -- query str --
     private String extOsQueryStr;

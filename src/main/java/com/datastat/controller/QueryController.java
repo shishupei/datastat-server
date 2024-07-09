@@ -21,6 +21,7 @@ import com.datastat.model.HmsExportDataReq;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
@@ -693,6 +694,17 @@ public class QueryController {
             @Valid @RequestBody TeamupApplyForm teamupApplyForm,
             @CookieValue(value = "_Y_G_", required = false) String token) {
         String res = queryService.putTeamupApplyForm(request, community, teamupApplyForm, token);
+        return res;
+    }
+
+    @OneidToken
+    @LimitRequest(callTime = 1, callCount = 1000)
+    @RequestMapping(value = "/sigGathering", method = RequestMethod.POST)
+    public String addSigGathering(HttpServletRequest request, 
+            @RequestParam String community,
+            @Valid @RequestBody SigGathering sigGatherings,
+            @CookieValue(value = "_Y_G_", required = false) String token) {
+        String res = queryService.putSigGathering(request, community, sigGatherings, token);
         return res;
     }
 }

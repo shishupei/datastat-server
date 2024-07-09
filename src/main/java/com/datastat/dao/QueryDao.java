@@ -20,6 +20,7 @@ import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
+import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
 import com.datastat.model.meetup.MeetupApplyForm;
@@ -252,7 +253,7 @@ public class QueryDao {
             users = downloads;
         }
         JsonNode isvNode = objectMapper.readTree(this.queryIsvCount(queryConf, "isv")).get("data").get("isv");
-        Object isv = sigsNode == null ? null : isvNode.intValue();
+        Object isv = isvNode == null ? null : isvNode.intValue();
         contributes.put("downloads", downloads);
         contributes.put("contributors", contributorsNode.intValue());
         contributes.put("users", users);
@@ -3408,6 +3409,15 @@ public class QueryDao {
     public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm, String token) {
         Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
         return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
+    }
+
+    public String putSigGathering(CustomPropertiesConfig queryConf, String item, SigGathering sigGatherings, String token) {
+        Map sigGatheringsMap = objectMapper.convertValue(sigGatherings, Map.class);
+        ArrayList<String> errorMesseages = sigGatherings.validField(queryConf.getSigGatheringTemplate());
+        if (errorMesseages.size() > 0) {
+            return resultJsonStr(400, item, objectMapper.valueToTree(errorMesseages), "write error");
+        }
+        return putDataSource(queryConf.getSigGatheringIndex(), sigGatheringsMap, token);
     }
 
 }

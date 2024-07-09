@@ -34,6 +34,7 @@ import com.datastat.model.HmsExportDataReq;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 
@@ -1443,6 +1444,19 @@ public class QueryService {
             res = queryDao.putTeamupApplyForm(queryConf, item, teamupApplyForm, token);
         } catch (Exception e) {
             logger.error("exception", e);
+        }
+        return res;
+    }
+
+    public String putSigGathering(HttpServletRequest request, String community, SigGathering sigGatherings, String token) {
+        String item = "SigGathering";
+        String res = resultJsonStr(400, null, "failed");;
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        try {
+            res = queryDao.putSigGathering(queryConf, item, sigGatherings, token);
+        } catch (Exception e) {
+            logger.error("exception", e.getMessage());
         }
         return res;
     }
