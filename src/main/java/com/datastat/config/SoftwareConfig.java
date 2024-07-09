@@ -9,7 +9,7 @@ import com.datastat.model.CustomPropertiesConfig;
 import lombok.Data;
 
 @ConfigurationProperties(prefix = "software")
-@PropertySource(value = {"file:${user.dir}/software.properties"})
+@PropertySource(value = {"file:${user.dir}/software.properties"}, encoding = "UTF-8")
 @Configuration("softwareConf")
 @Data
 public class SoftwareConfig extends CustomPropertiesConfig {
