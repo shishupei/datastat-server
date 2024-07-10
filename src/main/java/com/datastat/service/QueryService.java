@@ -521,8 +521,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "usertypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -538,8 +538,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "sigtypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -554,8 +554,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "sig" + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -583,8 +583,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "companyusers" + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -971,7 +971,7 @@ public class QueryService {
         try {
             RSAPrivateKey privateKey = RSAUtil.getPrivateKey(env.getProperty("rsa.authing.privateKey"));
             DecodedJWT decode = JWT.decode(RSAUtil.privateDecrypt(token, privateKey));
-            String permissionList = decode.getClaim("permissionList").asString();
+            String permissionList = decode.getClaim("permission").asString();
             String[] pers = new String(Base64.getDecoder().decode(permissionList.getBytes())).split(",");
             for (String per : pers) {
                 String[] perList = per.split(":");
