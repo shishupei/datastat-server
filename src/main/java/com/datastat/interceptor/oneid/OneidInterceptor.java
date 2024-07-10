@@ -25,9 +25,10 @@ import com.datastat.config.context.QueryConfContext;
 import com.datastat.dao.RedisDao;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.util.HttpClientUtils;
+import com.datastat.util.ObjectMapperUtil;
 import com.datastat.util.RSAUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
@@ -258,7 +259,7 @@ public class OneidInterceptor implements HandlerInterceptor {
         CustomPropertiesConfig queryConf = getQueryConf(httpServletRequest);
         try {
             if (sigToken != null && sigToken.required()) {
-                List<String> pers = getUserPermission(httpServletRequest, tokenCookie, "permissions");
+                List<String> pers = getUserPermission(httpServletRequest, tokenCookie, httpServletRequest.getHeader("token"));
                 for (String per : pers) {
                     if (per.equalsIgnoreCase(queryConf.getSigAction())) {
                         return "success";
@@ -276,10 +277,9 @@ public class OneidInterceptor implements HandlerInterceptor {
         CustomPropertiesConfig queryConf = getQueryConf(httpServletRequest);
         try {
             if (companyToken != null && companyToken.required()) {
-                List<String> pers = getUserPermission(httpServletRequest, tokenCookie, "companyList");
+                List<String> pers = getUserPermission(httpServletRequest, tokenCookie, httpServletRequest.getHeader("token"));
                 for (String per : pers) {
-                    String[] perList = per.split(":");
-                    if (perList.length > 1 && perList[1].equalsIgnoreCase(queryConf.getCompanyAction())) {
+                    if (per.equalsIgnoreCase(queryConf.getCompanyAction())) {
                         return "success";
                     }
                 }
@@ -297,26 +297,52 @@ public class OneidInterceptor implements HandlerInterceptor {
         return queryConfContext.getQueryConfig(serviceType);
     }
 
-    private List<String> getUserPermission(HttpServletRequest httpServletRequest, Cookie tokenCookie, String permissions) {
-        String community = httpServletRequest.getParameter("community");
-        String oneIdHost = env.getProperty("oneid.host");
-        String s = String.format("%s/oneid/user/permissions?community=%s", oneIdHost, community);
-        try {
-            HttpResponse<JsonNode> response = Unirest.get(s)
-                    .header("token", httpServletRequest.getHeader("token"))
-                    .header("Cookie", "_Y_G_=" + tokenCookie.getValue())
-                    .asJson();
-            JSONArray jsonArray = response.getBody().getObject().getJSONObject("data").getJSONArray(permissions);
+    // private List<String> getUserPermission(HttpServletRequest httpServletRequest, Cookie tokenCookie, String permissions) {
+    //     String community = httpServletRequest.getParameter("community");
+    //     String oneIdHost = env.getProperty("oneid.host");
+    //     String s = String.format("%s/oneid/user/permissions?community=%s", oneIdHost, community);
+    //     try {
+    //         HttpResponse<JsonNode> response = Unirest.get(s)
+    //                 .header("token", httpServletRequest.getHeader("token"))
+    //                 .header("Cookie", "_Y_G_=" + tokenCookie.getValue())
+    //                 .asJson();
+    //         JSONArray jsonArray = response.getBody().getObject().getJSONObject("data").getJSONArray(permissions);
 
-            List<String> list = new ArrayList<>();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                list.add(jsonArray.getString(i));
-            }
+    //         List<String> list = new ArrayList<>();
+    //         for (int i = 0; i < jsonArray.length(); i++) {
+    //             list.add(jsonArray.getString(i));
+    //         }
+    //         return list;
+    //     } catch (Exception e) {
+    //         throw new RuntimeException(e);
+    //     }
+
+    // }
+
+    private List<String> getUserPermission(HttpServletRequest httpServletRequest, Cookie tokenCookie, String userToken) {
+        List<String> list = new ArrayList<>();
+        String token = getManageToken();
+        String tokenCookieValue = tokenCookie.getValue();
+        String response = HttpClientUtils.getHttpClient(env.getProperty("permission.api"), token, userToken, tokenCookieValue);
+        JsonNode resJson = ObjectMapperUtil.toJsonNode(response);
+        if (!resJson.has("data")) {
             return list;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+        JsonNode permissions = resJson.get("data").get("permissions");
+        for (JsonNode per : permissions) {
+            list.add(per.asText());
+        }
+        return list;
+    }
 
+    private String getManageToken() {
+        String response = HttpClientUtils.postHttpClient(env.getProperty("manager.token.api"), env.getProperty("manager.token.body"));
+        try {
+            JsonNode resJson = ObjectMapperUtil.toJsonNode(response);
+            return resJson.get("token").asText();
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     /**

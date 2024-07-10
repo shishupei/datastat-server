@@ -14,6 +14,7 @@ package com.datastat.controller;
 import com.datastat.aop.LimitRequest;
 import com.datastat.aop.RateLimit;
 import com.datastat.interceptor.authentication.UserLoginToken;
+import com.datastat.interceptor.oneid.CompanyToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
@@ -282,6 +283,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/usercontribute")
     public String queryCompanyUserContribute(HttpServletRequest request,
                                              @RequestParam(value = "community") String community,
@@ -293,6 +295,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/sigcontribute")
     public String queryCompanySigcontribute(HttpServletRequest request,
                                             @RequestParam(value = "community") String community,
@@ -304,6 +307,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/sigdetails")
     public String queryCompanySigDetails(HttpServletRequest request,
                                          @RequestParam(value = "community") String community,
@@ -323,6 +327,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/users")
     public String queryCompanyUsers(HttpServletRequest request,
                                     @RequestParam(value = "community") String community,
