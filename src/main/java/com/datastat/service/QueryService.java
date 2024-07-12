@@ -1457,7 +1457,7 @@ public class QueryService {
         try {
             res = queryDao.putSigGathering(queryConf, item, sigGatherings, token);
         } catch (Exception e) {
-            logger.error("exception", e.getMessage());
+            logger.error("SigGathering exception", e.getMessage());
         }
         return res;
     }

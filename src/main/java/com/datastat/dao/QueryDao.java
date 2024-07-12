@@ -79,6 +79,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -3428,7 +3429,14 @@ public class QueryDao {
         if (errorMesseages.size() > 0) {
             return resultJsonStr(400, item, objectMapper.valueToTree(errorMesseages), "write error");
         }
-        return putDataSource(queryConf.getSigGatheringIndex(), sigGatheringsMap, token);
+        String result =  putDataSource(queryConf.getSigGatheringIndex(), sigGatheringsMap, token);
+
+        CompletableFuture<String> futureResult = CompletableFuture.supplyAsync(() -> {
+            return CodeUtil.sendCode("phone", "+86" + sigGatherings.getPhone(), env);
+        });
+        futureResult.thenAccept(resp -> logger.info("Send SMS Msg：" + resp));
+
+        return result;
     }
 
 }
