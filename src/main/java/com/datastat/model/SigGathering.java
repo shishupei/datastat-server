@@ -15,6 +15,7 @@ import java.util.*;
 
 import com.datastat.aop.moderation.ModerationValid;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -49,10 +50,12 @@ public class SigGathering {
     @Pattern(regexp = "^(agree|refuse)$", message = "value format error")
     private String attend;
 
+    @NotBlank
     @Size(max = 20, message = "the length can not exceed 20")
     @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String privacyVersion;
 
+    @NotBlank
     @Pattern(regexp = "^(agree|refuse)$", message = "value format error")
     private String acceptPrivacyVersion;
 
