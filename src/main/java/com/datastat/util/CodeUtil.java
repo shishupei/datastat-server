@@ -108,7 +108,6 @@ public class CodeUtil {
         if (null != signature && !signature.isEmpty()) {
             map.put("signature", signature);
         }
-        System.out.println(map);
 
         StringBuilder sb = new StringBuilder();
         String temp = "";
