@@ -3412,7 +3412,17 @@ public class QueryDao {
         return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
     }
 
+    @SneakyThrows
     public String putSigGathering(CustomPropertiesConfig queryConf, String item, SigGathering sigGatherings, String token) {
+        String userId = getUserId(token);
+        Response response = esAsyncHttpUtil.executeCount(esUrl, queryConf.getSigGatheringIndex(),
+                String.format(queryConf.getSigGatheringUserCount(), userId)).get();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        long count = dataNode.get("count").asLong();
+        if (count > Integer.parseInt(env.getProperty("register.cnt", "2"))) {
+            return resultJsonStr(400, null, "Repeat registration");
+        }
         Map sigGatheringsMap = objectMapper.convertValue(sigGatherings, Map.class);
         ArrayList<String> errorMesseages = sigGatherings.validField(queryConf.getSigGatheringTemplate());
         if (errorMesseages.size() > 0) {

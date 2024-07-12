@@ -198,6 +198,7 @@ public class CustomPropertiesConfig {
     private String repoDeveloperQueryStr;
     private String viewCountQueryStr;
     private String coreRepo;
+    private String sigGatheringUserCount;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
