@@ -3421,7 +3421,8 @@ public class QueryDao {
         String responseBody = response.getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(responseBody);
         long count = dataNode.get("count").asLong();
-        if (count > Integer.parseInt(env.getProperty("register.cnt", "2"))) {
+        // user submits an application no more than twice
+        if (count >= Integer.parseInt(env.getProperty("register.cnt", "2"))) {
             return resultJsonStr(400, null, "Repeat registration");
         }
         Map sigGatheringsMap = objectMapper.convertValue(sigGatherings, Map.class);
@@ -3434,7 +3435,7 @@ public class QueryDao {
         CompletableFuture<String> futureResult = CompletableFuture.supplyAsync(() -> {
             return CodeUtil.sendCode("phone", "+86" + sigGatherings.getPhone(), env);
         });
-        futureResult.thenAccept(resp -> logger.info("Send SMS Msg：" + resp));
+        futureResult.thenAccept(resp -> logger.info("Send SMS Msg: " + resp));
 
         return result;
     }
