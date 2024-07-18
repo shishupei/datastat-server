@@ -13,8 +13,6 @@ package com.datastat.model;
 
 import java.util.*;
 
-import com.datastat.aop.moderation.ModerationValid;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -60,8 +58,6 @@ public class SigGathering {
     private String acceptPrivacyVersion;
 
     @Size(max = 1000, message = "the length can not exceed 1000")
-    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
-    @ModerationValid
     private String others;
 
     public Boolean validSeminars(List<String> technicalSeminars, String templates){
