@@ -1,13 +1,20 @@
 package com.datastat.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
 import lombok.SneakyThrows;
 
 public class ModerationUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(ModerationUtil.class);
 
     public static String getHuaweiCloudToken(String body, String username, String password, String domain, String endpoint) {
         try {
@@ -27,16 +34,26 @@ public class ModerationUtil {
 
     @SneakyThrows
     public static boolean moderation(String url, String text, String token) {
-        String body = String.format("{\"items\":[{\"text\":\"%s\",\"type\":\"content\"}]}", text);
-        HttpResponse<String> response = Unirest.post(url)
-                    .header("X-Auth-Token", token)
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .asString();
         ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode itemNode = objectMapper.createObjectNode();
+        ArrayNode itemsNode = objectMapper.createArrayNode();
+        itemNode.put("text", text);
+        itemNode.put("type", "content");
+        itemsNode.add(itemNode);
+
+        ObjectNode bodyNode = objectMapper.createObjectNode();
+        bodyNode.set("items", itemsNode);
+        String body = objectMapper.writeValueAsString(bodyNode);
+
+        HttpResponse<String> response = Unirest.post(url)
+                .header("X-Auth-Token", token)
+                .header("Content-Type", "application/json")
+                .body(body)
+                .asString();
         JsonNode resp = objectMapper.readTree(response.getBody());
         if (response.getStatus() == 200 && resp.get("result").get("suggestion").asText().equals("pass"))
             return true;
+        logger.info(response.getBody());
         return false;
     }
 }
