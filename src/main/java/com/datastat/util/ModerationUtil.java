@@ -34,6 +34,9 @@ public class ModerationUtil {
 
     @SneakyThrows
     public static boolean moderation(String url, String text, String token) {
+        if (text == null) {
+            return true;
+        }
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode itemNode = objectMapper.createObjectNode();
         ArrayNode itemsNode = objectMapper.createArrayNode();

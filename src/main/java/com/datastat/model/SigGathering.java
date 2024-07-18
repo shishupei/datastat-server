@@ -13,8 +13,6 @@ package com.datastat.model;
 
 import java.util.*;
 
-import com.datastat.aop.moderation.ModerationValid;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
