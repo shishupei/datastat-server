@@ -60,8 +60,6 @@ public class SigGathering {
     private String acceptPrivacyVersion;
 
     @Size(max = 1000, message = "the length can not exceed 1000")
-    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
-    @ModerationValid
     private String others;
 
     public Boolean validSeminars(List<String> technicalSeminars, String templates){
