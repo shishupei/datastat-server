@@ -161,7 +161,7 @@ public class EsQueryUtils {
         return resultJsonStr(200, s, "ok", Map.of("totalCount", totalCount));
     }
 
-    public String esScroll(RestHighLevelClient restHighLevelClient, String item, String indexName,
+    public ArrayList<Object> esScroll(RestHighLevelClient restHighLevelClient, String item, String indexName,
                            int pageSize, SearchSourceBuilder sourceBuilder) {
         SearchRequest request = new SearchRequest(indexName);
         request.scroll(TimeValue.timeValueMinutes(2));
@@ -170,7 +170,7 @@ public class EsQueryUtils {
         sourceBuilder.size(pageSize);
         request.source(sourceBuilder);
 
-        ArrayList<Object> list = new ArrayList<>();
+        ArrayList<Object> reslist = new ArrayList<>();
         long totalCount = 0L;
         String scrollId = null;
         try {
@@ -180,7 +180,7 @@ public class EsQueryUtils {
 
             for (SearchHit hit : response.getHits().getHits()) {
                 Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-                list.add(sourceAsMap);
+                reslist.add(sourceAsMap);
             }
 
             while (true) {
@@ -191,13 +191,13 @@ public class EsQueryUtils {
                 if (hits == null || hits.length < 1) break;
                 for (SearchHit hit : hits) {
                     Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-                    list.add(sourceAsMap);
+                    reslist.add(sourceAsMap);
                 }
             }
 
         } catch (Exception ex) {
             logger.error("exception", ex);
-            return resultJsonStr(400, item, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
+            reslist = null;
         } finally {
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(scrollId);
@@ -208,7 +208,7 @@ public class EsQueryUtils {
             }
         }
 
-        return resultJsonStr(200, list, "ok", Map.of("totalCount", totalCount));
+        return reslist;
     }
 
     public String esScrollFromId(RestHighLevelClient client, String item, int pageSize, String indexName, String lastCursor, SearchSourceBuilder sourceBuilder) {
@@ -609,7 +609,7 @@ public class EsQueryUtils {
         return "{\"code\":" + code + ",\"data\":" + data + ",\"msg\":\"" + msg + "\"}";
     }
 
-    private String resultJsonStr(int code, Object data, String msg, Map<String, Object> map) {
+    protected String resultJsonStr(int code, Object data, String msg, Map<String, Object> map) {
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", code);
         resMap.put("data", data);

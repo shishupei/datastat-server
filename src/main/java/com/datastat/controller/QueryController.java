@@ -24,6 +24,7 @@ import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
+import com.datastat.model.dto.ContributeRequestParams;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
@@ -711,5 +712,10 @@ public class QueryController {
             @CookieValue(value = "_Y_G_", required = false) String token) {
         String res = queryService.putSigGathering(request, community, sigGatherings, token);
         return res;
+    }
+
+    @RequestMapping("/repo/issues")
+    public String queryRepoIssues(HttpServletRequest request, ContributeRequestParams params) throws Exception {
+        return queryService.queryRepoIssues(request, params);
     }
 }

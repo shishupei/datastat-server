@@ -48,6 +48,8 @@ public class CustomPropertiesConfig {
     private String orgName;
     private String isvCountToken;
     private String checkField;
+    private String baseUrl;
+    private String feedbackField;
 
     // -- index --
     private String extOsIndex;
@@ -199,6 +201,7 @@ public class CustomPropertiesConfig {
     private String viewCountQueryStr;
     private String coreRepo;
     private String sigGatheringUserCount;
+    private String repoIssueField;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
