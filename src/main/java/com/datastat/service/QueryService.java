@@ -36,6 +36,7 @@ import com.datastat.model.NpsBody;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
+import com.datastat.model.dto.ContributeRequestParams;
 import com.datastat.model.meetup.MeetupApplyForm;
 
 import jakarta.annotation.PostConstruct;
@@ -1460,6 +1461,38 @@ public class QueryService {
             logger.error("SigGathering exception", e.getMessage());
         }
         return res;
+    }
+
+    public String queryRepoIssues(HttpServletRequest request, ContributeRequestParams params) throws Exception {
+        String key = params.getCommunity() + params.getRepo() + params.getSort() + params.getFilter() + "feedbackissue";
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryRepoIssues(queryConf, params);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode resultJson = objectMapper.readTree(result);
+        if (resultJson.get("code").asInt() != 200) {
+            return resultJsonStr(404, null, "error");
+        }
+        ArrayList<HashMap<String, Object>> resList = objectMapper.convertValue(resultJson.get("data"),
+                new TypeReference<ArrayList<HashMap<String, Object>>>() {
+                });
+        ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+        int page = params.getPage() == null ? 1 : params.getPage();
+        int pageSize = params.getPageSize() == null ? 10 : params.getPageSize();
+        Map data = PageUtils.getDataByPage(page, pageSize, resList);    
+        dataList.add((HashMap<String, Object>) data);
+        
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", dataList);
+        resMap.put("msg", "success");
+        result = objectMapper.valueToTree(resMap).toString();
+        return result;
     }
 }
 

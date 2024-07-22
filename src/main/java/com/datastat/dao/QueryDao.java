@@ -23,6 +23,7 @@ import com.datastat.model.SigDetailsMaintainer;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
+import com.datastat.model.dto.ContributeRequestParams;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
@@ -619,8 +620,11 @@ public class QueryDao {
         String resultInfo = esQueryUtils.esScrollFromId(restHighLevelClient, item, Integer.parseInt(pageSize),
                 queryConf.getBuildCheckResultIndex(), lastCursor, queryResultSourceBuilder);
         SearchSourceBuilder mistakeSourceBuilder = assembleMistakeSourceBuilder("update_at", queryBody);
-        String mistakeInfoStr = esQueryUtils.esScroll(restHighLevelClient, item, queryConf.getBuildCheckMistakeIndex(), 5000, mistakeSourceBuilder);
-
+        ArrayList<Object> mistakeInfoList = esQueryUtils.esScroll(restHighLevelClient, item, queryConf.getBuildCheckMistakeIndex(), 5000, mistakeSourceBuilder);
+        String mistakeInfoStr = ResultUtil.resultJsonStr(400, item, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
+        if (mistakeInfoList != null) {
+            mistakeInfoStr = ResultUtil.resultJsonStr(200, mistakeInfoList, "ok", Map.of("totalCount", mistakeInfoList.size()));
+        }
         ArrayList<ObjectNode> finalResultJSONArray = new ArrayList<>();
         int totalCount = 0;
         String cursor = "";
@@ -3440,4 +3444,40 @@ public class QueryDao {
         return result;
     }
 
+    @SneakyThrows
+    public String queryRepoIssues(CustomPropertiesConfig queryConf, ContributeRequestParams params) {
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        String[] includeFields = queryConf.getRepoIssueField().split(",");
+        searchSourceBuilder.fetchSource(includeFields, null);
+
+        String filter = params.getFilter() == null ? "*" : params.getFilter();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.termQuery("is_gitee_issue", 1));
+        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("is_removed", 1));
+        boolQueryBuilder.must(QueryBuilders.termQuery("gitee_repo.keyword", queryConf.getBaseUrl() + params.getRepo()));
+        boolQueryBuilder.must(QueryBuilders.wildcardQuery("issue_customize_state.keyword", filter)); 
+        searchSourceBuilder.query(boolQueryBuilder);
+        if ("asc".equalsIgnoreCase(params.getSort())) {
+            searchSourceBuilder.sort("created_at", SortOrder.ASC);
+        } else {
+            searchSourceBuilder.sort("created_at", SortOrder.DESC);
+        }
+
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        ArrayList<Object> resultInfoList = esQueryUtils.esScroll(restHighLevelClient, "issue", queryConf.getGiteeAllIndex(), 1000, searchSourceBuilder);
+        String resultInfo = ResultUtil.resultJsonStr(400, "issue", ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
+        if (resultInfoList != null) { 
+            ArrayList<HashMap<String, Object>> resList = objectMapper.convertValue(resultInfoList,
+                new TypeReference<ArrayList<HashMap<String, Object>>>() {
+                });
+            resultInfoList = new ArrayList<>();
+            for (HashMap<String, Object> result : resList) {
+                String[] body = ((String) result.get("body")).split(queryConf.getFeedbackField());
+                result.put("feedback", body[body.length - 1]);
+                resultInfoList.add(result);
+            }
+            resultInfo = ResultUtil.resultJsonStr(200, resultInfoList, "ok", Map.of("totalCount", resultInfoList.size()));
+        }
+        return resultInfo;
+    }
 }
