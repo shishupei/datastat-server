@@ -609,7 +609,7 @@ public class EsQueryUtils {
         return "{\"code\":" + code + ",\"data\":" + data + ",\"msg\":\"" + msg + "\"}";
     }
 
-    protected String resultJsonStr(int code, Object data, String msg, Map<String, Object> map) {
+    private String resultJsonStr(int code, Object data, String msg, Map<String, Object> map) {
         HashMap<String, Object> resMap = new HashMap<>();
         resMap.put("code", code);
         resMap.put("data", data);
