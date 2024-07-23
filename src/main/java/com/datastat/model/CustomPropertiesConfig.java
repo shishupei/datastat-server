@@ -50,6 +50,7 @@ public class CustomPropertiesConfig {
     private String checkField;
     private String baseUrl;
     private String feedbackField;
+    private String softwareMaintainerIndex;
 
     // -- index --
     private String extOsIndex;
@@ -191,7 +192,6 @@ public class CustomPropertiesConfig {
     private String modelFoundryDownloadQueryStr;
     private String modelFoundryDownloadTrendQueryStr;
     private String repoMaintainerQuery;
-    private String repoMaintainerTopQuery;
     private String softwareInfoQuery;
     private String repoSigInfoQuery;
     private String applicationDownloadQuery;

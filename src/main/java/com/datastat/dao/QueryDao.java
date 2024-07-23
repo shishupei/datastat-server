@@ -30,12 +30,10 @@ import com.datastat.model.yaml.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.*;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.maxmind.geoip2.DatabaseReader;
@@ -90,7 +88,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -2119,12 +2116,7 @@ public class QueryDao {
 
     protected String getCompanyNames(String name) {
         ArrayList<String> res = getCompanyNameList(name);
-        String names = "(";
-        for (String r : res) {
-            names = names + "\\\"" + r + "\\\",";
-        }
-        names = names + ")";
-        return names;
+        return getFilterList(res);
     }
 
     protected ArrayList<HashMap<String, Object>> getData(QueryDao queryDao, CustomPropertiesConfig queryConf, String index, String queryStr) {
@@ -3134,37 +3126,18 @@ public class QueryDao {
             repos.add(orgName + "/" + repo);
         }
         String query = String.format(queryConf.getRepoMaintainerQuery(), getFilterList(repos));
-        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSoftwareMaintainerIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
         JsonNode hits = dataNode.get("hits").get("hits");
         if (!hits.elements().hasNext()) {
             return resultJsonStr(400, null, "repo error");
         }
-        JsonNode hit = hits.get(0);
-        JsonNode maintainers = hit.get("_source").get("maintainers");
-        ArrayList<String> userList = objectMapper.readValue(maintainers.traverse(), new TypeReference<ArrayList<String>>(){});
-
-        String maintainer = pickMaintainer(queryConf, userList, timeRange);
-        JsonNode maintainerInfos = hit.get("_source").get("maintainer_info");
-        for (JsonNode info : maintainerInfos) {
-            if (maintainer != null && maintainer.equals(info.get("gitee_id").asText())) {
-                return resultJsonStr(200, objectMapper.valueToTree(info), "ok");
-            }
-        }
-        return resultJsonStr(400, null, "query error");
-    }
-
-    @SneakyThrows
-    public String pickMaintainer(CustomPropertiesConfig queryConf, ArrayList<String> userList, String timeRange) {
-        String query = queryConf.getQueryStrWithTimeRange(queryConf.getRepoMaintainerTopQuery(), timeRange, getFilterList(userList));
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
-        String resBody = future.get().getResponseBody(UTF_8);
-        JsonNode dataNode = objectMapper.readTree(resBody);
-        JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
-        if (buckets.elements().hasNext()) {
-            return buckets.get(0).get("key").asText();
-        }
-        return null;
+        JsonNode source = hits.get(0).get("_source");
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("gitee_id", source.get("user_login"));
+        result.put("name", source.get("name"));
+        result.put("email", source.get("email"));
+        return resultJsonStr(200, objectMapper.valueToTree(result), "ok");
     }
 
     @SneakyThrows
