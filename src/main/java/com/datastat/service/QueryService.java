@@ -37,6 +37,7 @@ import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.dto.ContributeRequestParams;
+import com.datastat.model.dto.NpsIssueBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 
 import jakarta.annotation.PostConstruct;
@@ -252,7 +253,7 @@ public class QueryService {
                 }
             }
         } catch (Exception e) {
-            logger.error("queryAll exception: " + e.getMessage());
+            logger.error("queryAll exception - {}" + e.getMessage());
         }
         if (result == null) {
             logger.error("QueryAll key is not existed");
@@ -1458,7 +1459,7 @@ public class QueryService {
         try {
             res = queryDao.putSigGathering(queryConf, item, sigGatherings, token);
         } catch (Exception e) {
-            logger.error("SigGathering exception", e.getMessage());
+            logger.error("SigGathering exception - {}", e.getMessage());
         }
         return res;
     }
@@ -1494,5 +1495,13 @@ public class QueryService {
         result = objectMapper.valueToTree(resMap).toString();
         return result;
     }
+
+    public String putNpsIssue(HttpServletRequest request, String community, NpsIssueBody body, String token) {
+        if (!checkCommunity(community) && !community.equals("xihe")) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        return queryDao.putNpsIssue(queryConf, community, body, token);
+    }
+
 }
 

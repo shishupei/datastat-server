@@ -50,7 +50,9 @@ public class CustomPropertiesConfig {
     private String checkField;
     private String baseUrl;
     private String feedbackField;
-    private String softwareMaintainerIndex;
+    private String npsIssueFormat;
+    private String npsIssueTitleFormat;
+    private String postIssueUrl;
 
     // -- index --
     private String extOsIndex;
@@ -99,6 +101,7 @@ public class CustomPropertiesConfig {
     private String modelFoundryTianYiIndex;
     private String sigGatheringIndex;
     private String sigGatheringTemplate;
+    private String softwareMaintainerIndex;
 
     // -- query str --
     private String extOsQueryStr;
