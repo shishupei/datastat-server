@@ -70,7 +70,7 @@ public class CodeUtil {
                     break;
             }
         } catch (Exception e) {
-            logger.error("Sendcode Error", e.getMessage());
+            logger.error("Sendcode Error - {}", e.getMessage());
         }
         
         return resMsg;
@@ -116,7 +116,7 @@ public class CodeUtil {
             try {
                 temp = URLEncoder.encode(map.get(s), "UTF-8");
             } catch (Exception e) {
-                logger.error("BuildSmsBody Error", e.getMessage());
+                logger.error("BuildSmsBody Error - {}", e.getMessage());
             }
             sb.append(s).append("=").append(temp).append("&");
         }
@@ -148,7 +148,7 @@ public class CodeUtil {
             md.update((nonce + time + appSecret).getBytes());
             passwordDigest = md.digest();
         } catch (Exception e) {
-            logger.error("BuildWsseHeader Error", e.getMessage());
+            logger.error("BuildWsseHeader Error - {}", e.getMessage());
         }
 
         // PasswordDigest

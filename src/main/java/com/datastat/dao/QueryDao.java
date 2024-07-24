@@ -13,6 +13,7 @@ package com.datastat.dao;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.datastat.constant.Constant;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.IsvCount;
@@ -24,6 +25,7 @@ import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
 import com.datastat.model.dto.ContributeRequestParams;
+import com.datastat.model.dto.NpsIssueBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
@@ -2481,7 +2483,7 @@ public class QueryDao {
             DecodedJWT decode = JWT.decode(RSAUtil.privateDecrypt(token, privateKey));
             userId = decode.getAudience().get(0);
         } catch (Exception e) {
-            logger.error("exception", e);
+            logger.error("parse token exception - {}", e.getMessage());
         }
         return userId;
     }
@@ -3285,7 +3287,7 @@ public class QueryDao {
               bucket.put("repo",item.get("key").asText());
               bucket.put("download",item.get("details").get("buckets").get(0).get("sum").get("value").asInt());
             } catch (Exception e) {
-              logger.error("function queryModelFoundryCountSH get error", e.getMessage());
+              logger.error("function queryModelFoundryCountSH get error - {}", e.getMessage());
             }
             buckets.add(bucket);
           }
@@ -3453,4 +3455,52 @@ public class QueryDao {
         }
         return resultInfo;
     }
+
+    public String putNpsIssue(CustomPropertiesConfig queryConf, String community, NpsIssueBody body, String token) {
+        HashMap<String, Object> resMap = objectMapper.convertValue(body, new TypeReference<HashMap<String, Object>>() {});
+        if (token != null) {
+            resMap.put("userId", getUserId(token));
+        }
+        String owner = Constant.FEEDBACK_OWNER;
+        String repo = Constant.FEEDBACK_REPO;
+        if (body.getSrcRepo() != null && body.getSrcRepo().contains(Constant.SRC_OPENEULER)) {   
+            String[] path = body.getSrcRepo().split("/");
+            owner = Constant.SRC_OPENEULER;
+            repo = path[path.length - 1];
+        }
+        try{
+            Date now = new Date();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+            String nowStr = simpleDateFormat.format(now);
+            String uuid = UUID.randomUUID().toString();
+            resMap.put("created_at", nowStr);
+            String title = String.format(queryConf.getNpsIssueTitleFormat(), body.getType(), body.getName(), body.getVersion());
+            String content = String.format(queryConf.getNpsIssueFormat(), body.getFeedbackPageUrl(), body.getFeedbackValue(), body.getFeedbackText());
+            String url = String.format(queryConf.getPostIssueUrl(), owner);
+
+            HashMap<String, Object> postBody = new HashMap<>();
+            postBody.put("access_token", queryConf.getAccessToken());
+            postBody.put("title", title);
+            postBody.put("body", content); 
+            postBody.put("owner", owner);
+            postBody.put("repo", repo);
+            String postBodyStr = objectMapper.writeValueAsString(postBody);
+            HttpClientUtils.postHttpClient(url, postBodyStr);
+
+            BulkRequest request = new BulkRequest();
+            RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+            IndexRequest indexRequest = new IndexRequest(queryConf.getNpsIndex());
+            indexRequest.id(uuid);
+            indexRequest.source(resMap, XContentType.JSON);
+            request.add(indexRequest);
+            if (request.requests().size() != 0)
+                restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+            restHighLevelClient.close();
+            return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
+        } catch (Exception e) {
+            logger.error("nps issue exception - {}", e.getMessage());
+            return resultJsonStr(400, null, "error");
+        }
+    }
+
 }
