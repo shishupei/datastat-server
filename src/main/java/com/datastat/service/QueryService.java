@@ -1357,11 +1357,12 @@ public class QueryService {
     }
 
 
-    public String callback(HttpServletRequest request, HmsExportDataReq req) {
+    public String callback(HttpServletRequest request, String path, HmsExportDataReq req) {
+        path = path == null ? "pro" : path;
         String dataPath = req.getFilePath();
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("foundry");
-        queryDao.putExportData(queryConf, dataPath);
+        queryDao.putExportData(queryConf, path, dataPath);
         return resultJsonStr(0, null, "success");
     }
 

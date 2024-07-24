@@ -3185,11 +3185,12 @@ public class QueryDao {
         return resultJsonStr(200, total, "ok");
     }
 
-    public int putExportData(CustomPropertiesConfig queryConf, String dataPath) {
+    public int putExportData(CustomPropertiesConfig queryConf, String path, String dataPath) {
         int status_code = 400;
         String[] paths = dataPath.split(".csv")[0].split("/");
         String fileName = paths[paths.length - 1];
         String downloadDir = env.getProperty("export_path") + fileName;
+        String index = queryConf.getExportWebsiteViewPathIndex(path);
         try {
             List<HashMap<String, Object>> documents = CsvFileUtil.getZipFile(dataPath, downloadDir);
             BulkRequest bulkRequest = new BulkRequest();
@@ -3206,8 +3207,9 @@ public class QueryDao {
                 DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
                 String created_at = offsetDateTime.format(outputFormatter);
                 document.put("created_at", created_at);
-                IndexRequest indexRequest = new IndexRequest(queryConf.getExportWebsiteViewIndex());
-                indexRequest.id(UUID.randomUUID().toString());
+                IndexRequest indexRequest = new IndexRequest(index);
+                String docId = document.get("event").toString() + document.get("event_session_name").toString() + created_at;
+                indexRequest.id(docId);
                 indexRequest.source(document, XContentType.JSON);
                 bulkRequest.add(indexRequest);
             }
@@ -3217,7 +3219,7 @@ public class QueryDao {
             }
             restHighLevelClient.close();
         } catch (Exception e) {
-            logger.error("putExportData exception", e);
+            logger.error("putExportData exception - {}", e.getMessage());
         }
         return status_code;
     }
@@ -3430,7 +3432,8 @@ public class QueryDao {
         boolQueryBuilder.must(QueryBuilders.termQuery("is_gitee_issue", 1));
         boolQueryBuilder.mustNot(QueryBuilders.matchQuery("is_removed", 1));
         boolQueryBuilder.must(QueryBuilders.termQuery("gitee_repo.keyword", queryConf.getBaseUrl() + params.getRepo()));
-        boolQueryBuilder.must(QueryBuilders.wildcardQuery("issue_customize_state.keyword", filter)); 
+        boolQueryBuilder.must(QueryBuilders.wildcardQuery("issue_customize_state.keyword", filter));
+        boolQueryBuilder.must(QueryBuilders.queryStringQuery(queryConf.getNpsIssueFilter()));
         searchSourceBuilder.query(boolQueryBuilder);
         if ("asc".equalsIgnoreCase(params.getSort())) {
             searchSourceBuilder.sort("created_at", SortOrder.ASC);

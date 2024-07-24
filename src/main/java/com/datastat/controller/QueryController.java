@@ -651,8 +651,9 @@ public class QueryController {
     }
 
     @RequestMapping(value = "/agc/analytics/callback", method = RequestMethod.POST)
-    public String callback(HttpServletRequest request, @RequestBody @Valid HmsExportDataReq req) {
-        return queryService.callback(request, req);
+    public String callback(HttpServletRequest request, @RequestParam(value = "path", required = false) String path,
+            @RequestBody @Valid HmsExportDataReq req) {
+        return queryService.callback(request, path, req);
     }
 
     @RequestMapping(value = "/isv/count", method = RequestMethod.POST)

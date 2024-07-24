@@ -53,6 +53,7 @@ public class CustomPropertiesConfig {
     private String npsIssueFormat;
     private String npsIssueTitleFormat;
     private String postIssueUrl;
+    private String npsIssueFilter;
 
     // -- index --
     private String extOsIndex;
@@ -95,6 +96,7 @@ public class CustomPropertiesConfig {
     private String softwareIndex;
     private String aggContributorsIndex;
     private String exportWebsiteViewIndex;
+    private String exportWebsiteTelecomIndex;
     private String isvCountIndex;
     private String modelFoundrySHIndex;
     private String modelFoundryYiDongIndex;
@@ -617,6 +619,16 @@ public class CustomPropertiesConfig {
             return getModelFoundryTianYiIndex();
         } else if (path.equalsIgnoreCase("pro")){
             return getModelFoundryIndex();
+        } else {
+            return null;
+        }
+    }
+    
+    public String  getExportWebsiteViewPathIndex(String path) {
+        if (path.equalsIgnoreCase("telecom")) {
+            return getExportWebsiteTelecomIndex();
+        }  else if (path.equalsIgnoreCase("pro")){
+            return getExportWebsiteViewIndex();
         } else {
             return null;
         }
