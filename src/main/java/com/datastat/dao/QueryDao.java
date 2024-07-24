@@ -3488,7 +3488,7 @@ public class QueryDao {
             postBody.put("owner", owner);
             postBody.put("repo", repo);
             String postBodyStr = objectMapper.writeValueAsString(postBody);
-            // HttpClientUtils.postHttpClient(url, postBodyStr);
+            HttpClientUtils.postHttpClient(url, postBodyStr);
 
             BulkRequest request = new BulkRequest();
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
