@@ -3168,7 +3168,7 @@ public class QueryDao {
 
     @SneakyThrows
     public String queryRepoSigInfoList(CustomPropertiesConfig queryConf, String community, String repo) {
-        String repoQuery = repo == null ? "*" : Constant.SRC_OPENEULER + "/" + repo;  
+        String repoQuery = repo == null ? "*" : "\\\"" + Constant.SRC_OPENEULER + "/" + repo + "\\\"";  
         String query = String.format(queryConf.getRepoSigInfoListQuery(), repoQuery);
         String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
