@@ -2118,7 +2118,7 @@ public class QueryDao {
 
     protected String getCompanyNames(String name) {
         ArrayList<String> res = getCompanyNameList(name);
-        return getFilterList(res);
+        return ArrayListUtil.getFilterList(res);
     }
 
     protected ArrayList<HashMap<String, Object>> getData(QueryDao queryDao, CustomPropertiesConfig queryConf, String index, String queryStr) {
@@ -3111,15 +3111,6 @@ public class QueryDao {
         return resList;
     }
 
-    protected String getFilterList(ArrayList<String> res) {
-        String names = "(";
-        for (String r : res) {
-            names = names + "\\\"" + r + "\\\",";
-        }
-        names = names + ")";
-        return names;
-    }
-
     @SneakyThrows
     public String queryRepoMaintainer(CustomPropertiesConfig queryConf, String community, String repo, String timeRange) {
         ArrayList<String> repos = new ArrayList<>();
@@ -3127,7 +3118,7 @@ public class QueryDao {
         for (String orgName : orgNames) {
             repos.add(orgName + "/" + repo);
         }
-        String query = String.format(queryConf.getRepoMaintainerQuery(), getFilterList(repos));
+        String query = String.format(queryConf.getRepoMaintainerQuery(), ArrayListUtil.getFilterList(repos));
         String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSoftwareMaintainerIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
         JsonNode hits = dataNode.get("hits").get("hits");
@@ -3163,7 +3154,7 @@ public class QueryDao {
         for (String orgName : orgNames) {
             repos.add(orgName + "/" + repo);
         }
-        String query = String.format(queryConf.getRepoSigInfoQuery(), getFilterList(repos));
+        String query = String.format(queryConf.getRepoSigInfoQuery(), ArrayListUtil.getFilterList(repos));
         String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
         JsonNode hits = dataNode.get("hits").get("hits");
@@ -3173,6 +3164,27 @@ public class QueryDao {
         JsonNode hit = hits.get(0);
         JsonNode sigName = hit.get("_source").get("sig_name");
         return resultJsonStr(200, objectMapper.valueToTree(sigName), "ok");
+    }
+
+    @SneakyThrows
+    public String queryRepoSigInfoList(CustomPropertiesConfig queryConf, String community, String repo) {
+        String repoQuery = repo == null ? "*" : Constant.SRC_OPENEULER + "/" + repo;  
+        String query = String.format(queryConf.getRepoSigInfoListQuery(), repoQuery);
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("repos").get("buckets").elements();
+        ArrayList<Map<String, Object>> resMap = new ArrayList<>(); 
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            Iterator<JsonNode> sigBucket = bucket.get("sigs").get("buckets").elements();
+            if (sigBucket.hasNext()) {
+                Map<String, Object> info = new HashMap<>();
+                String[] splits = bucket.get("key").asText().split("/");
+                info.put(splits[splits.length - 1], sigBucket.next().get("key"));
+                resMap.add(info);
+            }
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(resMap), "ok");
     }
 
     @SneakyThrows
@@ -3208,7 +3220,7 @@ public class QueryDao {
                 String created_at = offsetDateTime.format(outputFormatter);
                 document.put("created_at", created_at);
                 IndexRequest indexRequest = new IndexRequest(index);
-                String docId = document.get("event").toString() + document.get("event_session_name").toString() + created_at;
+                String docId = document.get("event").toString() + document.get("event_session_name").toString() + document.get("eventtime").toString().replace(" ", "T");
                 indexRequest.id(docId);
                 indexRequest.source(document, XContentType.JSON);
                 bulkRequest.add(indexRequest);

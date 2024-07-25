@@ -635,6 +635,13 @@ public class QueryController {
         return queryService.queryRepoSigInfo(request, community, repo);
     }
 
+    @RequestMapping(value = "/repo/sig/list")
+    public String queryRepoSigInfoList(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "repo", required = false) String repo) {
+        return queryService.queryRepoSigInfoList(request, community, repo);
+    }
+
     @RequestMapping(value = "/software/info")
     public String querySoftwareInfo(HttpServletRequest request,
             @RequestParam(value = "community") String community,
