@@ -199,6 +199,7 @@ public class CustomPropertiesConfig {
     private String repoMaintainerQuery;
     private String softwareInfoQuery;
     private String repoSigInfoQuery;
+    private String repoSigInfoListQuery;
     private String applicationDownloadQuery;
     private String modelFoundryDownloadCountQueryStr;
     private String isvCountQuery;
