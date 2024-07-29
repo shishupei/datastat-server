@@ -3489,18 +3489,20 @@ public class QueryDao {
             String nowStr = simpleDateFormat.format(now);
             String uuid = UUID.randomUUID().toString();
             resMap.put("created_at", nowStr);
-            String title = String.format(queryConf.getNpsIssueTitleFormat(), body.getType(), body.getName(), body.getVersion());
-            String content = String.format(queryConf.getNpsIssueFormat(), body.getFeedbackPageUrl(), body.getFeedbackValue(), body.getFeedbackText());
-            String url = String.format(queryConf.getPostIssueUrl(), owner);
-
-            HashMap<String, Object> postBody = new HashMap<>();
-            postBody.put("access_token", queryConf.getAccessToken());
-            postBody.put("title", title);
-            postBody.put("body", content); 
-            postBody.put("owner", owner);
-            postBody.put("repo", repo);
-            String postBodyStr = objectMapper.writeValueAsString(postBody);
-            HttpClientUtils.postHttpClient(url, postBodyStr);
+            if (body.getType() != null && body.getName() != null && body.getVersion() != null) {
+                String title = String.format(queryConf.getNpsIssueTitleFormat(), body.getType(), body.getName(), body.getVersion());
+                String content = String.format(queryConf.getNpsIssueFormat(), body.getFeedbackPageUrl(), body.getFeedbackValue(), body.getFeedbackText());
+                String url = String.format(queryConf.getPostIssueUrl(), owner);
+    
+                HashMap<String, Object> postBody = new HashMap<>();
+                postBody.put("access_token", queryConf.getAccessToken());
+                postBody.put("title", title);
+                postBody.put("body", content);
+                postBody.put("owner", owner);
+                postBody.put("repo", repo);
+                String postBodyStr = objectMapper.writeValueAsString(postBody);
+                HttpClientUtils.postHttpClient(url, postBodyStr);
+            }
 
             BulkRequest request = new BulkRequest();
             RestHighLevelClient restHighLevelClient = getRestHighLevelClient();

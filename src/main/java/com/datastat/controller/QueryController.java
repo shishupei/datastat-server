@@ -729,6 +729,7 @@ public class QueryController {
     }
 
     @LimitRequest(callTime = 1, callCount = 1000)
+    @RateLimit
     @RequestMapping(value = "/nps/issue", method = RequestMethod.POST)
     public String putNpsIssue(HttpServletRequest request,
             @CookieValue(value = "_Y_G_", required = false) String token,
