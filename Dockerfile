@@ -38,4 +38,4 @@ RUN useradd -u 1000 datastat -s /bin/bash -m -U && \
     chown -R datastat:datastat om-data
 
 USER datastat
-CMD java -jar ds.jar --spring.config.location=${CONFIG_PATH}/application.properties'
+CMD java -jar ds.jar --spring.config.location=${CONFIG_PATH}/application.properties
