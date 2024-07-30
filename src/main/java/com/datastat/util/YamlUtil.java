@@ -19,7 +19,7 @@ import org.yaml.snakeyaml.Yaml;
 
 
 public class YamlUtil {
-    private static final Logger logger = LoggerFactory.getLogger(RestHighLevelClientUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(YamlUtil.class);
     public <T> T readLocalYaml(String yamlFile, Class<T> classType) {
         Yaml yaml = new Yaml();
         InputStream inputStream;

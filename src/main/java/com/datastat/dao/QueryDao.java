@@ -22,6 +22,7 @@ import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigDetails;
 import com.datastat.model.SigDetailsMaintainer;
+import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
 import com.datastat.model.meetup.MeetupApplyForm;
@@ -254,7 +255,7 @@ public class QueryDao {
             users = downloads;
         }
         JsonNode isvNode = objectMapper.readTree(this.queryIsvCount(queryConf, "isv")).get("data").get("isv");
-        Object isv = sigsNode == null ? null : isvNode.intValue();
+        Object isv = isvNode == null ? null : isvNode.intValue();
         contributes.put("downloads", downloads);
         contributes.put("contributors", contributorsNode.intValue());
         contributes.put("users", users);
@@ -509,7 +510,7 @@ public class QueryDao {
         Map<String, String> companyNameAlCn = companies.get(1);
 
         String contributesQueryStr = queryConf.getCompanyContributorsQuery(queryConf, community, contributeType, timeRange, version, repo, sig);
-        String index = version == null ? queryConf.getGiteeAllIndex() : queryConf.getGiteeVersionIndex();
+        String index = (version != null && "pr".equalsIgnoreCase(contributeType)) ? queryConf.getGiteeVersionIndex() : queryConf.getGiteeAllIndex();
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, index, contributesQueryStr);
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> buckets = dataNode.get("aggregations").get("group_field").get("buckets").elements();
@@ -1545,8 +1546,8 @@ public class QueryDao {
             statusText = response.getStatusText();
             String responseBody = response.getResponseBody(UTF_8);
             JsonNode dataNode = objectMapper.readTree(responseBody);
-            Iterator<JsonNode> buckets = dataNode.get("aggregations").get("distinct_field").get("buckets").elements();
-            count = Lists.newArrayList(buckets).size();
+            JsonNode buckets = dataNode.get("aggregations").get("distinct_field");
+            count = buckets.get("value").asInt();
         } catch (Exception e) {
             logger.error("exception", e);
         }
@@ -3377,6 +3378,16 @@ public class QueryDao {
         return resultJsonStr(statusCode, buckets, statusText);
     }
 
+    public boolean checkQueryAllData(CustomPropertiesConfig queryConf, JsonNode newData) {
+        String[] fields = queryConf.getCheckField().split(",");
+        for(String field : fields) {
+            if (newData.get(field).asInt() == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @SneakyThrows
     public String queryIssue(CustomPropertiesConfig queryConf, IssueDetailsParmas issueDetailsParmas) {
 
@@ -3831,19 +3842,13 @@ public class QueryDao {
         return resultJsonStr(statusCode, bucket, statusText);
     }
 
-    public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm, String token) {
-        Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
-        return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
-    }
-
     @SneakyThrows
     public String queryCommunityCoreRepos(CustomPropertiesConfig queryConf) {
         ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), queryConf.getCommunityRepoQueryStr());
         JsonNode dataNode = objectMapper.readTree(future.get().getResponseBody(UTF_8));
         Iterator<JsonNode> hits = dataNode.get("hits").get("hits").elements();
-        
         String repoListStr = queryConf.getCoreRepo();
-  
+
         ArrayList<HashMap<String, String>> res = new ArrayList<>();
         while (hits.hasNext()) {
             JsonNode hit = hits.next();
@@ -3854,11 +3859,23 @@ public class QueryDao {
             }});
         }
         coreReposSort(res);
-  
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
-      }
-  
-  
+    }
+
+    public String putTeamupApplyForm(CustomPropertiesConfig queryConf, String item, TeamupApplyForm teamupApplyForm, String token) {
+        Map teamupApplyFormMap = objectMapper.convertValue(teamupApplyForm, Map.class);
+        return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
+    }
+
+    public String putSigGathering(CustomPropertiesConfig queryConf, String item, SigGathering sigGatherings, String token) {
+        Map sigGatheringsMap = objectMapper.convertValue(sigGatherings, Map.class);
+        ArrayList<String> errorMesseages = sigGatherings.validField(queryConf.getSigGatheringTemplate());
+        if (errorMesseages.size() > 0) {
+            return resultJsonStr(400, item, objectMapper.valueToTree(errorMesseages), "write error");
+        }
+        return putDataSource(queryConf.getSigGatheringIndex(), sigGatheringsMap, token);
+    }
+
     public void coreReposSort(ArrayList<HashMap<String, String>> repos){
         Collections.sort(repos, new Comparator<Map<String, String>>() {
             @Override

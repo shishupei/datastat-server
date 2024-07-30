@@ -47,6 +47,7 @@ public class CustomPropertiesConfig {
     private String giteeUserInfoUrl;
     private String orgName;
     private String isvCountToken;
+    private String checkField;
 
     // -- index --
     private String extOsIndex;
@@ -81,6 +82,7 @@ public class CustomPropertiesConfig {
     private String ecosystemRepoIndex;
     private String giteeVersionIndex;
     private String meetupApplyFormIndex;
+    private String teamupApplyFormIndex;
     private String userTagIndex;
     private String npsIndex;
     private String giteeFeatureIndex;
@@ -92,7 +94,8 @@ public class CustomPropertiesConfig {
     private String modelFoundrySHIndex;
     private String modelFoundryYiDongIndex;
     private String modelFoundryTianYiIndex;
-    private String teamupApplyFormIndex;
+    private String sigGatheringIndex;
+    private String sigGatheringTemplate;
 
     // -- query str --
     private String extOsQueryStr;
@@ -163,6 +166,8 @@ public class CustomPropertiesConfig {
     private String claNameQuery;
     private String ecosystemRepoQuery;
     private String companyVersionPrQuery;
+    private String companyVersionCommentQuery;
+    private String companyVersionIssueQuery;
     private String companyVersionClocQuery;
     private String communityVersions;
     private String eurPackagesQuery;
@@ -191,9 +196,9 @@ public class CustomPropertiesConfig {
     private String modelFoundryDownloadCountQueryStr;
     private String isvCountQuery;
     private String repoDeveloperQueryStr;
+    private String viewCountQueryStr;
     private String pullsQueryStr;
     private String issueQueryStr;
-    private String viewCountQueryStr;
     private String pullsQueryReposStr;
     private String pullsQueryAssigneesStr;
     private String pullsQueryAuthorsStr;
@@ -426,9 +431,13 @@ public class CustomPropertiesConfig {
         String versionQueryStr = version.equalsIgnoreCase("all") ? "*" : version;
         if (contributeType.equalsIgnoreCase("cloc")) {
             contributesQueryStr = String.format(getCompanyVersionClocQuery(), versionQueryStr);
-        }
-        if (contributeType.equalsIgnoreCase("pr")) {
+        } else if (contributeType.equalsIgnoreCase("pr")) {
             contributesQueryStr = String.format(getCompanyVersionPrQuery(), versionQueryStr);
+        } else if (contributeType.equalsIgnoreCase("issue")) {
+            versionQueryStr = versionQueryStr.equalsIgnoreCase("*") ? "" : versionQueryStr;
+            contributesQueryStr = String.format(getCompanyVersionIssueQuery(), versionQueryStr);
+        } else if (contributeType.equalsIgnoreCase("comment")) {            
+            contributesQueryStr = String.format(getCompanyVersionCommentQuery(), versionQueryStr);
         }
         return contributesQueryStr;
     }

@@ -23,6 +23,7 @@ import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
@@ -682,6 +683,11 @@ public class QueryController {
         return queryService.queryViewCount(request, path);
     }
 
+    @RequestMapping("/community/coreRepos")
+    public String queryCoreRepos(HttpServletRequest request, @RequestParam(value = "community") String community) {
+        return queryService.queryCommunityCoreRepos(request, community);
+    }
+
     @RequestMapping(value = {"/issue", "/issue/"})
     public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
         return queryService.queryIssue(request, issueDetailsParmas);
@@ -750,16 +756,21 @@ public class QueryController {
     @LimitRequest(callTime = 1, callCount = 1000)
     @RequestMapping(value = "/teamupApplyForm", method = RequestMethod.POST)
     public String addTeamupApplyForm(HttpServletRequest request, 
-            @RequestParam String community,    
+            @RequestParam String community,
             @Valid @RequestBody TeamupApplyForm teamupApplyForm,
-            @CookieValue(value = "_Y_G_", required = false) String token
-        ) {
+            @CookieValue(value = "_Y_G_", required = false) String token) {
         String res = queryService.putTeamupApplyForm(request, community, teamupApplyForm, token);
         return res;
     }
 
-    @RequestMapping("/community/coreRepos")
-    public String queryCoreRepos(HttpServletRequest request, @RequestParam(value = "community") String community) {
-        return queryService.queryCommunityCoreRepos(request, community);
+    @OneidToken
+    @LimitRequest(callTime = 1, callCount = 1000)
+    @RequestMapping(value = "/sigGathering", method = RequestMethod.POST)
+    public String addSigGathering(HttpServletRequest request, 
+            @RequestParam String community,
+            @Valid @RequestBody SigGathering sigGatherings,
+            @CookieValue(value = "_Y_G_", required = false) String token) {
+        String res = queryService.putSigGathering(request, community, sigGatherings, token);
+        return res;
     }
 }

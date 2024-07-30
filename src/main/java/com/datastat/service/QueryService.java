@@ -23,7 +23,6 @@ import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.vo.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.ArrayListUtil;
-import com.datastat.util.ClientUtil;
 import com.datastat.util.PageUtils;
 import com.datastat.util.RSAUtil;
 import com.datastat.util.StringValidationUtil;
@@ -37,6 +36,7 @@ import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
 import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
+import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.meetup.MeetupApplyForm;
 
@@ -52,7 +52,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.interfaces.RSAPrivateKey;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -224,53 +223,42 @@ public class QueryService {
     }
 
     public String queryAll(HttpServletRequest request, String community) throws Exception {
-        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        if (!checkCommunity(community))
+            return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String item = "all";
         String key = community.toLowerCase() + item;
         String result = (String) redisDao.get(key);
-
-        JsonNode newData;
-        JsonNode oldData = null;
-        boolean isFlush = false;
-
-        if (result != null) {
-            JsonNode all = objectMapper.readTree(result);
-            String updateAt = all.get("update_at").asText();
-            oldData = all.get("data");
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-            try {
+        Boolean isUpdate = true;
+        try {
+            if (result != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+                String updateAt = objectMapper.readTree(result).get("update_at").asText();
                 Date updateDate = sdf.parse(updateAt);
                 Date now = new Date();
                 long diffs = (now.getTime() - updateDate.getTime());
-                if (diffs > Long.parseLong(env.getProperty("redis.flush.interval", "7200000"))) {
-                    isFlush = true;
+                // The redis cache is valid
+                if (diffs < Long.parseLong(env.getProperty("redis.flush.interval", "7200000"))) {
+                    isUpdate = false;
                 }
-            } catch (ParseException e) {
-                logger.error("exception", e);
             }
-        }
-
-        if (isFlush || result == null) {
-            boolean flag = false;
-            try {
+            // The redis cache is expired and needs to be updated
+            if (isUpdate) {
                 QueryDao queryDao = getQueryDao(request);
                 CustomPropertiesConfig queryConf = getQueryConf(request);
                 String resultNew = queryDao.queryAll(queryConf, community);
-
-                JsonNode allNew = objectMapper.readTree(resultNew);
-                newData = allNew.get("data");
-                if (oldData != null) {
-                    flag = false; //TODO errorAlertService.errorAlert(community, oldData, newData);
-                }
-                if (!flag) {
+                JsonNode newData = objectMapper.readTree(resultNew).get("data");
+                if (queryDao.checkQueryAllData(queryConf, newData)) {
                     redisDao.set(key, resultNew, -1L);
                     result = resultNew;
                 }
-            } catch (Exception e) {
-                logger.error("exception", e);
             }
+        } catch (Exception e) {
+            logger.error("queryAll exception: " + e.getMessage());
         }
-
+        if (result == null) {
+            logger.error("QueryAll key is not existed");
+            return resultJsonStr(404, "error", "Redis error");
+        }
         return result;
     }
 
@@ -1438,6 +1426,44 @@ public class QueryService {
         return result;
     }
 
+    public String queryCommunityCoreRepos(HttpServletRequest request, String community) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = community.toLowerCase() + "corerepos";
+        String result = null; 
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryCommunityCoreRepos(queryConf);
+        }
+        return result;
+    }
+
+    public String putTeamupApplyForm(HttpServletRequest request, String community, TeamupApplyForm teamupApplyForm, String token) {
+        String item = "teamupApplyForm";
+        String res = "";
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        try {
+            res = queryDao.putTeamupApplyForm(queryConf, item, teamupApplyForm, token);
+        } catch (Exception e) {
+            logger.error("exception", e);
+        }
+        return res;
+    }
+
+    public String putSigGathering(HttpServletRequest request, String community, SigGathering sigGatherings, String token) {
+        String item = "SigGathering";
+        String res = resultJsonStr(400, null, "failed");;
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        try {
+            res = queryDao.putSigGathering(queryConf, item, sigGatherings, token);
+        } catch (Exception e) {
+            logger.error("exception", e.getMessage());
+        }
+        return res;
+    }
+
     public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("openGauss");
@@ -1546,29 +1572,4 @@ public class QueryService {
         return result;
     }
 
-    public String putTeamupApplyForm(HttpServletRequest request, String community, TeamupApplyForm teamupApplyForm, String token) {
-        String item = "teamupApplyForm";
-        String res = "";
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf(request);
-        try {
-            res = queryDao.putTeamupApplyForm(queryConf, item, teamupApplyForm, token);
-        } catch (Exception e) {
-            logger.error("exception", e);
-        }
-        return res;
-    }
-
-    public String queryCommunityCoreRepos(HttpServletRequest request, String community) {
-        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String key = "community_corerepos_" + community.toLowerCase();
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            QueryDao queryDao = getQueryDao(request);
-            CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryCommunityCoreRepos(queryConf);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
 }
