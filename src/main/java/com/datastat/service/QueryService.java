@@ -37,6 +37,7 @@ import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.dto.ContributeRequestParams;
+import com.datastat.model.dto.NpsIssueBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 
 import jakarta.annotation.PostConstruct;
@@ -252,7 +253,7 @@ public class QueryService {
                 }
             }
         } catch (Exception e) {
-            logger.error("queryAll exception: " + e.getMessage());
+            logger.error("queryAll exception - {}" + e.getMessage());
         }
         if (result == null) {
             logger.error("QueryAll key is not existed");
@@ -1329,6 +1330,19 @@ public class QueryService {
         return result;
     }
 
+    public String queryRepoSigInfoList(HttpServletRequest request, String community, String repo) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "reposiglist" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo);
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryRepoSigInfoList(queryConf, community, repo);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
     public String querySoftwareInfo(HttpServletRequest request, String community, String repo, String tag) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = "softwareinfo" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo) + tag;
@@ -1356,11 +1370,12 @@ public class QueryService {
     }
 
 
-    public String callback(HttpServletRequest request, HmsExportDataReq req) {
+    public String callback(HttpServletRequest request, String path, HmsExportDataReq req) {
+        path = path == null ? "pro" : path;
         String dataPath = req.getFilePath();
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("foundry");
-        queryDao.putExportData(queryConf, dataPath);
+        queryDao.putExportData(queryConf, path, dataPath);
         return resultJsonStr(0, null, "success");
     }
 
@@ -1458,7 +1473,7 @@ public class QueryService {
         try {
             res = queryDao.putSigGathering(queryConf, item, sigGatherings, token);
         } catch (Exception e) {
-            logger.error("SigGathering exception", e.getMessage());
+            logger.error("SigGathering exception - {}", e.getMessage());
         }
         return res;
     }
@@ -1494,5 +1509,13 @@ public class QueryService {
         result = objectMapper.valueToTree(resMap).toString();
         return result;
     }
+
+    public String putNpsIssue(HttpServletRequest request, String community, NpsIssueBody body, String token) {
+        if (!checkCommunity(community) && !community.equals("xihe")) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        return queryDao.putNpsIssue(queryConf, community, body, token);
+    }
+
 }
 

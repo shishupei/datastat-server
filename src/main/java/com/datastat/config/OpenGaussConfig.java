@@ -26,7 +26,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
 @ConfigurationProperties(prefix = "opengauss")
-@PropertySource(value = {"file:${user.dir}/openGauss.properties"}, encoding = "UTF-8")
+@PropertySource(value = {"file:${config.path}/openGauss.properties"}, encoding = "UTF-8")
 @Configuration("opengaussConf")
 @Data
 public class OpenGaussConfig extends CustomPropertiesConfig {

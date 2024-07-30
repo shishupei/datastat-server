@@ -12,6 +12,7 @@
 package com.datastat.util;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -194,11 +195,15 @@ public class HttpClientUtils implements Serializable {
         HttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(uri);
         try {
-            httpPost.setHeader("Content-Type", "application/json");
-            StringEntity stringEntity = new StringEntity(requestBody);
+            httpPost.setHeader("Content-Type", "application/json;charset=UTF-8");
+            StringEntity stringEntity = new StringEntity(requestBody, StandardCharsets.UTF_8);
             httpPost.setEntity(stringEntity);
             HttpResponse response = httpClient.execute(httpPost);
             String responseBody = EntityUtils.toString(response.getEntity());
+            int code = response.getStatusLine().getStatusCode();
+            if (code != 200 && code != 201) {
+                logger.info(responseBody);
+            }          
             return responseBody;
         } catch (Exception e) {
             throw new RuntimeException("Unauthorized");
