@@ -1478,7 +1478,6 @@ public class QueryService {
         return res;
     }
 
-
     public String queryRepoIssues(HttpServletRequest request, ContributeRequestParams params) throws Exception {
         String key = params.getCommunity() + params.getRepo() + params.getSort() + params.getFilter() + "feedbackissue";
         String result = (String) redisDao.get(key);
