@@ -19,8 +19,10 @@ import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
 import com.datastat.model.HmsExportDataReq;
+import com.datastat.model.IssueDetailsParmas;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
+import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
@@ -699,6 +701,70 @@ public class QueryController {
     @RequestMapping("/community/coreRepos")
     public String queryCoreRepos(HttpServletRequest request, @RequestParam(value = "community") String community) {
         return queryService.queryCommunityCoreRepos(request, community);
+    }
+
+    @RequestMapping(value = {"/issue", "/issue/"})
+    public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
+        return queryService.queryIssue(request, issueDetailsParmas);
+    }
+
+    @RequestMapping(value = {"/pulls", "/pulls/"})
+    public String queryPulls(HttpServletRequest request, PullsDetailsParmas pullsDetailsParmas) {
+        return queryService.queryPulls(request, pullsDetailsParmas);
+    }
+
+    @RequestMapping(value = "/pulls/repos")
+    public String queryPullsRepos(HttpServletRequest request,
+            @RequestParam(value = "sig", required = false) String sig,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsRepos(request, sig, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/assignees")
+    public String queryPullsAssignees(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsAssignees(request, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/authors")
+    public String queryPullsAuthors(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsAuthors(request, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/refs")
+    public String queryPullsRefs(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsRefs(request, keyword, page, per_page);
+    }
+
+    @RequestMapping(value = "/pulls/sigs")
+    public String queryPullsSigs(HttpServletRequest request, @RequestParam(value = "keyword", required = false) String keyword) {
+        return queryService.queryPullsSigs(request, keyword);
+    }
+
+    @RequestMapping(value = "/pulls/labels")
+    public String queryPullsLabels(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryPullsLabels(request, keyword, page, per_page);
+    }
+    
+    @RequestMapping(value = "/issue/labels")
+    public String queryIssueLabels(HttpServletRequest request,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "per_page", required = false) Integer per_page) {
+        return queryService.queryIssueLabels(request, keyword, page, per_page);
     }
 
     @OneidToken
