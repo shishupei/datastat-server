@@ -205,15 +205,6 @@ public class CustomPropertiesConfig {
     private String isvCountQuery;
     private String repoDeveloperQueryStr;
     private String viewCountQueryStr;
-    private String pullsQueryStr;
-    private String issueQueryStr;
-    private String pullsQueryReposStr;
-    private String pullsQueryAssigneesStr;
-    private String pullsQueryAuthorsStr;
-    private String pullsQueryRefsStr;
-    private String pullsQuerySigsStr;
-    private String pullsQueryLabelsStr;
-    private String issueQueryLabelsStr;
     private String coreRepo;
     private String sigGatheringUserCount;
     private String repoIssueField;
