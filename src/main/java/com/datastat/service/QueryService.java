@@ -31,10 +31,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datastat.model.DatastatRequestBody;
 import com.datastat.model.HmsExportDataReq;
-import com.datastat.model.IssueDetailsParmas;
 import com.datastat.model.IsvCount;
 import com.datastat.model.NpsBody;
-import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
@@ -1518,115 +1516,6 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         return queryDao.putNpsIssue(queryConf, community, body, token);
-    }
-
-
-    public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = "issue" + issueDetailsParmas.toString();
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryIssue(queryConf, issueDetailsParmas);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-
-    public String queryPulls(HttpServletRequest request,PullsDetailsParmas pullsDetailsParmas) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = "pulls" + pullsDetailsParmas.toString();
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPulls(queryConf, pullsDetailsParmas);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-
-    public String queryPullsRepos(HttpServletRequest request, String sig, String keyword, Integer page, Integer per_page) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = "pullsRepos" + sig + page + keyword + per_page;
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPullsRepos(queryConf, sig, keyword, page, per_page);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-
-    public String queryPullsAssignees(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = String.format("pullsAssignees_keyword=%s_page%d_per_page%d", keyword, page, per_page);
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPullsAssignees(queryConf, keyword, page, per_page);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-
-    public String queryPullsAuthors(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = String.format("pullsSigs_keyword=%s_page%d_per_page%d", keyword, page, per_page);
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPullsAuthors(queryConf, keyword, page, per_page);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-
-    public String queryPullsRefs(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = String.format("pullsRefs_keyword=%s_page%d_per_page%d", keyword, page, per_page);
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPullsRefs(queryConf, keyword, page, per_page);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-
-    public String queryPullsSigs(HttpServletRequest request, String keyword) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = "pullsSigs" + keyword;
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryPullsSigs(queryConf, keyword);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
-    }
-  
-    public String queryPullsLabels(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
-      QueryDao queryDao = getQueryDao(request);
-      CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-      String key = "pullslabels" + keyword;
-      String result = (String) redisDao.get(key);
-      if (result == null) {
-          result = queryDao.queryPullsLabels(queryConf, keyword, page, per_page);
-          redisDao.set(key, result, redisDefaultExpire);
-      }
-      return result;
-    }
-
-    public String queryIssueLabels(HttpServletRequest request, String keyword, Integer page, Integer per_page) {
-        QueryDao queryDao = getQueryDao(request);
-        CustomPropertiesConfig queryConf = getQueryConf("openGauss");
-        String key = "issuelabels" + keyword;
-        String result = (String) redisDao.get(key);
-        if (result == null) {
-            result = queryDao.queryIssueLabels(queryConf, keyword, page, per_page);
-            redisDao.set(key, result, redisDefaultExpire);
-        }
-        return result;
     }
 
 }
