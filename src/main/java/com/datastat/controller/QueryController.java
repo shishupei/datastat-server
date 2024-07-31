@@ -14,6 +14,7 @@ package com.datastat.controller;
 import com.datastat.aop.LimitRequest;
 import com.datastat.aop.RateLimit;
 import com.datastat.interceptor.authentication.UserLoginToken;
+import com.datastat.interceptor.oneid.CompanyToken;
 import com.datastat.interceptor.oneid.OneidToken;
 import com.datastat.interceptor.oneid.SigToken;
 import com.datastat.model.DatastatRequestBody;
@@ -25,6 +26,8 @@ import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
+import com.datastat.model.dto.ContributeRequestParams;
+import com.datastat.model.dto.NpsIssueBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.service.QueryService;
@@ -284,6 +287,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/usercontribute")
     public String queryCompanyUserContribute(HttpServletRequest request,
                                              @RequestParam(value = "community") String community,
@@ -295,6 +299,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/sigcontribute")
     public String queryCompanySigcontribute(HttpServletRequest request,
                                             @RequestParam(value = "community") String community,
@@ -306,6 +311,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/sigdetails")
     public String queryCompanySigDetails(HttpServletRequest request,
                                          @RequestParam(value = "community") String community,
@@ -325,6 +331,7 @@ public class QueryController {
     }
 
     @OneidToken
+    @CompanyToken
     @RequestMapping("/company/users")
     public String queryCompanyUsers(HttpServletRequest request,
                                     @RequestParam(value = "community") String community,
@@ -630,6 +637,13 @@ public class QueryController {
         return queryService.queryRepoSigInfo(request, community, repo);
     }
 
+    @RequestMapping(value = "/repo/sig/list")
+    public String queryRepoSigInfoList(HttpServletRequest request,
+            @RequestParam(value = "community") String community,
+            @RequestParam(value = "repo", required = false) String repo) {
+        return queryService.queryRepoSigInfoList(request, community, repo);
+    }
+
     @RequestMapping(value = "/software/info")
     public String querySoftwareInfo(HttpServletRequest request,
             @RequestParam(value = "community") String community,
@@ -646,8 +660,9 @@ public class QueryController {
     }
 
     @RequestMapping(value = "/agc/analytics/callback", method = RequestMethod.POST)
-    public String callback(HttpServletRequest request, @RequestBody @Valid HmsExportDataReq req) {
-        return queryService.callback(request, req);
+    public String callback(HttpServletRequest request, @RequestParam(value = "path", required = false) String path,
+            @RequestBody @Valid HmsExportDataReq req) {
+        return queryService.callback(request, path, req);
     }
 
     @RequestMapping(value = "/isv/count", method = RequestMethod.POST)
@@ -772,5 +787,20 @@ public class QueryController {
             @CookieValue(value = "_Y_G_", required = false) String token) {
         String res = queryService.putSigGathering(request, community, sigGatherings, token);
         return res;
+    }
+
+    @RequestMapping("/repo/issues")
+    public String queryRepoIssues(HttpServletRequest request, ContributeRequestParams params) throws Exception {
+        return queryService.queryRepoIssues(request, params);
+    }
+
+    @LimitRequest(callTime = 1, callCount = 1000)
+    @RateLimit
+    @RequestMapping(value = "/nps/issue", method = RequestMethod.POST)
+    public String putNpsIssue(HttpServletRequest request,
+            @CookieValue(value = "_Y_G_", required = false) String token,
+            @RequestParam(value = "community") String community,
+            @Valid @RequestBody NpsIssueBody body) {
+        return queryService.putNpsIssue(request, community, body, token);
     }
 }

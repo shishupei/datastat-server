@@ -13,6 +13,7 @@ package com.datastat.dao;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.datastat.constant.Constant;
 import com.datastat.model.BlueZoneUser;
 import com.datastat.model.CustomPropertiesConfig;
 import com.datastat.model.IssueDetailsParmas;
@@ -25,18 +26,18 @@ import com.datastat.model.SigDetailsMaintainer;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
 import com.datastat.model.UserTagInfo;
+import com.datastat.model.dto.ContributeRequestParams;
+import com.datastat.model.dto.NpsIssueBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 import com.datastat.model.vo.*;
 import com.datastat.model.yaml.*;
 import com.datastat.result.ReturnCode;
 import com.datastat.util.*;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.maxmind.geoip2.DatabaseReader;
@@ -81,6 +82,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -90,7 +92,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -620,8 +621,11 @@ public class QueryDao {
         String resultInfo = esQueryUtils.esScrollFromId(restHighLevelClient, item, Integer.parseInt(pageSize),
                 queryConf.getBuildCheckResultIndex(), lastCursor, queryResultSourceBuilder);
         SearchSourceBuilder mistakeSourceBuilder = assembleMistakeSourceBuilder("update_at", queryBody);
-        String mistakeInfoStr = esQueryUtils.esScroll(restHighLevelClient, item, queryConf.getBuildCheckMistakeIndex(), 5000, mistakeSourceBuilder);
-
+        ArrayList<Object> mistakeInfoList = esQueryUtils.esScroll(restHighLevelClient, item, queryConf.getBuildCheckMistakeIndex(), 5000, mistakeSourceBuilder);
+        String mistakeInfoStr = ResultUtil.resultJsonStr(400, item, ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
+        if (mistakeInfoList != null) {
+            mistakeInfoStr = ResultUtil.resultJsonStr(200, mistakeInfoList, "ok", Map.of("totalCount", mistakeInfoList.size()));
+        }
         ArrayList<ObjectNode> finalResultJSONArray = new ArrayList<>();
         int totalCount = 0;
         String cursor = "";
@@ -2116,12 +2120,7 @@ public class QueryDao {
 
     protected String getCompanyNames(String name) {
         ArrayList<String> res = getCompanyNameList(name);
-        String names = "(";
-        for (String r : res) {
-            names = names + "\\\"" + r + "\\\",";
-        }
-        names = names + ")";
-        return names;
+        return ArrayListUtil.getFilterList(res);
     }
 
     protected ArrayList<HashMap<String, Object>> getData(QueryDao queryDao, CustomPropertiesConfig queryConf, String index, String queryStr) {
@@ -2486,7 +2485,7 @@ public class QueryDao {
             DecodedJWT decode = JWT.decode(RSAUtil.privateDecrypt(token, privateKey));
             userId = decode.getAudience().get(0);
         } catch (Exception e) {
-            logger.error("exception", e);
+            logger.error("parse token exception - {}", e.getMessage());
         }
         return userId;
     }
@@ -2495,8 +2494,9 @@ public class QueryDao {
         String userId = getUserId(token);
         if (userId == null)
             return "{\"code\":400,\"data\":\"user failed\",\"msg\":\"user failed\"}";
-        LocalDateTime now = LocalDateTime.now();
-        String nowStr = now.toString().split("\\.")[0] + "+08:00";
+        Date now = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        String nowStr = simpleDateFormat.format(now);
         dataSource.put("created_at", nowStr);
         dataSource.put("user_id", userId);
 
@@ -3113,15 +3113,6 @@ public class QueryDao {
         return resList;
     }
 
-    protected String getFilterList(ArrayList<String> res) {
-        String names = "(";
-        for (String r : res) {
-            names = names + "\\\"" + r + "\\\",";
-        }
-        names = names + ")";
-        return names;
-    }
-
     @SneakyThrows
     public String queryRepoMaintainer(CustomPropertiesConfig queryConf, String community, String repo, String timeRange) {
         ArrayList<String> repos = new ArrayList<>();
@@ -3129,38 +3120,19 @@ public class QueryDao {
         for (String orgName : orgNames) {
             repos.add(orgName + "/" + repo);
         }
-        String query = String.format(queryConf.getRepoMaintainerQuery(), getFilterList(repos));
-        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
+        String query = String.format(queryConf.getRepoMaintainerQuery(), ArrayListUtil.getFilterList(repos));
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSoftwareMaintainerIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
         JsonNode hits = dataNode.get("hits").get("hits");
         if (!hits.elements().hasNext()) {
             return resultJsonStr(400, null, "repo error");
         }
-        JsonNode hit = hits.get(0);
-        JsonNode maintainers = hit.get("_source").get("maintainers");
-        ArrayList<String> userList = objectMapper.readValue(maintainers.traverse(), new TypeReference<ArrayList<String>>(){});
-
-        String maintainer = pickMaintainer(queryConf, userList, timeRange);
-        JsonNode maintainerInfos = hit.get("_source").get("maintainer_info");
-        for (JsonNode info : maintainerInfos) {
-            if (maintainer != null && maintainer.equals(info.get("gitee_id").asText())) {
-                return resultJsonStr(200, objectMapper.valueToTree(info), "ok");
-            }
-        }
-        return resultJsonStr(400, null, "query error");
-    }
-
-    @SneakyThrows
-    public String pickMaintainer(CustomPropertiesConfig queryConf, ArrayList<String> userList, String timeRange) {
-        String query = queryConf.getQueryStrWithTimeRange(queryConf.getRepoMaintainerTopQuery(), timeRange, getFilterList(userList));
-        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getGiteeAllIndex(), query);
-        String resBody = future.get().getResponseBody(UTF_8);
-        JsonNode dataNode = objectMapper.readTree(resBody);
-        JsonNode buckets = dataNode.get("aggregations").get("group_field").get("buckets");
-        if (buckets.elements().hasNext()) {
-            return buckets.get(0).get("key").asText();
-        }
-        return null;
+        JsonNode source = hits.get(0).get("_source");
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("gitee_id", source.get("user_login"));
+        result.put("name", source.get("name"));
+        result.put("email", source.get("email"));
+        return resultJsonStr(200, objectMapper.valueToTree(result), "ok");
     }
 
     @SneakyThrows
@@ -3184,7 +3156,7 @@ public class QueryDao {
         for (String orgName : orgNames) {
             repos.add(orgName + "/" + repo);
         }
-        String query = String.format(queryConf.getRepoSigInfoQuery(), getFilterList(repos));
+        String query = String.format(queryConf.getRepoSigInfoQuery(), ArrayListUtil.getFilterList(repos));
         String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
         JsonNode dataNode = objectMapper.readTree(resBody);
         JsonNode hits = dataNode.get("hits").get("hits");
@@ -3197,6 +3169,27 @@ public class QueryDao {
     }
 
     @SneakyThrows
+    public String queryRepoSigInfoList(CustomPropertiesConfig queryConf, String community, String repo) {
+        String repoQuery = repo == null ? "*" : "\\\"" + Constant.SRC_OPENEULER + "/" + repo + "\\\"";  
+        String query = String.format(queryConf.getRepoSigInfoListQuery(), repoQuery);
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("repos").get("buckets").elements();
+        ArrayList<Map<String, Object>> resMap = new ArrayList<>(); 
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            Iterator<JsonNode> sigBucket = bucket.get("sigs").get("buckets").elements();
+            if (sigBucket.hasNext()) {
+                Map<String, Object> info = new HashMap<>();
+                String[] splits = bucket.get("key").asText().split("/");
+                info.put(splits[splits.length - 1], sigBucket.next().get("key"));
+                resMap.add(info);
+            }
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(resMap), "ok");
+    }
+
+    @SneakyThrows
     public String querySoftwareAppDownload(CustomPropertiesConfig queryConf, String community, String app) {
 
         String query = String.format(queryConf.getApplicationDownloadQuery(), app);
@@ -3206,11 +3199,12 @@ public class QueryDao {
         return resultJsonStr(200, total, "ok");
     }
 
-    public int putExportData(CustomPropertiesConfig queryConf, String dataPath) {
+    public int putExportData(CustomPropertiesConfig queryConf, String path, String dataPath) {
         int status_code = 400;
         String[] paths = dataPath.split(".csv")[0].split("/");
         String fileName = paths[paths.length - 1];
         String downloadDir = env.getProperty("export_path") + fileName;
+        String index = queryConf.getExportWebsiteViewPathIndex(path);
         try {
             List<HashMap<String, Object>> documents = CsvFileUtil.getZipFile(dataPath, downloadDir);
             BulkRequest bulkRequest = new BulkRequest();
@@ -3227,8 +3221,9 @@ public class QueryDao {
                 DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
                 String created_at = offsetDateTime.format(outputFormatter);
                 document.put("created_at", created_at);
-                IndexRequest indexRequest = new IndexRequest(queryConf.getExportWebsiteViewIndex());
-                indexRequest.id(UUID.randomUUID().toString());
+                IndexRequest indexRequest = new IndexRequest(index);
+                String docId = document.get("event").toString() + document.get("event_session_name").toString() + document.get("eventtime").toString().replace(" ", "T");
+                indexRequest.id(docId);
                 indexRequest.source(document, XContentType.JSON);
                 bulkRequest.add(indexRequest);
             }
@@ -3238,7 +3233,7 @@ public class QueryDao {
             }
             restHighLevelClient.close();
         } catch (Exception e) {
-            logger.error("putExportData exception", e);
+            logger.error("putExportData exception - {}", e.getMessage());
         }
         return status_code;
     }
@@ -3308,7 +3303,7 @@ public class QueryDao {
               bucket.put("repo",item.get("key").asText());
               bucket.put("download",item.get("details").get("buckets").get(0).get("sum").get("value").asInt());
             } catch (Exception e) {
-              logger.error("function queryModelFoundryCountSH get error", e.getMessage());
+              logger.error("function queryModelFoundryCountSH get error - {}", e.getMessage());
             }
             buckets.add(bucket);
           }
@@ -3867,13 +3862,118 @@ public class QueryDao {
         return putDataSource(queryConf.getTeamupApplyFormIndex(), teamupApplyFormMap, token);
     }
 
+    @SneakyThrows
     public String putSigGathering(CustomPropertiesConfig queryConf, String item, SigGathering sigGatherings, String token) {
+        String userId = getUserId(token);
+        Response response = esAsyncHttpUtil.executeCount(esUrl, queryConf.getSigGatheringIndex(),
+                String.format(queryConf.getSigGatheringUserCount(), userId)).get();
+        String responseBody = response.getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(responseBody);
+        long count = dataNode.get("count").asLong();
+        // user submits an application no more than twice
+        if (count >= Integer.parseInt(env.getProperty("register.cnt", "2"))) {
+            return resultJsonStr(400, null, "Repeat registration");
+        }
         Map sigGatheringsMap = objectMapper.convertValue(sigGatherings, Map.class);
         ArrayList<String> errorMesseages = sigGatherings.validField(queryConf.getSigGatheringTemplate());
         if (errorMesseages.size() > 0) {
             return resultJsonStr(400, item, objectMapper.valueToTree(errorMesseages), "write error");
         }
-        return putDataSource(queryConf.getSigGatheringIndex(), sigGatheringsMap, token);
+        String result =  putDataSource(queryConf.getSigGatheringIndex(), sigGatheringsMap, token);
+
+        CompletableFuture<String> futureResult = CompletableFuture.supplyAsync(() -> {
+            return CodeUtil.sendCode("phone", "+86" + sigGatherings.getPhone(), env);
+        });
+        futureResult.thenAccept(resp -> logger.info("Send SMS Msg: " + resp));
+
+        return result;
+    }
+
+    @SneakyThrows
+    public String queryRepoIssues(CustomPropertiesConfig queryConf, ContributeRequestParams params) {
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        String[] includeFields = queryConf.getRepoIssueField().split(",");
+        searchSourceBuilder.fetchSource(includeFields, null);
+
+        String filter = params.getFilter() == null ? "*" : params.getFilter();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.termQuery("is_gitee_issue", 1));
+        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("is_removed", 1));
+        boolQueryBuilder.must(QueryBuilders.termQuery("gitee_repo.keyword", queryConf.getBaseUrl() + params.getRepo()));
+        boolQueryBuilder.must(QueryBuilders.wildcardQuery("issue_customize_state.keyword", filter));
+        boolQueryBuilder.must(QueryBuilders.queryStringQuery(queryConf.getNpsIssueFilter()));
+        searchSourceBuilder.query(boolQueryBuilder);
+        if ("asc".equalsIgnoreCase(params.getSort())) {
+            searchSourceBuilder.sort("created_at", SortOrder.ASC);
+        } else {
+            searchSourceBuilder.sort("created_at", SortOrder.DESC);
+        }
+
+        RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+        ArrayList<Object> resultInfoList = esQueryUtils.esScroll(restHighLevelClient, "issue", queryConf.getGiteeAllIndex(), 1000, searchSourceBuilder);
+        String resultInfo = ResultUtil.resultJsonStr(400, "issue", ReturnCode.RC400.getMessage(), ReturnCode.RC400.getMessage());
+        if (resultInfoList != null) { 
+            ArrayList<HashMap<String, Object>> resList = objectMapper.convertValue(resultInfoList,
+                new TypeReference<ArrayList<HashMap<String, Object>>>() {
+                });
+            resultInfoList = new ArrayList<>();
+            for (HashMap<String, Object> result : resList) {
+                String[] body = ((String) result.get("body")).split(queryConf.getFeedbackField());
+                result.put("feedback", body[body.length - 1]);
+                resultInfoList.add(result);
+            }
+            resultInfo = ResultUtil.resultJsonStr(200, resultInfoList, "ok", Map.of("totalCount", resultInfoList.size()));
+        }
+        return resultInfo;
+    }
+
+    public String putNpsIssue(CustomPropertiesConfig queryConf, String community, NpsIssueBody body, String token) {
+        HashMap<String, Object> resMap = objectMapper.convertValue(body, new TypeReference<HashMap<String, Object>>() {});
+        if (token != null) {
+            resMap.put("userId", getUserId(token));
+        }
+        String owner = Constant.FEEDBACK_OWNER;
+        String repo = Constant.FEEDBACK_REPO;
+        if (body.getSrcRepo() != null && body.getSrcRepo().contains(Constant.SRC_OPENEULER)) {   
+            String[] path = body.getSrcRepo().split("/");
+            owner = Constant.SRC_OPENEULER;
+            repo = path[path.length - 1];
+        }
+        try{
+            Date now = new Date();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+            String nowStr = simpleDateFormat.format(now);
+            String uuid = UUID.randomUUID().toString();
+            resMap.put("created_at", nowStr);
+            if (body.getType() != null && body.getName() != null && body.getVersion() != null) {
+                String title = String.format(queryConf.getNpsIssueTitleFormat(), body.getType(), body.getName(), body.getVersion());
+                String content = String.format(queryConf.getNpsIssueFormat(), body.getFeedbackPageUrl(), body.getFeedbackValue(), body.getFeedbackText());
+                String url = String.format(queryConf.getPostIssueUrl(), owner);
+    
+                HashMap<String, Object> postBody = new HashMap<>();
+                postBody.put("access_token", queryConf.getAccessToken());
+                postBody.put("title", title);
+                postBody.put("body", content);
+                postBody.put("owner", owner);
+                postBody.put("repo", repo);
+                String postBodyStr = objectMapper.writeValueAsString(postBody);
+                HttpClientUtils.postHttpClient(url, postBodyStr);
+            }
+
+            BulkRequest request = new BulkRequest();
+            RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
+            IndexRequest indexRequest = new IndexRequest(queryConf.getNpsIndex());
+            indexRequest.id(uuid);
+            indexRequest.source(resMap, XContentType.JSON);
+            request.add(indexRequest);
+            if (request.requests().size() != 0)
+                restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+            restHighLevelClient.close();
+            return resultJsonStr(200, objectMapper.valueToTree("success"), "success");
+        } catch (Exception e) {
+            logger.error("nps issue exception - {}", e.getMessage());
+            return resultJsonStr(400, null, "error");
+        }
     }
 
     public void coreReposSort(ArrayList<HashMap<String, String>> repos){

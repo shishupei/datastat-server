@@ -10,13 +10,13 @@ WORKDIR /var/lib/ds
 
 
 RUN yum install -y wget \
-    && wget https://mirrors-i.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/linux/OpenJDK17U-jdk_x64_linux_hotspot_17.0.11_9.tar.gz \
-    && tar -zxvf OpenJDK17U-jdk_x64_linux_hotspot_17.0.11_9.tar.gz \
+    && wget https://mirrors-i.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/linux/OpenJDK17U-jdk_x64_linux_hotspot_17.0.12_7.tar.gz \
+    && tar -zxvf OpenJDK17U-jdk_x64_linux_hotspot_17.0.12_7.tar.gz \
     && wget https://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz \
     && tar -xzvf apache-maven-3.8.8-bin.tar.gz \
     && yum install -y git
 
-ENV JAVA_HOME=/var/lib/ds/jdk-17.0.11+9
+ENV JAVA_HOME=/var/lib/ds/jdk-17.0.12+7
 ENV PATH=${JAVA_HOME}/bin:$PATH
 
 ENV MAVEN_HOEM=/var/lib/ds/apache-maven-3.8.8
@@ -26,6 +26,9 @@ ENV LC_ALL C.UTF-8
 
 WORKDIR /var/lib/ds/datastat-server
 COPY . /var/lib/ds/datastat-server
+
+ENV CONFIG_PATH=/opt/config
+
 RUN mvn clean install package -Dmaven.test.skip && \
         mv ./target/ds-0.0.1-SNAPSHOT.jar ../ds.jar
 
@@ -35,4 +38,4 @@ RUN useradd -u 1000 datastat -s /bin/bash -m -U && \
     chown -R datastat:datastat om-data
 
 USER datastat
-CMD java -jar ds.jar
+CMD java -jar ds.jar --spring.config.location=${CONFIG_PATH}/application.properties

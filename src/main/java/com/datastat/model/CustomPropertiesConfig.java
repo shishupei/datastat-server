@@ -48,6 +48,12 @@ public class CustomPropertiesConfig {
     private String orgName;
     private String isvCountToken;
     private String checkField;
+    private String baseUrl;
+    private String feedbackField;
+    private String npsIssueFormat;
+    private String npsIssueTitleFormat;
+    private String postIssueUrl;
+    private String npsIssueFilter;
 
     // -- index --
     private String extOsIndex;
@@ -90,12 +96,14 @@ public class CustomPropertiesConfig {
     private String softwareIndex;
     private String aggContributorsIndex;
     private String exportWebsiteViewIndex;
+    private String exportWebsiteTelecomIndex;
     private String isvCountIndex;
     private String modelFoundrySHIndex;
     private String modelFoundryYiDongIndex;
     private String modelFoundryTianYiIndex;
     private String sigGatheringIndex;
     private String sigGatheringTemplate;
+    private String softwareMaintainerIndex;
 
     // -- query str --
     private String extOsQueryStr;
@@ -189,9 +197,9 @@ public class CustomPropertiesConfig {
     private String modelFoundryDownloadQueryStr;
     private String modelFoundryDownloadTrendQueryStr;
     private String repoMaintainerQuery;
-    private String repoMaintainerTopQuery;
     private String softwareInfoQuery;
     private String repoSigInfoQuery;
+    private String repoSigInfoListQuery;
     private String applicationDownloadQuery;
     private String modelFoundryDownloadCountQueryStr;
     private String isvCountQuery;
@@ -207,6 +215,8 @@ public class CustomPropertiesConfig {
     private String pullsQueryLabelsStr;
     private String issueQueryLabelsStr;
     private String coreRepo;
+    private String sigGatheringUserCount;
+    private String repoIssueField;
     
     protected static final Map<String, String> contributeTypeMap = new HashMap<>();
     protected static final Map<String, String> groupFieldMap = new HashMap<>();
@@ -619,6 +629,16 @@ public class CustomPropertiesConfig {
             return getModelFoundryTianYiIndex();
         } else if (path.equalsIgnoreCase("pro")){
             return getModelFoundryIndex();
+        } else {
+            return null;
+        }
+    }
+    
+    public String  getExportWebsiteViewPathIndex(String path) {
+        if (path.equalsIgnoreCase("telecom")) {
+            return getExportWebsiteTelecomIndex();
+        }  else if (path.equalsIgnoreCase("pro")){
+            return getExportWebsiteViewIndex();
         } else {
             return null;
         }

@@ -1,0 +1,19 @@
+{
+    "nps": [
+        {
+            "feedbackPageUrl": "https://software-website.osinfra.cn",    
+            "feedbackValue": 5,
+            "feedbackText": "\"openeuler\""
+        },
+        {
+            "feedbackPageUrl": "https://software-website.osinfra.cn",    
+            "feedbackValue": 5,
+            "feedbackText": "openeuler: 23.09"
+        },
+        {
+            "feedbackPageUrl": "https://software-website.osinfra.cn",    
+            "feedbackValue": 5,
+            "feedbackText": null
+        }
+    ]
+}

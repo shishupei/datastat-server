@@ -88,7 +88,7 @@ public class RedisDao {
             result = true;
             logger.info("update " + key + " success!");
         } catch (Exception e) {
-            logger.error("exception", e);
+            logger.error("exception - {}", e.getMessage());
         }
         return result;
     }
@@ -104,7 +104,7 @@ public class RedisDao {
             ValueOperations operations = redisTemplate.opsForValue();
             result = operations.get(key);
         } catch (Exception e) {
-            logger.error("exception", e);
+            logger.error("exception - {}", e.getMessage());
         }
         return result;
     }
@@ -123,7 +123,7 @@ public class RedisDao {
             redisTemplate.expire(key, expire, TimeUnit.SECONDS);
             result = true;
         } catch (Exception e) {
-            logger.error("exception", e);
+            logger.error("exception - {}", e.getMessage());
         }
         return result;
     }
@@ -135,7 +135,7 @@ public class RedisDao {
             HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
             result = hashOperations.get(key, field);
         } catch (Exception e) {
-            logger.error("exception", e);
+            logger.error("exception - {}", e.getMessage());
         }
         return result;
     }
@@ -149,7 +149,7 @@ public class RedisDao {
         try {
             result = redisTemplate.hasKey(key);
         } catch (Exception e) {
-            logger.error("exception", e.getMessage());
+            logger.error("exception - {}", e.getMessage());
         }
         return result;
     }
@@ -166,7 +166,7 @@ public class RedisDao {
             }
             result = true;
         } catch (Exception e) {
-            logger.error("exception", e.getMessage());
+            logger.error("exception - {}", e.getMessage());
         }
         return result;
     }
@@ -256,7 +256,7 @@ public class RedisDao {
             int code = dataNode.get("code").intValue();
             return code == 200;
         } catch (JsonProcessingException e) {
-            logger.error("exception", e);
+            logger.error("exception - {}", e.getMessage());
             return false;
         }
     }
