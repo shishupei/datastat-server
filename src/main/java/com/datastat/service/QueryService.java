@@ -38,6 +38,8 @@ import com.datastat.model.PullsDetailsParmas;
 import com.datastat.model.QaBotRequestBody;
 import com.datastat.model.SigGathering;
 import com.datastat.model.TeamupApplyForm;
+import com.datastat.model.dto.ContributeRequestParams;
+import com.datastat.model.dto.NpsIssueBody;
 import com.datastat.model.meetup.MeetupApplyForm;
 
 import jakarta.annotation.PostConstruct;
@@ -253,7 +255,7 @@ public class QueryService {
                 }
             }
         } catch (Exception e) {
-            logger.error("queryAll exception: " + e.getMessage());
+            logger.error("queryAll exception - {}" + e.getMessage());
         }
         if (result == null) {
             logger.error("QueryAll key is not existed");
@@ -523,8 +525,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "usertypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -540,8 +542,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "sigtypecontribute_" + contributeType.toLowerCase() + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -556,8 +558,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "sig" + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -585,8 +587,8 @@ public class QueryService {
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf(request);
         // 是否有企业访问权限
-        boolean per = checkPermission(request, queryDao, queryConf, token, company);
-        if (!per) return resultJsonStr(400, "", "No Permission");
+        // boolean per = checkPermission(request, queryDao, queryConf, token, company);
+        // if (!per) return resultJsonStr(400, "", "No Permission");
 
         String key = community.toLowerCase() + company + "companyusers" + timeRange.toLowerCase();
         String result = (String) redisDao.get(key);
@@ -973,7 +975,7 @@ public class QueryService {
         try {
             RSAPrivateKey privateKey = RSAUtil.getPrivateKey(env.getProperty("rsa.authing.privateKey"));
             DecodedJWT decode = JWT.decode(RSAUtil.privateDecrypt(token, privateKey));
-            String permissionList = decode.getClaim("permissionList").asString();
+            String permissionList = decode.getClaim("permission").asString();
             String[] pers = new String(Base64.getDecoder().decode(permissionList.getBytes())).split(",");
             for (String per : pers) {
                 String[] perList = per.split(":");
@@ -1330,6 +1332,19 @@ public class QueryService {
         return result;
     }
 
+    public String queryRepoSigInfoList(HttpServletRequest request, String community, String repo) {
+        if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        String key = "reposiglist" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo);
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryRepoSigInfoList(queryConf, community, repo);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
+
     public String querySoftwareInfo(HttpServletRequest request, String community, String repo, String tag) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
         String key = "softwareinfo" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo) + tag;
@@ -1357,11 +1372,12 @@ public class QueryService {
     }
 
 
-    public String callback(HttpServletRequest request, HmsExportDataReq req) {
+    public String callback(HttpServletRequest request, String path, HmsExportDataReq req) {
+        path = path == null ? "pro" : path;
         String dataPath = req.getFilePath();
         QueryDao queryDao = getQueryDao(request);
         CustomPropertiesConfig queryConf = getQueryConf("foundry");
-        queryDao.putExportData(queryConf, dataPath);
+        queryDao.putExportData(queryConf, path, dataPath);
         return resultJsonStr(0, null, "success");
     }
 
@@ -1459,10 +1475,51 @@ public class QueryService {
         try {
             res = queryDao.putSigGathering(queryConf, item, sigGatherings, token);
         } catch (Exception e) {
-            logger.error("exception", e.getMessage());
+            logger.error("SigGathering exception - {}", e.getMessage());
         }
         return res;
     }
+
+
+    public String queryRepoIssues(HttpServletRequest request, ContributeRequestParams params) throws Exception {
+        String key = params.getCommunity() + params.getRepo() + params.getSort() + params.getFilter() + "feedbackissue";
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+            QueryDao queryDao = getQueryDao(request);
+            CustomPropertiesConfig queryConf = getQueryConf(request);
+            result = queryDao.queryRepoIssues(queryConf, params);
+            redisDao.set(key, result, redisDefaultExpire);
+        }
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode resultJson = objectMapper.readTree(result);
+        if (resultJson.get("code").asInt() != 200) {
+            return resultJsonStr(404, null, "error");
+        }
+        ArrayList<HashMap<String, Object>> resList = objectMapper.convertValue(resultJson.get("data"),
+                new TypeReference<ArrayList<HashMap<String, Object>>>() {
+                });
+        ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+        int page = params.getPage() == null ? 1 : params.getPage();
+        int pageSize = params.getPageSize() == null ? 10 : params.getPageSize();
+        Map data = PageUtils.getDataByPage(page, pageSize, resList);    
+        dataList.add((HashMap<String, Object>) data);
+        
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("code", 200);
+        resMap.put("data", dataList);
+        resMap.put("msg", "success");
+        result = objectMapper.valueToTree(resMap).toString();
+        return result;
+    }
+
+    public String putNpsIssue(HttpServletRequest request, String community, NpsIssueBody body, String token) {
+        if (!checkCommunity(community) && !community.equals("xihe")) return getQueryDao(request).resultJsonStr(404, "error", "not found");
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf(request);
+        return queryDao.putNpsIssue(queryConf, community, body, token);
+    }
+
 
     public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
         QueryDao queryDao = getQueryDao(request);

@@ -33,4 +33,13 @@ public class ArrayListUtil {
         }
         return result;
     }
+
+    public static String getFilterList(ArrayList<String> queryList) {
+        String result = "(";
+        for (String query : queryList) {
+            result = result + "\\\"" + query + "\\\",";
+        }
+        result = result + ")";
+        return result;
+    }
 }

@@ -13,13 +13,14 @@ package com.datastat.model;
 
 import java.util.*;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class SigGathering {
-    @Size(max = 50, message = "the length can not exceed 50")
+    @Size(max = 20, message = "the length can not exceed 20")
     @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String name;
 
@@ -34,15 +35,30 @@ public class SigGathering {
     @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Email format error")
     private String email;
 
-    @Size(max = 50, message = "the length can not exceed 50")
+    @Size(max = 20, message = "the length can not exceed 20")
     @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
     private String company;
 
-    @Size(max = 50, message = "the length can not exceed 50")
+    @Size(max = 20, message = "the length can not exceed 20")
     private List<String> sigs;
 
-    @Size(max = 50, message = "the length can not exceed 50")
+    @Size(max = 20, message = "the length can not exceed 20")
     private List<String> technicalSeminars;
+
+    @Pattern(regexp = "^(agree|refuse)$", message = "value format error")
+    private String attend;
+
+    @NotBlank
+    @Size(max = 20, message = "the length can not exceed 20")
+    @Pattern(regexp = "^[^<>%&$]*$", message = "Text format error")
+    private String privacyVersion;
+
+    @NotBlank
+    @Pattern(regexp = "^(agree|refuse)$", message = "value format error")
+    private String acceptPrivacyVersion;
+
+    @Size(max = 1000, message = "the length can not exceed 1000")
+    private String others;
 
     public Boolean validSeminars(List<String> technicalSeminars, String templates){
         List<String>valueList = Arrays.asList(templates.split(","));
