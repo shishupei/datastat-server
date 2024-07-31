@@ -3397,7 +3397,7 @@ public class QueryDao {
                 put("isCoreRepo", repoListStr.contains(repository) ? "1" : "0");
             }});
         }
-
+        coreReposSort(res);
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 
@@ -3520,4 +3520,21 @@ public class QueryDao {
         }
     }
 
+    public void coreReposSort(ArrayList<HashMap<String, String>> repos){
+        Collections.sort(repos, new Comparator<Map<String, String>>() {
+            @Override
+            public int compare(Map<String, String> repo1, Map<String, String> repo2) {
+                String isCoreRepo1 = repo1.get("isCoreRepo");
+                String isCoreRepo2 = repo2.get("isCoreRepo");
+                String repoName1 = repo1.get("repo");
+                String repoName2 = repo2.get("repo");
+        
+                if (isCoreRepo1.equals(isCoreRepo2)) {
+                    return repoName1.compareToIgnoreCase(repoName2);
+                } else {
+                    return isCoreRepo2.compareToIgnoreCase(isCoreRepo1);
+                }
+            }
+      }); 
+    }
 }
