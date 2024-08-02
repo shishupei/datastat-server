@@ -3397,7 +3397,6 @@ public class QueryDao {
                 put("isCoreRepo", repoListStr.contains(repository) ? "1" : "0");
             }});
         }
-
         return resultJsonStr(200, objectMapper.valueToTree(res), "ok");
     }
 
