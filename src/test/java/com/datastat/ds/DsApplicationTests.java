@@ -25,16 +25,16 @@ class DsApplicationTests {
 	}
 
 	@Autowired
-    private WebApplicationContext webApplicationContext;
+	private WebApplicationContext webApplicationContext;
 
-    private ObjectMapper mapper = new ObjectMapper();
+	private ObjectMapper mapper = new ObjectMapper();
 
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    @BeforeEach
-    public void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-    }
+	@BeforeEach
+	public void setUp() throws Exception {
+		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+	}
 
 	@Test
 	void testNps() throws Exception {
@@ -50,5 +50,4 @@ class DsApplicationTests {
 		}
 
 	}
-
 }
