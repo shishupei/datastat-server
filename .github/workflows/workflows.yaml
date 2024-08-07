@@ -1,0 +1,32 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "**.java"
+
+jobs:
+  sonarqube-analysis:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'corretto'
+        java-version: '17'
+    - name: Install SonarQube Scanner
+      run: |
+        wget https://sonarcloud.io/static/cpp/builds/sonarcloud-scanner-debian-8.1.0.32747.zip
+        unzip sonarcloud-scanner-debian-8.1.0.32747.zip
+        mv sonarcloud-scanner-debian-8.1.0.32747 /usr/local/bin/sonarcloud-scanner
+        chmod +x /usr/local/bin/sonarcloud-scanner
+    - name: Run SonarQube Analysis
+      run: |
+        sonarcloud-scanner -D sonar.projectKey=${{ github.repository }} -D sonar.qualitygate.wait=true -D sonar.branch.name=${{ github.ref }}
