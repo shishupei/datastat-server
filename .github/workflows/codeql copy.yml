@@ -27,10 +27,13 @@ jobs:
         languages: java
         build-mode: none
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:java"
+    # - name: Perform CodeQL Analysis
+    #   uses: github/codeql-action/analyze@v3
+    #   with:
+    #     category: "/language:java"
+
+    - name: Action to run java checkstyle
+      uses: nitinsh99/checkstyle-action@1.0.0
 
     - name: Upload CodeQL results
       uses: actions/upload-artifact@v2
