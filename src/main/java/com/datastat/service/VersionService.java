@@ -87,7 +87,7 @@ public class VersionService {
                 long expire = Long.valueOf(env.getProperty("redis.keyExpire"));
 
                 RequestBuilder builder = asyncHttpUtil.getBuilder();
-                String bodyData = "{\"query\":{\"bool\":{\"filter\":[{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"is_gitee_repo:1\"}}]}},\"_source\":[\"branch_detail\"],\"size\":10000}";
+                String bodyData = "{\"query\":{\"bool\":{\"filter\":[{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"is_gitee_repo:1 AND !is_removed:1\"}}]}},\"_source\":[\"branch_detail\"],\"size\":10000}";
                 Request request = builder.setUrl(url).setBody(bodyData).build();
                 ListenableFuture<Response> future = EsAsyncHttpUtil.getClient().executeRequest(request);
                 Response response = future.get();

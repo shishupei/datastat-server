@@ -1306,14 +1306,14 @@ public class QueryService {
         return result;
     }
 
-    public String queryRepoMaintainer(HttpServletRequest request, String community, String repo, String timeRange) {
+    public String queryRepoMaintainer(HttpServletRequest request, String community, String repo) {
         if (!checkCommunity(community)) return getQueryDao(request).resultJsonStr(404, "error", "not found");
-        String key = "repomaintainer" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo) + timeRange;
+        String key = "repomaintainer" + StringUtils.lowerCase(community) + StringUtils.lowerCase(repo);
         String result = (String) redisDao.get(key);
         if (result == null) {
             QueryDao queryDao = getQueryDao(request);
             CustomPropertiesConfig queryConf = getQueryConf(request);
-            result = queryDao.queryRepoMaintainer(queryConf, community, repo, timeRange);
+            result = queryDao.queryAllRepoMaintainer(queryConf, community, repo);
             redisDao.set(key, result, redisDefaultExpire);
         }
         return result;
@@ -1519,7 +1519,6 @@ public class QueryService {
         CustomPropertiesConfig queryConf = getQueryConf(request);
         return queryDao.putNpsIssue(queryConf, community, body, token);
     }
-
 
     public String queryIssue(HttpServletRequest request, IssueDetailsParmas issueDetailsParmas) {
         QueryDao queryDao = getQueryDao(request);
