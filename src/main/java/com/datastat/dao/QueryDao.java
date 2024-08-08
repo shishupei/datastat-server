@@ -3134,6 +3134,34 @@ public class QueryDao {
     }
 
     @SneakyThrows
+    public String queryAllRepoMaintainer(CustomPropertiesConfig queryConf, String community, String repo) {
+        String repoQuery = repo == null ? "*" : "\\\"" + Constant.SRC_OPENEULER + "/" + repo + "\\\""; 
+        
+        String query = String.format(queryConf.getRepoMaintainerQuery(), repoQuery);
+        String resBody = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSoftwareMaintainerIndex(), query).get().getResponseBody(UTF_8);
+        JsonNode dataNode = objectMapper.readTree(resBody);
+        ArrayList<HashMap<String, Object>> result = new ArrayList<>();
+        Iterator<JsonNode> buckets = dataNode.get("aggregations").get("repos").get("buckets").elements();
+        while (buckets.hasNext()) {
+            JsonNode bucket = buckets.next();
+            String[] repoName = bucket.get("key").get("repo_name").asText().split("/");
+            JsonNode hits = bucket.get("top_repo_hits").get("hits").get("hits");
+            if (!hits.elements().hasNext()) {
+                continue;
+            }
+            JsonNode source = hits.get(0).get("_source");
+            HashMap<String, Object> repoInfo = new HashMap<>();
+            repoInfo.put("gitee_id", source.get("user_login"));
+            repoInfo.put("name", source.get("name"));
+            repoInfo.put("email", source.get("email"));
+            HashMap<String, Object> item = new HashMap<>();
+            item.put(repoName[repoName.length - 1], repoInfo);
+            result.add(item);
+        }
+        return resultJsonStr(200, objectMapper.valueToTree(result), "ok");
+    }
+
+    @SneakyThrows
     public String querySoftwareInfo(CustomPropertiesConfig queryConf, String community, String repo, String tag) {
 
         String query = String.format(queryConf.getSoftwareInfoQuery(), repo, tag);
