@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://pmd.sourceforge.net/pmd-ruleset-schema.xsd"
+        version="1.0.0">
+    <ruleset name="p3c">
+        <rule ref="com.alibaba.p3c.rules:p3c-java-rules" />
+    </ruleset>
+</pmd>
