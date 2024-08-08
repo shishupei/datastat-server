@@ -227,24 +227,14 @@
             <artifactId>p3c-core</artifactId>
             <version>最新版本</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-pmd-plugin</artifactId>
             <version>3.13.0</version>
-            <configuration>
-                <rulesets>
-                    <ruleset>p3c.xml</ruleset>
-                </rulesets>
-                <targetJdk>1.8</targetJdk>
-            </configuration>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>pmd</goal>
-                    </goals>
-                </execution>
-            </executions>
+            
         </dependency>
+        
     </dependencies>
 
     <build>
