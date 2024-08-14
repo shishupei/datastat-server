@@ -1628,4 +1628,15 @@ public class QueryService {
         return result;
     }
 
+    public String queryUserOwnerRepos(HttpServletRequest request, String user) {
+        QueryDao queryDao = getQueryDao(request);
+        CustomPropertiesConfig queryConf = getQueryConf("openEuler");
+        String key = "user_owner_repos_" + user;
+        String result = (String) redisDao.get(key);
+        if (result == null) {
+          result = queryDao.queryUserOwnerRepos(queryConf, user);
+          redisDao.set(key, result, redisDefaultExpire);
+        }
+        return result;
+    }
 }

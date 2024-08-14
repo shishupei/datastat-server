@@ -802,4 +802,10 @@ public class QueryController {
             @Valid @RequestBody NpsIssueBody body) {
         return queryService.putNpsIssue(request, community, body, token);
     }
+
+    @RequestMapping("/user/owner/repos")
+    public String queryUserOwnerRepos(HttpServletRequest request, 
+        @RequestParam(value = "user") String user) throws Exception {
+        return queryService.queryUserOwnerRepos(request, user);
+    }
 }
