@@ -4052,7 +4052,7 @@ public class QueryDao {
                 }
             }
             
-            return resultJsonStr(statusCode, target_repos, statusText);  
+            return resultJsonStr(statusCode, objectMapper.valueToTree(target_repos), statusText);  
 
           } catch (Exception e) {
             logger.error("query/user/owner/repos get error", e.getMessage());
