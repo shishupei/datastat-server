@@ -11,6 +11,4 @@ jobs:
       - uses: dbelyaev/action-checkstyle@master
         with:
           reporter: github-pr-review
-          checkstyle_config: sun_checks.xml
-      - uses: super-linter/super-linter@v7.0.0
-      
+          checkstyle_config: sun_checks.xml      
