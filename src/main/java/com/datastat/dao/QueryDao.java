@@ -3547,4 +3547,43 @@ public class QueryDao {
         }
     }
 
+    @SneakyThrows
+    public String queryUserOwnerRepos(CustomPropertiesConfig queryConf, String user) {
+        String query = String.format(queryConf.getUserOwnerReposQuery(), user) ;
+        ListenableFuture<Response> future = esAsyncHttpUtil.executeSearch(esUrl, queryConf.getSigIndex(), query);
+        Response response = future.get();
+        int statusCode = response.getStatusCode();
+        String statusText = response.getStatusText();
+        String responseBody = response.getResponseBody(UTF_8);
+
+        try {
+            JsonNode dataNode = objectMapper.readTree(responseBody);
+            JsonNode aggregations = dataNode.get("aggregations");
+            JsonNode user_logins = aggregations.get("user_logins");
+            JsonNode buckets = user_logins.get("buckets");
+            JsonNode bucket = buckets.get(0);
+            JsonNode repos = bucket.get("repos");
+            JsonNode repo_buckets = repos.get("buckets");
+    
+            var target_repos = new ArrayList<String>();
+    
+            for (JsonNode repo_bucket : repo_buckets) {
+                String repoStr = repo_bucket.get("key").asText();
+                String org = repoStr.split("/")[0];
+                String repo = repoStr.split("/")[1];
+    
+                if(org.equals("src-openeuler")) {
+                    target_repos.add(repo);
+                }
+            }
+            
+            return resultJsonStr(statusCode, objectMapper.valueToTree(target_repos), statusText);  
+
+          } catch (Exception e) {
+            logger.error("query/user/owner/repos get error", e.getMessage());
+            String emptyMsg = "No repos found for the user, please check the input parameters.";
+
+            return resultJsonStr(statusCode, null, emptyMsg);
+        }
+    }
 }
