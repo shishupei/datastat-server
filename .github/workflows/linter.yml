@@ -28,6 +28,8 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_JAVA: true
           FILTER_REGEX_INCLUDE: .*src/.*/.* # Only lint files in src/
+
         with:
           path: src/**/*
